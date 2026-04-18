@@ -1,0 +1,220 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);font-size:13px;overflow:hidden;max-width:380px;margin:0 auto}
+.breadcrumb{font-size:11px;color:var(--color-text-tertiary);padding:8px 12px 0;font-family:var(--font-mono)}
+.panel-header{display:flex;align-items:center;gap:10px;padding:8px 12px}
+.enable-toggle{width:48px;height:48px;border-radius:10px;border:0.5px solid var(--color-border-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;background:#0a1520}
+.enable-toggle svg{width:32px;height:32px}
+.panel-title{flex:1;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:6px;padding:6px 10px;font-size:14px;font-weight:500;color:var(--color-text-primary);text-align:center}
+.menu-btn{width:32px;height:32px;border-radius:6px;border:0.5px solid var(--color-border-secondary);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary);flex-shrink:0}
+.menu-btn:hover{background:var(--color-background-secondary)}
+.sec-head{font-size:10px;font-weight:500;color:var(--color-text-tertiary);padding:5px 12px 3px;background:var(--color-background-tertiary);border-top:0.5px solid var(--color-border-tertiary);border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between}
+.section{padding:0 12px}
+.field-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--color-text-secondary);min-width:82px;flex-shrink:0}
+.fv{flex:1;display:flex;align-items:center;gap:5px}
+.fv input{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:5px;padding:4px 8px;font-size:12px;color:var(--color-text-primary);font-family:var(--font-mono);width:100%}
+.fv input:focus{outline:none;border-color:var(--color-border-primary)}
+.fv input[disabled]{color:var(--color-text-tertiary);cursor:not-allowed;background:var(--color-background-tertiary)}
+.fv input.port{max-width:72px}
+.flow-pill{display:flex;align-items:center;gap:4px;font-size:10px;border-radius:4px;padding:2px 7px;border:0.5px solid;font-weight:500}
+.flow-pill.out{background:#1a0e00;color:#EF9F27;border-color:#EF9F2744}
+.flow-pill.in{background:#00101a;color:#85B7EB;border-color:#85B7EB44}
+.flow-dot{width:6px;height:6px;border-radius:50%}
+.flow-dot.out{background:#EF9F27}
+.flow-dot.in{background:#85B7EB}
+.flow-dot.off{background:var(--color-border-tertiary)}
+.en2-row{transition:opacity .15s}
+.toggle-wrap{display:flex;align-items:center;gap:8px}
+.toggle-track{position:relative;width:30px;height:17px;border-radius:9px;background:var(--color-border-secondary);cursor:pointer;transition:background .15s;flex-shrink:0;border:none}
+.toggle-track.on{background:#36ABFF}
+.toggle-thumb{position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .15s;pointer-events:none}
+.toggle-track.on .toggle-thumb{transform:translateX(13px)}
+.reset-btn{width:20px;height:20px;border-radius:4px;border:0.5px solid var(--color-border-secondary);background:none;color:var(--color-text-tertiary);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.reset-btn:hover{background:var(--color-background-secondary)}
+.ind-row{display:flex;align-items:center;gap:5px}
+.ind{width:11px;height:11px;border-radius:3px;transition:background .2s}
+.ind.out-act{background:#EF9F27}
+.ind.in-act{background:#36ABFF}
+.ind.off{background:var(--color-border-tertiary)}
+.panel-footer{display:flex;align-items:center;gap:8px;padding:8px 12px;border-top:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)}
+.monitor-btn{padding:5px 10px;background:none;border:0.5px solid var(--color-border-secondary);border-radius:5px;font-size:11px;color:var(--color-text-secondary);cursor:pointer;display:flex;align-items:center;gap:5px}
+.monitor-btn:hover{background:var(--color-background-tertiary)}
+.mon-dot{width:7px;height:7px;border-radius:50%;background:var(--color-border-secondary);flex-shrink:0}
+.mon-dot.on{background:#36ABFF}
+.log-panel{background:#0a0a0a;border-top:0.5px solid var(--color-border-tertiary);padding:8px 12px;font-family:var(--font-mono);font-size:11px;color:#85B7EB;line-height:1.6;max-height:80px;overflow-y:auto;display:none}
+.log-panel.show{display:block}
+.status-bar{display:flex;align-items:center;gap:8px;padding:5px 12px;border-top:0.5px solid var(--color-border-tertiary);background:var(--color-background-tertiary);font-size:10px;color:var(--color-text-tertiary)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--color-border-tertiary)}
+.status-dot.active{background:#1D9E75}
+</style>
+
+<h2 class="sr-only">OSC device panel mockup — shows forward-to destinations and receiving-at port, with enable toggle, second output toggle, and live flow indicators</h2>
+
+<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px">
+<div class="panel">
+
+  <div class="breadcrumb">DocumentaRoom &gt; PeerB-WinVideo &gt; OSC &gt; channel 0</div>
+
+  <div class="panel-header">
+    <button class="enable-toggle" id="enableBtn" onclick="toggleEnable()">
+      <svg id="enableIcon" viewBox="0 0 200 200">
+        <path fill="#36ABFF" d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+        <path fill="#36ABFF" d="m 90.045214,51.309795 0.25488,59.999995 H 70.045216 l 29.999984,40 30,-40 H 110.30008 L 110.0452,71.309795 h 69.93036 l 0.13928,-20 z"/>
+      </svg>
+    </button>
+    <div class="panel-title">OSC</div>
+    <div class="ind-row" id="indRow">
+      <div class="ind out-act" id="indOut" title="output active"></div>
+      <div class="ind in-act" id="indIn" title="input active"></div>
+    </div>
+    <button class="menu-btn">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- forward to section -->
+  <div class="sec-head">
+    <span>forward to</span>
+    <span class="flow-pill out"><span class="flow-dot out"></span>outgoing</span>
+  </div>
+
+  <div class="section">
+    <!-- output 1 -->
+    <div class="field-row">
+      <span class="field-label" style="font-size:10px;color:var(--color-text-tertiary)">output 1</span>
+      <div class="fv">
+        <input type="text" id="ip1" value="10.128.96.182" placeholder="IP address"/>
+        <input type="text" id="port1" value="10001" class="port" placeholder="port"/>
+      </div>
+      <div class="flow-dot out" style="flex-shrink:0" id="actOut1" title="active"></div>
+    </div>
+
+    <!-- enable second output toggle -->
+    <div class="field-row" style="padding:5px 0">
+      <span class="field-label" style="font-size:10px;color:var(--color-text-tertiary)">output 2</span>
+      <div class="fv">
+        <div class="toggle-wrap">
+          <button class="toggle-track" id="en2Track" onclick="toggleEn2()" title="enable second output">
+            <div class="toggle-thumb"></div>
+          </button>
+          <span id="en2Label" style="font-size:11px;color:var(--color-text-tertiary)">disabled</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- output 2 (shown when enabled) -->
+    <div class="field-row en2-row" id="en2Row" style="opacity:0.3;pointer-events:none">
+      <span class="field-label" style="font-size:10px;color:var(--color-text-tertiary)">  </span>
+      <div class="fv">
+        <input type="text" id="ip2" value="10.128.96.182" placeholder="IP address"/>
+        <input type="text" id="port2" value="10002" class="port" placeholder="port"/>
+      </div>
+      <div class="flow-dot off" style="flex-shrink:0" id="actOut2"></div>
+    </div>
+  </div>
+
+  <!-- receiving at section -->
+  <div class="sec-head">
+    <span>receiving at</span>
+    <span class="flow-pill in"><span class="flow-dot in"></span>incoming</span>
+  </div>
+
+  <div class="section">
+    <div class="field-row">
+      <span class="field-label" style="font-size:10px;color:var(--color-text-tertiary)">local IP</span>
+      <div class="fv">
+        <input type="text" value="10.128.96.182" disabled/>
+      </div>
+      <div class="flow-dot in" style="flex-shrink:0" id="actIn" title="receiving"></div>
+    </div>
+    <div class="field-row">
+      <span class="field-label" style="font-size:10px;color:var(--color-text-tertiary)">input port</span>
+      <div class="fv">
+        <input type="text" id="portIn" value="10000" class="port"/>
+      </div>
+      <button class="reset-btn" onclick="document.getElementById('portIn').value='10000'" title="reset to default">↺</button>
+    </div>
+  </div>
+
+  <!-- status bar -->
+  <div class="status-bar">
+    <div class="status-dot active" id="statusDot"></div>
+    <span id="statusText">active — forwarding to 2 destinations</span>
+    <span style="margin-left:auto;font-family:var(--font-mono)" id="peerIP">peer: 10.128.96.182</span>
+  </div>
+
+  <div class="panel-footer">
+    <button class="monitor-btn" id="monBtn" onclick="toggleMonitor()">
+      <div class="mon-dot" id="monDot"></div>
+      monitor
+    </button>
+    <span style="font-size:10px;color:var(--color-text-tertiary);margin-left:auto">osc device</span>
+  </div>
+
+  <div class="log-panel" id="logPanel">
+    <div style="color:#36ABFF">[osc] listening on 10.128.96.182:10000</div>
+    <div>[osc] rx /avatar/position 0.12 1.74 -0.33</div>
+    <div>[osc] tx → 10.128.96.182:10001 /avatar/position</div>
+    <div>[osc] rx /avatar/rotation 0.0 180.0 0.0</div>
+    <div>[osc] tx → 10.128.96.182:10001 /avatar/rotation</div>
+  </div>
+
+</div>
+</div>
+
+<script>
+let enabled = true
+let en2 = false
+let monOpen = false
+
+const ICON_PEER_RX = 'm 90.045214,51.309795 0.25488,59.999995 H 70.045216 l 29.999984,40 30,-40 H 110.30008 L 110.0452,71.309795 h 69.93036 l 0.13928,-20 z'
+const ICON_SINK = ''
+const GROUND = 'm 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z'
+
+function toggleEnable() {
+  enabled = !enabled
+  const btn = document.getElementById('enableBtn')
+  btn.style.background = enabled ? '#0a1520' : '#111'
+
+  const icon = document.getElementById('enableIcon')
+  if (enabled) {
+    icon.innerHTML = `<path fill="#36ABFF" d="${GROUND}"/><path fill="#36ABFF" d="${ICON_PEER_RX}"/>`
+  } else {
+    icon.innerHTML = `<path fill="#444" d="${GROUND}"/>`
+  }
+
+  document.getElementById('indOut').className = 'ind ' + (enabled ? 'out-act' : 'off')
+  document.getElementById('indIn').className  = 'ind ' + (enabled ? 'in-act'  : 'off')
+  document.getElementById('actOut1').className = 'flow-dot ' + (enabled ? 'out' : 'off')
+  document.getElementById('actIn').className   = 'flow-dot ' + (enabled ? 'in'  : 'off')
+  document.getElementById('statusDot').className = 'status-dot' + (enabled ? ' active' : '')
+  document.getElementById('statusText').textContent = enabled
+    ? ('active — forwarding to ' + (en2 ? '2' : '1') + ' destination' + (en2 ? 's' : ''))
+    : 'disabled'
+}
+
+function toggleEn2() {
+  en2 = !en2
+  const track = document.getElementById('en2Track')
+  track.classList.toggle('on', en2)
+  document.getElementById('en2Label').textContent = en2 ? 'enabled' : 'disabled'
+  const row = document.getElementById('en2Row')
+  row.style.opacity = en2 ? '1' : '0.3'
+  row.style.pointerEvents = en2 ? 'auto' : 'none'
+  document.getElementById('actOut2').className = 'flow-dot ' + (en2 && enabled ? 'out' : 'off')
+  if (enabled) {
+    document.getElementById('statusText').textContent =
+      'active — forwarding to ' + (en2 ? '2' : '1') + ' destination' + (en2 ? 's' : '')
+  }
+}
+
+function toggleMonitor() {
+  monOpen = !monOpen
+  document.getElementById('logPanel').classList.toggle('show', monOpen)
+  document.getElementById('monDot').classList.toggle('on', monOpen)
+}
+</script>

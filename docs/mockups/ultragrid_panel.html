@@ -1,0 +1,446 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);font-size:13px;overflow:hidden;max-width:440px;margin:0 auto}
+.breadcrumb{font-size:11px;color:var(--color-text-tertiary);padding:8px 12px 0;font-family:var(--font-mono)}
+.panel-header{display:flex;align-items:center;gap:10px;padding:8px 12px}
+.enable-toggle{width:48px;height:48px;border-radius:10px;background:#111;border:0.5px solid var(--color-border-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.enable-toggle.on{background:#1a1f10}
+.enable-toggle svg{width:32px;height:32px}
+.panel-title{flex:1;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:6px;padding:6px 10px;font-size:14px;font-weight:500;color:var(--color-text-primary);text-align:center}
+.menu-btn{width:32px;height:32px;border-radius:6px;border:0.5px solid var(--color-border-secondary);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary);flex-shrink:0}
+.menu-btn:hover{background:var(--color-background-secondary)}
+.sec-head{font-size:10px;font-weight:500;color:var(--color-text-tertiary);padding:5px 12px 3px;background:var(--color-background-tertiary);border-top:0.5px solid var(--color-border-tertiary);border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between}
+.sec-head .badge{font-size:9px;border-radius:3px;padding:1px 5px;border:0.5px solid}
+.badge.tx{background:#2a1800;color:#EF9F27;border-color:#EF9F2744}
+.badge.rx{background:#00101a;color:#85B7EB;border-color:#85B7EB44}
+.section{padding:0 12px}
+.field-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--color-text-secondary);min-width:82px;flex-shrink:0}
+.fv{flex:1;display:flex;align-items:center;gap:5px}
+.fv input,.fv select{width:100%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:5px;padding:4px 7px;font-size:12px;color:var(--color-text-primary);font-family:var(--font-sans)}
+.fv input:focus,.fv select:focus{outline:none;border-color:var(--color-border-primary)}
+.fv input[disabled]{color:var(--color-text-tertiary);cursor:not-allowed}
+.fv.split{gap:5px}
+.fv.split select{flex:2}
+.fv.split select.narrow{flex:1}
+.reset-btn{width:20px;height:20px;border-radius:4px;border:0.5px solid var(--color-border-secondary);background:none;color:var(--color-text-tertiary);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+.reset-btn:hover{background:var(--color-background-secondary)}
+.clear-btn{width:20px;height:20px;border-radius:4px;border:0.5px solid var(--color-border-secondary);background:none;color:var(--color-text-tertiary);cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+.adv-row{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.adv-row:last-child{border-bottom:none}
+.adv-label{font-size:10px;color:var(--color-text-tertiary);min-width:55px;flex-shrink:0}
+.ctrls{display:flex;gap:6px;padding:10px 12px;border-bottom:0.5px solid var(--color-border-tertiary);flex-wrap:wrap;align-items:center}
+.ctrl-group{display:flex;flex-direction:column;gap:3px;flex:1;min-width:120px}
+.ctrl-group label{font-size:10px;color:var(--color-text-tertiary)}
+.ctrl-group select{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:5px;padding:5px 7px;font-size:12px;color:var(--color-text-primary);width:100%}
+.ctrl-group select:focus{outline:none;border-color:var(--color-border-primary)}
+.panel-footer{display:flex;align-items:center;gap:8px;padding:8px 12px;border-top:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)}
+.cli-btn{padding:5px 14px;background:#1BFEE9;border:none;border-radius:5px;font-size:11px;font-weight:500;color:#003830;cursor:pointer}
+.cli-btn:hover{opacity:0.85}
+.monitor-btn{padding:5px 10px;background:none;border:0.5px solid var(--color-border-secondary);border-radius:5px;font-size:11px;color:var(--color-text-secondary);cursor:pointer;display:flex;align-items:center;gap:5px}
+.monitor-btn:hover{background:var(--color-background-tertiary)}
+.mon-dot{width:7px;height:7px;border-radius:50%;background:var(--color-border-secondary);flex-shrink:0}
+.mon-dot.on{background:#1BFEE9}
+.log-panel{background:#0a0a0a;border-top:0.5px solid var(--color-border-tertiary);padding:8px 12px;font-family:var(--font-mono);font-size:11px;color:#9FE1CB;line-height:1.6;max-height:88px;overflow-y:auto;display:none}
+.log-panel.show{display:block}
+.cli-preview{background:var(--color-background-tertiary);border-top:0.5px solid var(--color-border-tertiary);padding:6px 12px;font-family:var(--font-mono);font-size:10px;color:var(--color-text-secondary);line-height:1.5;display:none;word-break:break-all}
+.cli-preview.show{display:block}
+.help-btn{padding:3px 8px;font-size:10px;border:0.5px solid var(--color-border-secondary);border-radius:4px;background:none;color:var(--color-text-tertiary);cursor:pointer}
+.help-btn:hover{background:var(--color-background-secondary)}
+.indicators{display:flex;gap:5px;align-items:center}
+.ind{width:10px;height:10px;border-radius:3px}
+.ind.tx{background:#EF9F27}
+.ind.rx{background:#85B7EB}
+.ind.off{background:var(--color-border-tertiary)}
+.stun-row{display:none}
+.stun-row.show{display:flex}
+</style>
+
+<h2 class="sr-only">UltraGrid device panel — interactive mockup with network mode, connection and transmission selectors controlling which TX and RX sections appear</h2>
+
+<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px">
+<div class="panel" id="panel">
+
+  <div class="breadcrumb">MyDoc &gt; MacBook &gt; UltraGrid &gt; channel 2</div>
+
+  <div class="panel-header">
+    <button class="enable-toggle on" id="enableBtn" onclick="toggleEnable()">
+      <svg id="enableIcon" viewBox="0 0 200 200"><path fill="#1BFEE9" d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path fill="#1BFEE9" d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/></svg>
+    </button>
+    <div class="panel-title">ultragrid</div>
+    <div class="indicators">
+      <div class="ind tx" id="indTX"></div>
+      <div class="ind rx" id="indRX"></div>
+    </div>
+    <button class="menu-btn">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <!-- network + connection + transmission controls -->
+  <div class="ctrls">
+    <div class="ctrl-group">
+      <label>network</label>
+      <select id="netMode" onchange="update()">
+        <option value="0">send to router</option>
+        <option value="1">receive from router</option>
+        <option value="2" selected>peer to peer (automatic)</option>
+        <option value="3">peer to peer (manual)</option>
+        <option value="4">capture to local</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <label>connection</label>
+      <select id="conn" onchange="update()">
+        <option value="0">send (TX)</option>
+        <option value="1">receive (RX)</option>
+        <option value="2" selected>both (RX+TX)</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <label>transmission</label>
+      <select id="trans" onchange="update()">
+        <option value="0">video</option>
+        <option value="1">audio</option>
+        <option value="2" selected>video &amp; audio</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- network-mode-specific field -->
+  <div class="section" style="padding-top:2px;padding-bottom:2px">
+    <div class="field-row stun-row" id="stunRow" style="display:flex">
+      <span class="field-label">stun url</span>
+      <div class="fv"><input type="text" value="stun4.l.google.com:19302"/></div>
+    </div>
+    <div class="field-row" id="manualIPRow" style="display:none">
+      <span class="field-label">send to</span>
+      <div class="fv"><input type="text" value="0.0.0.0:11022" font-family="monospace"/></div>
+    </div>
+    <div class="field-row" id="routerIPRow" style="display:none">
+      <span class="field-label">server IP</span>
+      <div class="fv"><input type="text" value="telemersive.server.ch" disabled/></div>
+      <span class="field-label" style="min-width:40px">port</span>
+      <div class="fv" style="max-width:80px"><input type="text" value="11022"/></div>
+    </div>
+  </div>
+
+  <!-- TX VIDEO section -->
+  <div id="txVideoSec">
+    <div class="sec-head">
+      <span>TX video</span>
+      <span class="badge tx">sending</span>
+    </div>
+    <div class="section">
+      <div class="field-row">
+        <span class="field-label">TX video</span>
+        <div class="fv split">
+          <select id="txVidType" onchange="updateTxVidAdv()">
+            <option value="syphon">syphon</option>
+            <option value="ndi">NDI</option>
+            <option value="custom">custom</option>
+          </select>
+        </div>
+      </div>
+      <div class="adv-row" id="txVidAdv">
+        <span class="adv-label">advanced</span>
+        <div class="fv">
+          <select id="txVidSel">
+            <option>-default-</option>
+            <option>Telemersive_channel_2</option>
+            <option>OBS Virtual Camera</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="reset">○</button>
+      </div>
+      <div class="adv-row" id="txVidCustomAdv" style="display:none">
+        <span class="adv-label">flags</span>
+        <div class="fv"><input type="text" value="-none-"/></div>
+        <button class="help-btn" onclick="sendPrompt('What custom flags does UltraGrid support for video capture?')">help &lt;&lt;</button>
+      </div>
+      <div class="adv-row">
+        <span class="adv-label">codec</span>
+        <div class="fv split">
+          <select><option>H.264</option><option selected>JPEG</option><option>VP8</option><option>uncompressed</option></select>
+          <input type="text" value="10" style="max-width:50px" title="bitrate Mbps"/>
+          <span style="font-size:10px;color:var(--color-text-tertiary);white-space:nowrap">Mbps</span>
+        </div>
+      </div>
+      <div class="adv-row">
+        <span class="adv-label">fps limit</span>
+        <div class="fv"><input type="text" value="0" style="max-width:60px"/></div>
+        <span style="font-size:10px;color:var(--color-text-tertiary);margin-left:4px">0 = unlimited</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TX AUDIO section -->
+  <div id="txAudioSec">
+    <div class="sec-head">
+      <span>TX audio</span>
+      <span class="badge tx">sending</span>
+    </div>
+    <div class="section">
+      <div class="field-row">
+        <span class="field-label">TX audio</span>
+        <div class="fv split">
+          <select id="txAudType" onchange="updateTxAudAdv()">
+            <option value="portaudio">portaudio</option>
+            <option value="coreaudio">coreaudio</option>
+            <option value="wasapi">wasapi</option>
+            <option value="jack" selected>jack</option>
+            <option value="testcard">testcard</option>
+            <option value="custom">custom</option>
+          </select>
+        </div>
+      </div>
+      <div class="adv-row" id="txAudAdv">
+        <span class="adv-label">advanced</span>
+        <div class="fv">
+          <select>
+            <option>-default-</option>
+            <option>Built-in Microphone</option>
+            <option>Blackhole 2ch</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="reset">○</button>
+      </div>
+      <div class="adv-row" id="txAudTestcard" style="display:none">
+        <span class="adv-label">frequency</span>
+        <div class="fv"><input type="text" value="440" style="max-width:70px"/></div>
+        <span class="adv-label" style="min-width:40px">vol</span>
+        <div class="fv"><input type="text" value="-18" style="max-width:60px"/></div>
+      </div>
+      <div class="adv-row">
+        <span class="adv-label">codec</span>
+        <div class="fv split">
+          <select><option>opus</option><option>PCMA</option><option>uncompressed</option></select>
+          <input type="text" value="64000" style="max-width:70px" title="bitrate"/>
+          <span style="font-size:10px;color:var(--color-text-tertiary)">bps</span>
+        </div>
+      </div>
+      <div class="adv-row">
+        <span class="adv-label">sample rate</span>
+        <div class="fv split">
+          <input type="text" value="32000" style="max-width:80px"/>
+          <span style="font-size:10px;color:var(--color-text-tertiary)">Hz</span>
+          <span class="adv-label" style="min-width:50px">channels</span>
+          <input type="text" value="1" style="max-width:40px"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RX VIDEO section -->
+  <div id="rxVideoSec">
+    <div class="sec-head">
+      <span>RX video</span>
+      <span class="badge rx">receiving</span>
+    </div>
+    <div class="section">
+      <div class="field-row">
+        <span class="field-label">RX video</span>
+        <div class="fv split">
+          <select id="rxVidType" onchange="updateRxVidAdv()">
+            <option value="syphon" selected>syphon</option>
+            <option value="ndi">NDI</option>
+            <option value="custom">custom</option>
+          </select>
+        </div>
+      </div>
+      <div class="adv-row" id="rxVidAdv">
+        <span class="adv-label">output name</span>
+        <div class="fv"><input type="text" value="Telemersive_channel_2"/></div>
+        <button class="reset-btn" title="reset">○</button>
+        <button class="clear-btn" title="clear">×</button>
+      </div>
+      <div class="adv-row">
+        <span class="adv-label">postprocess</span>
+        <div class="fv"><input type="text" value="-none-"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RX AUDIO section -->
+  <div id="rxAudioSec">
+    <div class="sec-head">
+      <span>RX audio</span>
+      <span class="badge rx">receiving</span>
+    </div>
+    <div class="section">
+      <div class="field-row">
+        <span class="field-label">RX audio</span>
+        <div class="fv split">
+          <select id="rxAudType" onchange="updateRxAudAdv()">
+            <option value="portaudio" selected>portaudio</option>
+            <option value="coreaudio">coreaudio</option>
+            <option value="wasapi">wasapi</option>
+            <option value="jack">jack</option>
+            <option value="custom">custom</option>
+          </select>
+        </div>
+      </div>
+      <div class="adv-row" id="rxAudAdv">
+        <span class="adv-label">advanced</span>
+        <div class="fv">
+          <select>
+            <option>-default-</option>
+            <option>Built-in Output</option>
+            <option>Blackhole 2ch</option>
+          </select>
+        </div>
+        <button class="reset-btn" title="reset">○</button>
+      </div>
+      <div class="adv-row">
+        <span class="adv-label">channels</span>
+        <div class="fv"><input type="text" value="-none-" style="max-width:80px"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GLOBAL ADVANCED -->
+  <div class="sec-head">advanced</div>
+  <div class="section">
+    <div class="adv-row">
+      <span class="adv-label">encryption</span>
+      <div class="fv"><input type="text" value="-none-"/></div>
+    </div>
+    <div class="adv-row">
+      <span class="adv-label">custom flags</span>
+      <div class="fv"><input type="text" value="-none-"/></div>
+      <button class="help-btn" onclick="sendPrompt('What global UltraGrid advanced flags are most useful for telematic performance?')">help &lt;&lt;</button>
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <button class="cli-btn" id="cliBtn" onclick="toggleCli()">CLI</button>
+    <button class="monitor-btn" id="monBtn" onclick="toggleMonitor()">
+      <div class="mon-dot" id="monDot"></div>
+      monitor
+    </button>
+    <span style="font-size:10px;color:var(--color-text-tertiary);margin-left:auto">ultragrid device</span>
+  </div>
+
+  <div class="cli-preview" id="cliPreview">uv-qt -s syphon:Telemersive_channel_2 -c JPEG:10 -t syphon:Telemersive_channel_2 --audio-capture-format jack:-default- --audio-compress opus:64000 -P 11022</div>
+
+  <div class="log-panel" id="logPanel">
+    <div style="color:#EF9F27">[uv] starting ultragrid...</div>
+    <div>[uv] Display device: syphon</div>
+    <div>[uv] Capture device: syphon</div>
+    <div>[uv] Audio capture: jack</div>
+    <div>[uv] connected to 10.21.17.201:11022</div>
+    <div>[uv] fps: 59.94 | bitrate: 9.8 Mbps</div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const GROUND = 'M10,140v50h180v-50h-20v30H30v-30z'
+const ICONS = {
+  toServer: 'M90.5,150L89.4,60H70l30-40 30,40h-20.6l1.1,90z',
+  fromServer: 'M109.4,19.9L110.6,110H130L100,150 70,110h20.6L89.4,19.9z',
+  p2pBoth: 'M89.5,51.5l0.3,60H70l30,40 30-40H110L110,71.3h70l0.1-20z M90,130h-20l30,40 30-40H110',
+  toLocal: 'M90,60l60,0.3V40l40,30-40,30V80.3L110,80v69.9l-20,0.1z',
+}
+
+function getIconPath(net, conn) {
+  if(net==='4') return ICONS.toLocal
+  if(net==='0') return ICONS.toServer
+  if(net==='1') return ICONS.fromServer
+  return ICONS.toServer
+}
+
+function update() {
+  const net = document.getElementById('netMode').value
+  const conn = document.getElementById('conn').value
+  const trans = document.getElementById('trans').value
+  const hasTX = conn==='0'||conn==='2'
+  const hasRX = conn==='1'||conn==='2'
+  const hasVid = trans==='0'||trans==='2'
+  const hasAud = trans==='1'||trans==='2'
+  const isLocal = net==='4'
+  const isSend = net==='0'
+  const isRecv = net==='1'
+  const isP2pAuto = net==='2'
+  const isP2pMan = net==='3'
+
+  document.getElementById('txVideoSec').style.display = hasTX&&hasVid&&!isRecv ? 'block':'none'
+  document.getElementById('txAudioSec').style.display = hasTX&&hasAud&&!isRecv&&!isLocal ? 'block':'none'
+  document.getElementById('rxVideoSec').style.display = hasRX&&hasVid&&!isSend ? 'block':'none'
+  document.getElementById('rxAudioSec').style.display = hasRX&&hasAud&&!isSend&&!isLocal ? 'block':'none'
+
+  document.getElementById('stunRow').style.display = isP2pAuto ? 'flex':'none'
+  document.getElementById('manualIPRow').style.display = isP2pMan ? 'flex':'none'
+  document.getElementById('routerIPRow').style.display = (isSend||isRecv) ? 'flex':'none'
+
+  const indTX = document.getElementById('indTX')
+  const indRX = document.getElementById('indRX')
+  indTX.className = 'ind ' + (hasTX&&!isRecv ? 'tx':'off')
+  indRX.className = 'ind ' + (hasRX&&!isSend ? 'rx':'off')
+
+  const iconPath = getIconPath(net, conn)
+  let fill = '#1BFEE9'
+  const trans_v = document.getElementById('trans').value
+  if(trans_v==='0') fill='#F0DE01'
+  else if(trans_v==='1') fill='#00E411'
+  else fill='#1BFEE9'
+  const fillIcon = (hasTX&&!isRecv&&!(hasRX&&!isSend)) ? fill : (hasRX&&!isSend&&!hasTX) ? fill : fill
+  document.getElementById('enableIcon').innerHTML =
+    `<path fill="${fill}" d="${GROUND}"/><path fill="${fill}" d="${iconPath}"/>`
+
+  buildCli(net, conn, trans)
+}
+
+function buildCli(net, conn, trans) {
+  const hasTX = conn==='0'||conn==='2'
+  const hasRX = conn==='1'||conn==='2'
+  const hasVid = trans==='0'||trans==='2'
+  const hasAud = trans==='1'||trans==='2'
+  const isSend = net==='0', isRecv = net==='1', isLocal = net==='4'
+  let cmd = 'uv-qt'
+  if(hasTX&&hasVid&&!isRecv) cmd += ' -s syphon:Telemersive_channel_2 -c JPEG:10'
+  if(hasTX&&hasAud&&!isRecv&&!isLocal) cmd += ' --audio-capture-format jack:-default- --audio-compress opus:64000'
+  if(hasRX&&hasVid&&!isSend) cmd += ' -t syphon:Telemersive_channel_2'
+  if(hasRX&&hasAud&&!isSend&&!isLocal) cmd += ' --audio-playback-format portaudio:-default-'
+  if(net==='2') cmd += ' --holepunch stun4.l.google.com:19302'
+  if(net==='3') cmd += ' --send-to 0.0.0.0:11022'
+  if(isSend||isRecv) cmd += ' -P 11022'
+  document.getElementById('cliPreview').textContent = cmd
+}
+
+function updateTxVidAdv() {
+  const t = document.getElementById('txVidType').value
+  document.getElementById('txVidAdv').style.display = t!=='custom' ? 'flex':'none'
+  document.getElementById('txVidCustomAdv').style.display = t==='custom' ? 'flex':'none'
+}
+function updateTxAudAdv() {
+  const t = document.getElementById('txAudType').value
+  document.getElementById('txAudAdv').style.display = t!=='testcard'&&t!=='custom' ? 'flex':'none'
+  document.getElementById('txAudTestcard').style.display = t==='testcard' ? 'flex':'none'
+}
+function updateRxVidAdv() {}
+function updateRxAudAdv() {}
+
+let enabled = true
+function toggleEnable() {
+  enabled = !enabled
+  document.getElementById('enableBtn').className = 'enable-toggle' + (enabled?' on':'')
+  document.getElementById('enableBtn').style.background = enabled ? '#1a1f10' : '#111'
+}
+
+let cliOpen = false, monOpen = false
+function toggleCli() {
+  cliOpen = !cliOpen
+  document.getElementById('cliPreview').classList.toggle('show', cliOpen)
+}
+function toggleMonitor() {
+  monOpen = !monOpen
+  document.getElementById('logPanel').classList.toggle('show', monOpen)
+  document.getElementById('monDot').classList.toggle('on', monOpen)
+}
+
+update()
+</script>

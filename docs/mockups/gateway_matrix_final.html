@@ -1,0 +1,260 @@
+<style>
+*{box-sizing:border-box}
+.gw{font-family:var(--font-sans);font-size:13px;position:relative}
+.gw-header{background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);padding:6px 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.gw-field{display:flex;flex-direction:column;gap:1px}
+.gw-field label{font-size:10px;color:var(--color-text-tertiary)}
+.gw-pill{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:5px;padding:2px 7px;font-size:12px;color:var(--color-text-primary);white-space:nowrap}
+.gw-pill.room{background:#1D9E75;color:#E1F5EE;border-color:#0F6E56;font-weight:500}
+.gw-pill.mono{font-family:var(--font-mono);font-size:11px}
+.matrix-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+.col-peer{min-width:120px;width:120px;position:sticky;left:0;z-index:2}
+.col-ch{width:64px;min-width:64px}
+.ch-head{font-size:10px;color:var(--color-text-tertiary);text-align:center;padding:3px 2px;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-tertiary)}
+.peer-label{padding:5px 8px;border:0.5px solid var(--color-border-tertiary);vertical-align:top}
+.peer-name{font-weight:500;font-size:12px;display:flex;align-items:center;gap:4px;margin-bottom:2px}
+.peer-meta{font-size:10px;font-family:var(--font-mono);margin-bottom:3px}
+.peer-icons{display:flex;gap:4px}
+.icon-btn{width:18px;height:18px;border-radius:3px;background:none;border:0.5px solid;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;transition:opacity .1s;padding:0}
+.icon-btn:hover{opacity:0.7}
+.cell{width:64px;height:58px;border:0.5px solid var(--color-border-tertiary);vertical-align:middle;cursor:pointer;transition:filter .1s;position:relative}
+.cell:hover .cell-plus{opacity:1}
+.cell:hover{filter:brightness(1.08)}
+.cell.empty{background:var(--color-background-secondary)}
+.cell.empty:hover{background:var(--color-background-tertiary)}
+.cell-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:2px}
+.dev-box{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.dev-box.stopped{opacity:0.28}
+.dev-label{font-size:9px;font-weight:500;line-height:1}
+.cell-plus{position:absolute;top:2px;right:2px;width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,0.7);opacity:0;transition:opacity .15s;line-height:1}
+.empty-plus{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:2px;opacity:0.35}
+.empty-plus:hover{opacity:0.7}
+.cell.empty .empty-plus{opacity:0.3}
+.cell.empty:hover .empty-plus{opacity:0.6}
+.color-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.local-tag{font-size:9px;background:var(--color-background-tertiary);border-radius:3px;padding:1px 4px;color:var(--color-text-tertiary)}
+.os-tag{font-size:9px;border-radius:3px;padding:1px 4px;border:0.5px solid}
+.popup{position:fixed;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:8px;padding:4px 0;min-width:160px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.15);display:none}
+.popup.show{display:block}
+.popup-item{padding:6px 12px;font-size:12px;cursor:pointer;color:var(--color-text-primary);white-space:nowrap}
+.popup-item:hover{background:var(--color-background-secondary)}
+.popup-title{padding:4px 12px 2px;font-size:10px;color:var(--color-text-tertiary)}
+.legend{padding:6px 10px;display:flex;gap:10px;border-top:0.5px solid var(--color-border-tertiary);flex-wrap:wrap;align-items:center}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--color-text-secondary)}
+.leg-box{width:20px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center}
+</style>
+
+<!-- Add device popup -->
+<div class="popup" id="addPopup">
+  <div class="popup-title" id="popupTitle">add device</div>
+  <div class="popup-item" onclick="closePopup();sendPrompt('Show me the OSC device panel design for the telemersive gateway')">… osc device</div>
+  <div class="popup-item" onclick="closePopup();sendPrompt('Show me the UltraGrid device panel design for the telemersive gateway')">… ultragrid device</div>
+  <div class="popup-item" onclick="closePopup();sendPrompt('Show me the NatNet MoCap device panel design for the telemersive gateway')">… natnet2OSC device</div>
+</div>
+
+<div class="gw" id="gwRoot" onclick="handleRootClick(event)">
+<div class="gw-header">
+  <div class="gw-field"><label>roomName</label><div class="gw-pill room">Osmosis</div></div>
+  <div class="gw-field"><label>localIP</label><div class="gw-pill">10.128.140.117</div></div>
+  <div class="gw-field"><label>publicIP</label><div class="gw-pill">195.176.29.132</div></div>
+  <div class="gw-field"><label>roomID</label><div class="gw-pill">11</div></div>
+  <div class="gw-field" style="flex:1"><label>peerID</label><div class="gw-pill mono">cDnpWabcRTSMAsgmmduDgk</div></div>
+</div>
+
+<div class="matrix-wrap">
+<table>
+<thead><tr>
+  <th class="col-peer ch-head" style="background:var(--color-background-secondary)"></th>
+  <th class="col-ch ch-head">ch.0</th>
+  <th class="col-ch ch-head">ch.1</th>
+  <th class="col-ch ch-head">ch.2</th>
+  <th class="col-ch ch-head">ch.3</th>
+  <th class="col-ch ch-head">ch.4</th>
+  <th class="col-ch ch-head">ch.5</th>
+  <th class="col-ch ch-head">ch.6</th>
+  <th class="col-ch ch-head">ch.7</th>
+</tr></thead>
+<tbody>
+
+<!-- LOCAL: TutorialMac -->
+<tr>
+  <td class="peer-label col-peer" style="background:#0a1f18;border-left:2px solid #1D9E75">
+    <div class="peer-name"><span class="color-dot" style="background:#1D9E75"></span><span style="color:#9FE1CB">TutorialMac</span><span class="local-tag">(you)</span></div>
+    <div class="peer-meta" style="color:#3a7a60">10.128.140.117</div>
+    <div class="peer-icons">
+      <button class="icon-btn" style="border-color:#1D9E7555;color:#5DCAA5">▼</button>
+      <button class="icon-btn" style="border-color:#1D9E7555;color:#5DCAA5" title="locked">🔒</button>
+      <button class="icon-btn" style="border-color:#1D9E7555;color:#5DCAA5" title="locate">⌖</button>
+    </div>
+  </td>
+  <!-- empty cells with + -->
+  <td class="cell empty" style="border-color:#1D9E7522" onclick="showPopup(event,'TutorialMac ch.0')"><div class="empty-plus"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></td>
+  <td class="cell empty" style="border-color:#1D9E7522" onclick="showPopup(event,'TutorialMac ch.1')"><div class="empty-plus"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></td>
+  <!-- ch.2 OSC bidi active -->
+  <td class="cell" style="background:#0a1f18;border-color:#1D9E7555" onclick="sendPrompt('Show me the OSC device panel mockup for the telemersive gateway redesign')">
+    <div class="cell-inner">
+      <div class="dev-box" style="background:#36ABFF">
+        <svg width="24" height="24" viewBox="0 0 200 200" fill="white"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="m 90.045214,51.309795 0.25488,59.999995 H 70.045216 l 29.999984,40 30,-40 H 110.30008 L 110.0452,71.309795 h 69.93036 l 0.13928,-20 z"/></svg>
+      </div>
+      <div class="dev-label" style="color:#9FE1CB">OSC</div>
+    </div>
+    <div class="cell-plus">+</div>
+  </td>
+  <!-- ch.3 MoCap TX active -->
+  <td class="cell" style="background:#0a1f18;border-color:#1D9E7555" onclick="sendPrompt('Show me the MoCap NatNet device panel mockup for the telemersive gateway redesign')">
+    <div class="cell-inner">
+      <div class="dev-box" style="background:#FFA126">
+        <svg width="24" height="24" viewBox="0 0 200 200" fill="white"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/></svg>
+      </div>
+      <div class="dev-label" style="color:#9FE1CB">MoCap</div>
+    </div>
+    <div class="cell-plus">+</div>
+  </td>
+  <td class="cell empty" style="border-color:#1D9E7522" onclick="showPopup(event,'TutorialMac ch.4')"><div class="empty-plus"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></td>
+  <td class="cell empty" style="border-color:#1D9E7522" onclick="showPopup(event,'TutorialMac ch.5')"><div class="empty-plus"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></td>
+  <!-- ch.6 UG v+a TX -->
+  <td class="cell" style="background:#0a1f18;border-color:#1D9E7555" onclick="sendPrompt('Show me the UltraGrid device panel mockup for the telemersive gateway redesign')">
+    <div class="cell-inner">
+      <div class="dev-box" style="background:#1BFEE9">
+        <svg width="24" height="24" viewBox="0 0 200 200" fill="#006655"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/></svg>
+      </div>
+      <div class="dev-label" style="color:#9FE1CB">ultragrid</div>
+    </div>
+    <div class="cell-plus">+</div>
+  </td>
+  <td class="cell empty" style="border-color:#1D9E7522" onclick="showPopup(event,'TutorialMac ch.7')"><div class="empty-plus"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></td>
+</tr>
+
+<!-- REMOTE: Projection_IAS, blue, NOT locked -->
+<tr>
+  <td class="peer-label col-peer" style="background:#080e1f;border-left:2px solid #1565C0">
+    <div class="peer-name"><span class="color-dot" style="background:#1565C0"></span><span style="color:#90CAF9">Projection_IAS</span><span class="os-tag" style="color:#64B5F6;border-color:#1565C044">osx</span></div>
+    <div class="peer-meta" style="color:#2a4a80">10.128.140.22</div>
+    <div class="peer-icons">
+      <button class="icon-btn" style="border-color:#1565C044;color:#64B5F6" title="unlocked">🔓</button>
+      <button class="icon-btn" style="border-color:#1565C044;color:#64B5F6" title="locate">⌖</button>
+    </div>
+  </td>
+  <td class="cell empty" style="border-color:#1565C022" onclick="showPopup(event,'Projection_IAS ch.0')"><div class="empty-plus"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></td>
+  <td class="cell empty" style="border-color:#1565C022" onclick="showPopup(event,'Projection_IAS ch.1')"><div class="empty-plus"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></td>
+  <!-- OSC recv -->
+  <td class="cell" style="background:#080e1f;border-color:#1565C044" onclick="sendPrompt('Show me the OSC device panel mockup')">
+    <div class="cell-inner">
+      <div class="dev-box" style="background:#36ABFF">
+        <svg width="24" height="24" viewBox="0 0 200 200" fill="white"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/></svg>
+      </div>
+      <div class="dev-label" style="color:#90CAF9">OSC</div>
+    </div>
+    <div class="cell-plus">+</div>
+  </td>
+  <!-- MoCap TX -->
+  <td class="cell" style="background:#080e1f;border-color:#1565C044">
+    <div class="cell-inner">
+      <div class="dev-box" style="background:#FFA126">
+        <svg width="24" height="24" viewBox="0 0 200 200" fill="white"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/></svg>
+      </div>
+      <div class="dev-label" style="color:#90CAF9">MoCap</div>
+    </div>
+    <div class="cell-plus">+</div>
+  </td>
+  <td class="cell empty" style="border-color:#1565C022" onclick="showPopup(event,'Projection_IAS ch.4')"><div class="empty-plus"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></td>
+  <td class="cell empty" style="border-color:#1565C022" onclick="showPopup(event,'Projection_IAS ch.5')"><div class="empty-plus"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div></td>
+  <!-- UG video RX -->
+  <td class="cell" style="background:#080e1f;border-color:#1565C044">
+    <div class="cell-inner">
+      <div class="dev-box" style="background:#F0DE01">
+        <svg width="24" height="24" viewBox="0 0 200 200" fill="#665800"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/></svg>
+      </div>
+      <div class="dev-label" style="color:#90CAF9">ultragrid</div>
+    </div>
+    <div class="cell-plus">+</div>
+  </td>
+  <!-- UG audio stopped -->
+  <td class="cell" style="background:#080e1f;border-color:#1565C044">
+    <div class="cell-inner">
+      <div class="dev-box stopped" style="background:#00E411">
+        <svg width="24" height="24" viewBox="0 0 200 200" fill="#003308"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/></svg>
+      </div>
+      <div class="dev-label" style="color:#90CAF9;opacity:0.35">ultragrid</div>
+    </div>
+    <div class="cell-plus">+</div>
+  </td>
+</tr>
+
+<!-- REMOTE: MoCap_IAS, cyan, LOCKED -->
+<tr>
+  <td class="peer-label col-peer" style="background:#001a1f;border-left:2px solid #00ACC1">
+    <div class="peer-name"><span class="color-dot" style="background:#00ACC1"></span><span style="color:#80DEEA">MoCap_IAS</span><span class="os-tag" style="color:#4DD0E1;border-color:#00ACC144">win</span></div>
+    <div class="peer-meta" style="color:#1a5560">10.128.140.55</div>
+    <div class="peer-icons">
+      <button class="icon-btn" style="border-color:#00ACC144;color:#4DD0E1" title="locked">🔒</button>
+      <button class="icon-btn" style="border-color:#00ACC144;color:#4DD0E1" title="locate">⌖</button>
+    </div>
+  </td>
+  <!-- MoCap TX — locked peer, no + on hover -->
+  <td class="cell" style="background:#001a1f;border-color:#00ACC144;cursor:default">
+    <div class="cell-inner">
+      <div class="dev-box" style="background:#FFA126">
+        <svg width="24" height="24" viewBox="0 0 200 200" fill="white"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/></svg>
+      </div>
+      <div class="dev-label" style="color:#80DEEA">MoCap</div>
+    </div>
+  </td>
+  <!-- locked empty cells — no + -->
+  <td class="cell empty" style="border-color:#00ACC122;cursor:default"><div class="cell-inner"></div></td>
+  <td class="cell empty" style="border-color:#00ACC122;cursor:default"><div class="cell-inner"></div></td>
+  <td class="cell empty" style="border-color:#00ACC122;cursor:default"><div class="cell-inner"></div></td>
+  <td class="cell empty" style="border-color:#00ACC122;cursor:default"><div class="cell-inner"></div></td>
+  <td class="cell empty" style="border-color:#00ACC122;cursor:default"><div class="cell-inner"></div></td>
+  <!-- UG v+a TX -->
+  <td class="cell" style="background:#001a1f;border-color:#00ACC144;cursor:default">
+    <div class="cell-inner">
+      <div class="dev-box" style="background:#1BFEE9">
+        <svg width="24" height="24" viewBox="0 0 200 200" fill="#006655"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/></svg>
+      </div>
+      <div class="dev-label" style="color:#80DEEA">ultragrid</div>
+    </div>
+  </td>
+  <!-- UG v+a stopped -->
+  <td class="cell" style="background:#001a1f;border-color:#00ACC144;cursor:default">
+    <div class="cell-inner">
+      <div class="dev-box stopped" style="background:#1BFEE9">
+        <svg width="24" height="24" viewBox="0 0 200 200" fill="#006655"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/></svg>
+      </div>
+      <div class="dev-label" style="color:#80DEEA;opacity:0.35">ultragrid</div>
+    </div>
+  </td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+<div class="legend">
+  <div class="leg-item"><div class="leg-box" style="background:#36ABFF"><svg width="14" height="14" viewBox="0 0 200 200" fill="white"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="m 90,50 0.25,60 H 70 l 30,40 30,-40 H 110 L 110,50 h 70 l 0.14,-20 z"/></svg></div>OSC</div>
+  <div class="leg-item"><div class="leg-box" style="background:#FFA126"><svg width="14" height="14" viewBox="0 0 200 200" fill="white"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="M 90,150 89,60 H 70 l 30,-40 30,40 h -20 l 1,90 z"/></svg></div>MoCap</div>
+  <div class="leg-item"><div class="leg-box" style="background:#F0DE01"><svg width="14" height="14" viewBox="0 0 200 200" fill="#665800"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="M 90,150 89,60 H 70 l 30,-40 30,40 h -20 l 1,90 z"/></svg></div>UG video</div>
+  <div class="leg-item"><div class="leg-box" style="background:#00E411"><svg width="14" height="14" viewBox="0 0 200 200" fill="#003308"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="M 90,150 89,60 H 70 l 30,-40 30,40 h -20 l 1,90 z"/></svg></div>UG audio</div>
+  <div class="leg-item"><div class="leg-box" style="background:#1BFEE9"><svg width="14" height="14" viewBox="0 0 200 200" fill="#006655"><path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/><path d="M 90,150 89,60 H 70 l 30,-40 30,40 h -20 l 1,90 z"/></svg></div>UG v+a</div>
+  <div class="leg-item"><span style="font-size:10px">🔒 locked = no add/edit</span></div>
+  <div class="leg-item"><span style="font-size:10px;opacity:0.4">■</span><span> stopped</span></div>
+</div>
+</div>
+
+<script>
+function showPopup(e, context) {
+  e.stopPropagation();
+  const popup = document.getElementById('addPopup');
+  document.getElementById('popupTitle').textContent = 'add to ' + context;
+  popup.style.left = Math.min(e.clientX, window.innerWidth - 180) + 'px';
+  popup.style.top = (e.clientY + 4) + 'px';
+  popup.classList.add('show');
+}
+function closePopup() {
+  document.getElementById('addPopup').classList.remove('show');
+}
+function handleRootClick(e) {
+  if (!e.target.closest('#addPopup')) closePopup();
+}
+</script>

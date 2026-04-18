@@ -1,0 +1,565 @@
+Apr 16 13:28:35.299 ..: ==================
+Apr 16 13:28:35.300 ..: BusClient started.
+Apr 16 13:28:35.301 ..: init: gathering IP information... 
+Apr 16 13:28:35.308 ..: MAX CONSOLE > Unhandled Message: [setverbose_out 1]
+Apr 16 13:28:35.308 ..: MAX CONSOLE > Unhandled Message: [logmax Unhandled Message: [setverbose_in 1]]
+Apr 16 13:28:35.308 ..: MAX CONSOLE > Apr 16 13:28:35.299 ..: ==================
+Apr 16 13:28:35.308 ..: MAX CONSOLE > Apr 16 13:28:35.300 ..: BusClient started.
+Apr 16 13:28:35.308 ..: MAX CONSOLE > bus broker connected 0
+Apr 16 13:28:35.308 ..: MAX CONSOLE > bus peer joined 0
+Apr 16 13:28:35.308 ..: MAX CONSOLE > unsubscribe /peer/r1V3Nizu365GMScoF6ULLY/settings/#
+Apr 16 13:28:35.308 ..: MAX CONSOLE > unsubscribe /peer/r1V3Nizu365GMScoF6ULLY/rack/+/+/loaded
+Apr 16 13:28:35.309 ..: MAX CONSOLE > bus rooms menu clear
+Apr 16 13:28:35.309 ..: MAX CONSOLE > bus rooms listing
+Apr 16 13:28:35.309 ..: MAX CONSOLE > bus rooms done
+Apr 16 13:28:35.309 ..: MAX CONSOLE > bus peers menu clear
+Apr 16 13:28:35.309 ..: MAX CONSOLE > bus peers done
+Apr 16 13:28:35.309 ..: MAX CONSOLE > Apr 16 13:28:35.301 ..: init: gathering IP information... 
+Apr 16 13:28:35.332 ..:    ...gathering done.
+Apr 16 13:28:35.334 ..: MAX CONSOLE > Apr 16 13:28:35.332 ..:    ...gathering done.
+Apr 16 13:28:35.334 ..: MAX CONSOLE > bus peer id jNZogmxb5sJea7NDRfVSUD
+Apr 16 13:28:35.334 ..: MAX CONSOLE > bus ready
+Apr 16 13:28:35.334 ..: MAX CONSOLE > configure telemersion.zhdk.ch 3883 peer telemersion2021 10.21.116.214
+Apr 16 13:28:40.553 ..: connect: attempting to connect to broker...
+Apr 16 13:28:40.565 ..: MAX CONSOLE > configure telemersion.zhdk.ch 3883 peer telemersion2021 10.21.116.214
+Apr 16 13:28:40.565 ..: MAX CONSOLE > connect
+Apr 16 13:28:40.565 ..: MAX CONSOLE > Apr 16 13:28:40.553 ..: connect: attempting to connect to broker...
+Apr 16 13:28:40.582 ..: ...successfully connected.
+Apr 16 13:28:40.582 ..: ...stopping connection timout thread.
+Apr 16 13:28:40.583 ..: MAX CONSOLE > bus broker connected 1
+Apr 16 13:28:40.584 ..: MAX CONSOLE > Apr 16 13:28:40.582 ..: ...successfully connected.
+Apr 16 13:28:40.584 ..: MAX CONSOLE > Apr 16 13:28:40.582 ..: ...stopping connection timout thread.
+Apr 16 13:28:42.581 myPeerName: <-- local peer attempting to join room myRoomName...
+Apr 16 13:28:42.586 myPeerName:    <-- reconnect to broker with correct last will...
+Apr 16 13:28:42.588 myPeerName: MAX CONSOLE > join myPeerName myRoomName myRoomPassword
+Apr 16 13:28:42.588 myPeerName: MAX CONSOLE > Apr 16 13:28:42.581 myPeerName: <-- local peer attempting to join room myRoomName...
+Apr 16 13:28:42.588 myPeerName: MAX CONSOLE > Apr 16 13:28:42.586 myPeerName:    <-- reconnect to broker with correct last will...
+Apr 16 13:28:42.610 myPeerName:    <-- ... reconnected.
+Apr 16 13:28:42.610 myPeerName: MAX CONSOLE > Apr 16 13:28:42.610 myPeerName:    <-- ... reconnected.
+Apr 16 13:28:42.614 myPeerName:    <-- send request to create / join room...
+Apr 16 13:28:42.614 myPeerName: MAX CONSOLE > Apr 16 13:28:42.614 myPeerName:    <-- send request to create / join room...
+Apr 16 13:28:43.020 myPeerName: <-- found room 'myRoomName'
+Apr 16 13:28:43.021 myPeerName: MAX CONSOLE > bus rooms menu clear
+Apr 16 13:28:43.021 myPeerName: MAX CONSOLE > bus rooms menu append myRoomName
+Apr 16 13:28:43.021 myPeerName: MAX CONSOLE > bus rooms listing myRoomName
+Apr 16 13:28:43.021 myPeerName: MAX CONSOLE > bus rooms done
+Apr 16 13:28:43.021 myPeerName: MAX CONSOLE > Apr 16 13:28:43.020 myPeerName: <-- found room 'myRoomName'
+Apr 16 13:28:43.063 myPeerName: ...stopping join timout thread.
+Apr 16 13:28:43.063 myPeerName: <-- access to room myRoomName accepted.
+Apr 16 13:28:43.066 myPeerName:    <-- local peer (jNZogmxb5sJea7NDRfVSUD) subscribing...
+Apr 16 13:28:43.067 myPeerName: MAX CONSOLE > Apr 16 13:28:43.063 myPeerName: ...stopping join timout thread.
+Apr 16 13:28:43.067 myPeerName: MAX CONSOLE > Apr 16 13:28:43.063 myPeerName: <-- access to room myRoomName accepted.
+Apr 16 13:28:43.069 myPeerName: MAX CONSOLE > Apr 16 13:28:43.066 myPeerName:    <-- local peer (jNZogmxb5sJea7NDRfVSUD) subscribing...
+Apr 16 13:28:43.088 myPeerName: MAX CONSOLE > bus peer name myPeerName
+Apr 16 13:28:43.088 myPeerName: MAX CONSOLE > bus peer id jNZogmxb5sJea7NDRfVSUD
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > bus peer localIP 10.21.116.214
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > bus peer publicIP 195.176.29.132
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > bus peer room name myRoomName
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > ultragrid - channel# 50: ugRoomName: myRoomName
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > bus peer room id 11
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > ultragrid - channel# 50: ugLANPort: 11502
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > ultragrid - channel# 50: ugLANip: 0.0.0.0
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > ultragrid - channel# 50: ugPort: 11502
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > bus peer room uuid qtNoH1xFWZ3DRYYwJwrH69
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > bus peer joined 1
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > subscribe /peer/jNZogmxb5sJea7NDRfVSUD/settings/#
+Apr 16 13:28:43.091 myPeerName: MAX CONSOLE > subscribe /peer/jNZogmxb5sJea7NDRfVSUD/rack/+/+/loaded
+Apr 16 13:28:43.100 myPeerName: MAX CONSOLE > chat {13:28:43 GMT+0200:[myPeerName]: > has joined room}
+Apr 16 13:28:43.113 myPeerName:    <-- ... local peer subscriptions complete
+Apr 16 13:28:43.113 myPeerName: MAX CONSOLE > Apr 16 13:28:43.113 myPeerName:    <-- ... local peer subscriptions complete
+Apr 16 13:28:44.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/loaded 0
+Apr 16 13:28:44.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/loaded 0
+Apr 16 13:28:44.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.4/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.5/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.6/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.7/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.8/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.9/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.10/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.11/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.12/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.13/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.14/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.15/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.16/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.17/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.18/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.19/loaded 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/lock/enable 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/background/color 0.7125 0.3938 0.6661 1
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/textureCaptureRange -default-
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/ndiRange -default-
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/portaudioCaptureRange 1 Scarlett 18i8 USB (out: 8 in: 18 Core Audio)|2 NDI Audio (out: 0 in: 2 Core Audio)|3 BlackHole 16ch (out: 16 in: 16 Core Audio)|4 BlackHole 2ch (out: 2 in: 2 Core Audio)|5 MacBook ProMikrofon (out: 0 in: 1 Core Audio)|9 ess (out: 24 in: 34 Core Audio)
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/coreaudioCaptureRange 62 BlackHole 16ch|78 BlackHole 2ch|94 BlackHole 64ch|161 MacBook Pro-Mikrofon|110 Microsoft Teams Audio|128 ZoomAudioDevice|58 Hauptgeraet
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/wasapiCaptureRange 0
+Apr 16 13:28:44.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/jackCaptureRange 0
+Apr 16 13:28:44.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/portaudioReceiveRange 0 Acer H6517ST (out: 2 in: 0 Core Audio)|3 Audiofuse Studio (out: 18 in: 20 Core Audio)|4 BlackHole 16ch (out: 16 in: 16 Core Audio)|5 BlackHole 2ch (out: 2 in: 2 Core Audio)|7 MacBook ProLautsprecher (out: 2 in: 0 Core Audio)|10 ESS (out: 34 in: 36 Core Audio)
+Apr 16 13:28:44.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/coreaudioReceiveRange 62 BlackHole 16ch|78 BlackHole 2ch|94 BlackHole 64ch|154 MacBook Pro-Lautsprecher|110 Microsoft Teams Audio|128 ZoomAudioDevice|58 Hauptgeraet
+Apr 16 13:28:44.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/wasapiReceiveRange 0
+Apr 16 13:28:44.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/jackReceiveRange 0
+Apr 16 13:28:44.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localProps/ug_enable 1
+Apr 16 13:28:44.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/settings/localProps/natnet_enable 0
+Apr 16 13:28:44.096 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/loaded 0
+Apr 16 13:28:44.100 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/loaded 0
+Apr 16 13:28:44.100 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/loaded 0
+Apr 16 13:28:44.100 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/loaded 0
+Apr 16 13:28:44.100 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.4/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.5/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.6/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.7/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.8/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.9/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.10/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.11/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.12/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.13/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.14/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.15/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.16/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.17/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.18/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.19/loaded 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/lock/enable 0
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/background/color 0.7125 0.3938 0.6661 1
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/textureCaptureRange -default-
+Apr 16 13:28:44.101 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/ndiRange -default-
+Apr 16 13:28:44.102 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/portaudioCaptureRange 1 Scarlett 18i8 USB (out: 8 in: 18 Core Audio)|2 NDI Audio (out: 0 in: 2 Core Audio)|3 BlackHole 16ch (out: 16 in: 16 Core Audio)|4 BlackHole 2ch (out: 2 in: 2 Core Audio)|5 MacBook ProMikrofon (out: 0 in: 1 Core Audio)|9 ess (out: 24 in: 34 Core Audio)
+Apr 16 13:28:44.102 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/coreaudioCaptureRange 62 BlackHole 16ch|78 BlackHole 2ch|94 BlackHole 64ch|161 MacBook Pro-Mikrofon|110 Microsoft Teams Audio|128 ZoomAudioDevice|58 Hauptgeraet
+Apr 16 13:28:44.102 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/wasapiCaptureRange 0
+Apr 16 13:28:44.102 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/jackCaptureRange 0
+Apr 16 13:28:44.102 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/portaudioReceiveRange 0 Acer H6517ST (out: 2 in: 0 Core Audio)|3 Audiofuse Studio (out: 18 in: 20 Core Audio)|4 BlackHole 16ch (out: 16 in: 16 Core Audio)|5 BlackHole 2ch (out: 2 in: 2 Core Audio)|7 MacBook ProLautsprecher (out: 2 in: 0 Core Audio)|10 ESS (out: 34 in: 36 Core Audio)
+Apr 16 13:28:44.102 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/coreaudioReceiveRange 62 BlackHole 16ch|78 BlackHole 2ch|94 BlackHole 64ch|154 MacBook Pro-Lautsprecher|110 Microsoft Teams Audio|128 ZoomAudioDevice|58 Hauptgeraet
+Apr 16 13:28:44.102 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/wasapiReceiveRange 0
+Apr 16 13:28:44.102 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localMenus/jackReceiveRange 0
+Apr 16 13:28:44.102 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localProps/ug_enable 1
+Apr 16 13:28:44.102 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/settings/localProps/natnet_enable 0
+Apr 16 13:28:47.058 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/peerLocalIP 0
+Apr 16 13:28:47.058 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/peerLocalIP 0
+Apr 16 13:28:47.058 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/enableTwo 0
+Apr 16 13:28:47.058 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/inputPort 10009
+Apr 16 13:28:47.058 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputIPOne 0
+Apr 16 13:28:47.058 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputIPTwo 0
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputPortOne 10008
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputPortTwo 10007
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/reset 0
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/reset 1
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputPortTwo 10027
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputPortOne 10028
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/inputPort 10029
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputPortTwo 10007
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputPortOne 10008
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/inputPort 10009
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/monitor/monitorGate 0
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/monitor/log 0
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/monitor/log 0
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/description OSC
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/enable 0
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/inputIndicator 0
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/outputIndicator 0
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/peerLocalIP 10.21.116.214
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputIPTwo 10.21.116.214
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputIPOne 10.21.116.214
+Apr 16 13:28:47.059 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/loaded 1
+Apr 16 13:28:47.060 myPeerName: MAX CONSOLE > subscribe /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/#
+Apr 16 13:28:47.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/loaded 1
+Apr 16 13:28:47.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/peerLocalIP 10.21.116.214
+Apr 16 13:28:47.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/enableTwo 0
+Apr 16 13:28:47.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/inputPort 10009
+Apr 16 13:28:47.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputIPOne 10.21.116.214
+Apr 16 13:28:47.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputIPTwo 10.21.116.214
+Apr 16 13:28:47.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputPortOne 10008
+Apr 16 13:28:47.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/outputPortTwo 10007
+Apr 16 13:28:47.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/localudp/reset 1
+Apr 16 13:28:47.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/monitor/monitorGate 0
+Apr 16 13:28:47.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/monitor/log 0
+Apr 16 13:28:47.114 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/description OSC
+Apr 16 13:28:47.114 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/enable 0
+Apr 16 13:28:47.116 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/inputIndicator 0
+Apr 16 13:28:47.116 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.0/device/gui/outputIndicator 0
+Apr 16 13:28:49.586 myPeerName:    <-- received room ping
+Apr 16 13:28:49.589 myPeerName: MAX CONSOLE > Apr 16 13:28:49.586 myPeerName:    <-- received room ping
+Apr 16 13:28:49.612 myPeerName: ...stopping join timout thread.
+Apr 16 13:28:49.612 myPeerName: <-- access to room myRoomName confirmed.
+Apr 16 13:28:49.615 myPeerName: MAX CONSOLE > Apr 16 13:28:49.612 myPeerName: ...stopping join timout thread.
+Apr 16 13:28:49.617 myPeerName: MAX CONSOLE > Apr 16 13:28:49.612 myPeerName: <-- access to room myRoomName confirmed.
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/texture/menu/selection 0
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/texture/menu/selection 0
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/texture/menu/selection -default-
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugTexture_capture: -default-
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugTexture_capture: -default-
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/custom/customFlags/flags -none-
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCustomFlagsVideo_capture: -none-
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCustomFlagsVideo_capture: -none-
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/ndi/menu/selection 0
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/ndi/menu/selection 0
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/ndi/menu/selection -default-
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugNDI_capture: -default-
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugNDI_capture: -default-
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/compress/bitrate 0
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/compress/codec 0
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLibAv_codec: H.264
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/compress/codec 2
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLibAv_codec_bitrate: 10
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/compress/bitrate 10
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLibAv_codec: H.264
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLibAv_codec_bitrate: 10
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/texture/fps 0
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugTexture_fps: 0
+Apr 16 13:28:50.093 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugTexture_fps: 0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/filter/params 0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/filter/params 0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/filter/params -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCapture_filter: -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCapture_filter: -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/type 0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugVideoCaptureMode: texture
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/texture/closedWindow 0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/texture/name s_channel_0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugTexture_display: s_channel_0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugDisplay_window_show: 0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/custom/customFlags/flags -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCustomFlagsVideo_receive: -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCustomFlagsVideo_receive: -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/ndi/name s_channel_0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugNDI_display: s_channel_0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/advanced/postprocessor/params 0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/advanced/postprocessor/params 0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/advanced/postprocessor/params -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugReceive_postprocessor: -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugReceive_postprocessor: -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/type 0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugVideoReceiverMode: texture
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/custom/customFlags/flags -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCustomFlagsAudio_capture: -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCustomFlagsAudio_capture: -none-
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/portaudio/menu/selection 0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/portaudio/menu/selection 0
+Apr 16 13:28:50.094 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/portaudio/menu/selection -default-
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/testcard/frequency 100
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/testcard/volume 0.0000
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_testcard_capture_vol: -18
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/testcard/volume -18.0000
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_testcard_capture_freq: 440
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/testcard/frequency 440
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_testcard_capture_freq: 440
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_testcard_capture_vol: -18
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/coreaudio/menu/selection 0
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/coreaudio/menu/selection 0
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/coreaudio/menu/selection -default-
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/wasapi/menu/selection 0
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/wasapi/menu/selection 0
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/wasapi/menu/selection -default-
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/advanced/compress/bitrate 0
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/advanced/compress/codec 0
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/advanced/compress/samplerate 0
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/advanced/compress/samplerate 32000
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_codec: OPUS
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/advanced/compress/codec 1
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_codec_bitrate: 64000
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/advanced/compress/bitrate 64000
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_codec: OPUS
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_codec_bitrate: 64000
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/advanced/channels/channels 1
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_channels: 1
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_channels: 1
+Apr 16 13:28:50.095 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/jack/menu/selection 0
+Apr 16 13:28:50.096 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/jack/menu/selection 0
+Apr 16 13:28:50.096 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/jack/menu/selection -default-
+Apr 16 13:28:50.096 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugJack_capture: -default-
+Apr 16 13:28:50.096 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugJack_capture: -default-
+Apr 16 13:28:50.096 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/type 0
+Apr 16 13:28:50.096 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudioCaptureMode: portaudio
+Apr 16 13:28:50.096 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/custom/customFlags/flags -none-
+Apr 16 13:28:50.096 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCustomFlagsAudio_receive: -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCustomFlagsAudio_receive: -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/portaudio/menu/selection 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/portaudio/menu/selection 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/portaudio/menu/selection -default-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/coreaudio/menu/selection 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/coreaudio/menu/selection 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/coreaudio/menu/selection -default-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/wasapi/menu/selection 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/wasapi/menu/selection 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/wasapi/menu/selection -default-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/advanced/channels/params 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/advanced/channels/params 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/advanced/channels/params -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_channel_mapping: fff-none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudio_channel_mapping: fff-none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/jack/menu/selection 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/jack/menu/selection 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/jack/menu/selection -default-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugJack_receive: -default-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugJack_receive: -default-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/type 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAudioReceiveMode: portaudio
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/advanced/custom/customFlags/flags -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCustomFlagsAdvanced: -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugCustomFlagsAdvanced: -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/advanced/advanced/params/params 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/advanced/advanced/params/params 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/advanced/advanced/params/params -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugParams: -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugParams: -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/advanced/advanced/encryption/key 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/advanced/advanced/encryption/key 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/advanced/advanced/encryption/key -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAdv_encryption: -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugAdv_encryption: -none-
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/connection 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/transmission 0
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugTransmission_mode: 2
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/transmission 2
+Apr 16 13:28:50.102 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugConnection_type: 2
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/connection 2
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/holepuncher/stunServer stun4.l.google.com:19302
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugStunServerPort: 19302
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugStunServerURL: stun4.l.google.com
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugStunServerPort: 19302
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugStunServerURL: stun4.l.google.com
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLANPort: 11000
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLANip: 0.0.0.0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/local/customSending 0.0.0.0:11000
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLANPort: 11000
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLANip: 0.0.0.0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLANPort: 11000
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLANip: 0.0.0.0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugPort: 11000
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/ports/alternativeChannel 0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/ports/receiveChannel 0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/mode 0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugNetworkMode: peer to peer (manual)
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/mode 5
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugNetworkMode: peer to peer (manual)
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/monitor/log 0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/monitor/log 0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/monitor/monitorGate 0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/remoteValues/local_os 0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/remoteValues/local_os 0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugPort: 11012
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/local/customSending 0.0.0.0:11012
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLANPort: 11012
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugLANip: 0.0.0.0
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/ndi/name s_channel_1
+Apr 16 13:28:50.103 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugNDI_display: s_channel_1
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/texture/name s_channel_1
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugTexture_display: s_channel_1
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/ndi/name myRoomName_channel_1
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugNDI_display: myRoomName_channel_1
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/texture/name myRoomName_channel_1
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugTexture_display: myRoomName_channel_1
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/indicators 0
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/indicators 0
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/updateMenu 0
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/updateMenu 0
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/updateMenu audioCapture jack
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > running command: /Applications/TelemersiveGateway/externals/ultragrid/uv-qt.app/Contents/MacOS/uv []string{-s jack:help}
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/description ultragrid
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/enable 0
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/print_cli 0
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/remoteValues/local_os osx
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugVideoCaptureMode: syphon
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugVideoReceiverMode: syphon
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugFilePath: /Applications/TelemersiveGateway/externals/ultragrid/uv-qt.app/Contents/MacOS/uv
+Apr 16 13:28:50.104 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugFPS_attribute: :override_fps=
+Apr 16 13:28:50.108 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugDisplay_flag_prefix: gl:syphon=
+Apr 16 13:28:50.108 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugRoomName: myRoomName
+Apr 16 13:28:50.108 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugHolePuncherURL: telemersion.zhdk.ch
+Apr 16 13:28:50.108 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugHolePuncherPort: 9418
+Apr 16 13:28:50.108 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugRouter: telemersion.zhdk.ch
+Apr 16 13:28:50.108 myPeerName: MAX CONSOLE > ultragrid - channel# 1: ugVerbose: 1
+Apr 16 13:28:50.108 myPeerName: MAX CONSOLE > ultragrid - channel# 1: gathering information on the patcher hierarchy..
+Apr 16 13:28:50.108 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/loaded 2
+Apr 16 13:28:50.108 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/loaded 2
+Apr 16 13:28:50.108 myPeerName: MAX CONSOLE > subscribe /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/#
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/texture/menu/selection -default-
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/custom/customFlags/flags -none-
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/ndi/menu/selection -default-
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/compress/bitrate 10
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/compress/codec 2
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/texture/fps 0
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/advanced/filter/params -none-
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoCapture/type 0
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/texture/closedWindow 0
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/texture/name myRoomName_channel_1
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/custom/customFlags/flags -none-
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/ndi/name myRoomName_channel_1
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/advanced/postprocessor/params -none-
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/videoReciever/type 0
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/custom/customFlags/flags -none-
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/portaudio/menu/selection -default-
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/testcard/frequency 440
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/testcard/volume -18
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/coreaudio/menu/selection -default-
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/wasapi/menu/selection -default-
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/advanced/compress/bitrate 64000
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/advanced/compress/codec 1
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/advanced/compress/samplerate 32000
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/advanced/channels/channels 1
+Apr 16 13:28:50.110 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/jack/menu/selection -default-
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioCapture/type 0
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/custom/customFlags/flags -none-
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/portaudio/menu/selection -default-
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/coreaudio/menu/selection -default-
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/wasapi/menu/selection -default-
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/advanced/channels/params -none-
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/jack/menu/selection -default-
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/audioReceiver/type 0
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/advanced/custom/customFlags/flags -none-
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/advanced/advanced/params/params -none-
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/advanced/advanced/encryption/key -none-
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/connection 2
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/audioVideo/transmission 2
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/holepuncher/stunServer stun4.l.google.com:19302
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/local/customSending 0.0.0.0:11012
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/ports/alternativeChannel 0
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/ports/receiveChannel 0
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/network/mode 5
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/monitor/log 0
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/monitor/monitorGate 0
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/remoteValues/local_os osx
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/indicators 0
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/updateMenu audioCapture jack
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/description ultragrid
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/enable 0
+Apr 16 13:28:50.111 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/print_cli 0
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/direction/select 0
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/direction/select 2
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/direction/enableNatNet 0
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/direction/enableNatNet 0
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/direction/enableNatNet 1
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/inputPort 2000
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/listeningIP 127.0.0.1
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputIPOne 127.0.0.1
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputIPTwo 127.0.0.1
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputPortOne 2000
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputPortTwo 2000
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/reset 0
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/reset 1
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputPortTwo 10001
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputPortOne 10000
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/inputPort 10002
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputPortTwo 10021
+Apr 16 13:28:51.943 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputPortOne 10020
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/inputPort 10022
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/autoReconnect 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/bundled 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/cmdPort 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/codec 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/dataPort 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/frameModulo 1
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/invmatrix 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/leftHanded 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/matrix 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/motiveIP 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/multicastIP 239.255.42.99
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/sendMarkerInfos 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/sendOtherMarkerInfos 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/sendSkeletons 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/verbose 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/yUp2zUp 0
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/dataPort 1511
+Apr 16 13:28:51.944 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/codec 3
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/cmdPort 1510
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/defaultLocalIP 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/defaultLocalIP 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/monitor/monitorGate 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/monitor/log 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/monitor/log 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/remoteValues/local_os 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/remoteValues/local_os 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/indicators 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/indicators 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/description MoCap
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/enable 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/enableTwo 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/indicators 0 0 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/remoteValues/local_os osx
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/direction/enableNatNet 0
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputIPTwo 10.21.116.214
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputIPOne 10.21.116.214
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/listeningIP 10.21.116.214
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/motiveIP 10.21.116.214
+Apr 16 13:28:51.945 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/loaded 3
+Apr 16 13:28:51.952 myPeerName: MAX CONSOLE > subscribe /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/#
+Apr 16 13:28:51.954 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/loaded 3
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/direction/select 2
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/direction/enableNatNet 0
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/inputPort 10022
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/listeningIP 10.21.116.214
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputIPOne 10.21.116.214
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputIPTwo 10.21.116.214
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputPortOne 10020
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/outputPortTwo 10021
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/localudp/reset 1
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/autoReconnect 0
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/bundled 0
+Apr 16 13:28:51.955 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/cmdPort 1510
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/codec 3
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/dataPort 1511
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/frameModulo 1
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/invmatrix 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/leftHanded 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/matrix 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/motiveIP 10.21.116.214
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/multicastIP 239.255.42.99
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/sendMarkerInfos 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/sendOtherMarkerInfos 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/sendSkeletons 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/verbose 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/yUp2zUp 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/natnet/defaultLocalIP 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/monitor/monitorGate 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/monitor/log 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/remoteValues/local_os osx
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/indicators 0 0 0
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/description MoCap
+Apr 16 13:28:51.956 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/enable 0
+Apr 16 13:28:51.957 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.2/device/gui/enableTwo 0
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/peerLocalIP 0
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/peerLocalIP 0
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/enableTwo 0
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/inputPort 10039
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputIPOne 0
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputIPTwo 0
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputPortOne 10038
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputPortTwo 10037
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/reset 0
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/reset 1
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputPortTwo 10027
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputPortOne 10028
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/inputPort 10029
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputPortTwo 10037
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputPortOne 10038
+Apr 16 13:28:54.392 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/inputPort 10039
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/monitor/monitorGate 0
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/monitor/log 0
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/monitor/log 0
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/description StageC
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/enable 0
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/inputIndicator 0
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/outputIndicator 0
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/peerLocalIP 10.21.116.214
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputIPTwo 10.21.116.214
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputIPOne 10.21.116.214
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/loaded 4
+Apr 16 13:28:54.393 myPeerName: MAX CONSOLE > subscribe /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/#
+Apr 16 13:28:54.406 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/loaded 4
+Apr 16 13:28:54.407 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/peerLocalIP 10.21.116.214
+Apr 16 13:28:54.407 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/enableTwo 0
+Apr 16 13:28:54.407 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/inputPort 10039
+Apr 16 13:28:54.407 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputIPOne 10.21.116.214
+Apr 16 13:28:54.407 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputIPTwo 10.21.116.214
+Apr 16 13:28:54.407 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputPortOne 10038
+Apr 16 13:28:54.407 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/outputPortTwo 10037
+Apr 16 13:28:54.407 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/localudp/reset 1
+Apr 16 13:28:54.407 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/monitor/monitorGate 0
+Apr 16 13:28:54.407 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/monitor/log 0
+Apr 16 13:28:54.408 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/description StageC
+Apr 16 13:28:54.409 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/enable 0
+Apr 16 13:28:54.410 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/inputIndicator 0
+Apr 16 13:28:54.410 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.3/device/gui/outputIndicator 0
+Apr 16 13:28:55.089 myPeerName: MAX CONSOLE > publish 1 /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/indicators 0 0 0 0 0 0
+Apr 16 13:28:55.100 myPeerName: MAX CONSOLE > mqtt /peer/jNZogmxb5sJea7NDRfVSUD/rack/page_0/channel.1/device/gui/indicators 0 0 0 0 0 0

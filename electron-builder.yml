@@ -1,0 +1,13 @@
+appId: ch.telemersive.gateway-ng
+productName: Telemersive Gateway NG
+directories:
+  buildResources: build
+  output: dist
+files:
+  - out/**/*
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64

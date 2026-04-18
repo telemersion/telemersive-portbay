@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Telemersive Gateway NG — Color Scheme</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #1a1a1a; color: #ddd; font-family: system-ui, -apple-system, sans-serif; padding: 24px; }
+h1 { font-size: 18px; color: #fff; margin-bottom: 20px; }
+h2 { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 12px; border-bottom: 1px solid #333; padding-bottom: 4px; }
+h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
+
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.swatch { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.swatch-box { width: 48px; height: 48px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); }
+.swatch-label { font-size: 9px; color: #888; text-align: center; }
+.swatch-hex { font-size: 9px; color: #555; font-family: monospace; }
+
+/* Cells */
+.cell { width: 72px; height: 64px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 2px; position: relative; }
+.cell-label { font-size: 9px; font-weight: 500; }
+.cell-icon { display: flex; align-items: center; justify-content: center; }
+.cell-caption { font-size: 9px; color: #666; text-align: center; margin-top: 4px; max-width: 72px; }
+.cell-wrap { display: flex; flex-direction: column; align-items: center; }
+
+.cell.selected { box-shadow: 0 0 0 3px #36ABFF; }
+.plus { opacity: 0.35; color: #666; }
+
+/* Peer rows */
+.peer-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; min-width: 200px; }
+.peer-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.peer-name { font-size: 12px; font-weight: 500; }
+.peer-tag { font-size: 9px; padding: 1px 4px; border-radius: 3px; }
+.peer-ip { font-size: 10px; font-family: monospace; opacity: 0.5; }
+
+/* Section grid */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, 90px); gap: 16px; }
+.grid-wide { display: grid; grid-template-columns: repeat(auto-fill, 220px); gap: 16px; }
+
+.matrix-demo { display: flex; gap: 3px; }
+.matrix-section { margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<h1>Telemersive Gateway NG — Color Scheme</h1>
+
+<!-- ==================== SURFACE COLORS ==================== -->
+<h2>Surface Colors</h2>
+<div class="row">
+  <div class="swatch">
+    <div class="swatch-box" style="background:#1a1a1a; border-color:#444"></div>
+    <div class="swatch-label">Page BG</div>
+    <div class="swatch-hex">#1a1a1a</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#252525"></div>
+    <div class="swatch-label">Panel BG</div>
+    <div class="swatch-hex">#252525</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#333"></div>
+    <div class="swatch-label">Cell BG</div>
+    <div class="swatch-hex">#333</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#444"></div>
+    <div class="swatch-label">Cell Border</div>
+    <div class="swatch-hex">#444</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#555"></div>
+    <div class="swatch-label">Input Border</div>
+    <div class="swatch-hex">#555</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#ddd"></div>
+    <div class="swatch-label">Text</div>
+    <div class="swatch-hex">#ddd</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#888"></div>
+    <div class="swatch-label">Text Muted</div>
+    <div class="swatch-hex">#888</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#555"></div>
+    <div class="swatch-label">Text Dim</div>
+    <div class="swatch-hex">#555</div>
+  </div>
+</div>
+
+<!-- ==================== DEVICE COLORS ==================== -->
+<h2>Device Type Colors</h2>
+<div class="row">
+  <div class="swatch">
+    <div class="swatch-box" style="background:#36ABFF"></div>
+    <div class="swatch-label">OSC</div>
+    <div class="swatch-hex">#36ABFF</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#FFA126"></div>
+    <div class="swatch-label">MoCap</div>
+    <div class="swatch-hex">#FFA126</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#F0DE01"></div>
+    <div class="swatch-label">UG Video</div>
+    <div class="swatch-hex">#F0DE01</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#00E411"></div>
+    <div class="swatch-label">UG Audio</div>
+    <div class="swatch-hex">#00E411</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#1BFEE9"></div>
+    <div class="swatch-label">UG V+A</div>
+    <div class="swatch-hex">#1BFEE9</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#FE5FF5"></div>
+    <div class="swatch-label">StageC</div>
+    <div class="swatch-hex">#FE5FF5</div>
+  </div>
+</div>
+
+<h3>Disabled state: #999 (uniform gray for all device types)</h3>
+<div class="row">
+  <div class="swatch">
+    <div class="swatch-box" style="background:#999"></div>
+    <div class="swatch-label">Disabled</div>
+    <div class="swatch-hex">#999</div>
+  </div>
+</div>
+
+<!-- ==================== UI ACCENT ==================== -->
+<h2>UI Accents</h2>
+<div class="row">
+  <div class="swatch">
+    <div class="swatch-box" style="background:#1D9E75"></div>
+    <div class="swatch-label">Enable ON</div>
+    <div class="swatch-hex">#1D9E75</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#36ABFF"></div>
+    <div class="swatch-label">Selection</div>
+    <div class="swatch-hex">#36ABFF</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#a33"></div>
+    <div class="swatch-label">Danger</div>
+    <div class="swatch-hex">#a33</div>
+  </div>
+</div>
+
+<!-- ==================== PEER ROWS ==================== -->
+<h2>Peer Rows</h2>
+<p style="font-size:11px; color:#888; margin-bottom:12px">Each peer has a unique color. Shown here with example colors.</p>
+
+<div class="grid-wide">
+  <div>
+    <div class="peer-row" style="background:#0a1f18; border-left:3px solid #1D9E75">
+      <div class="peer-dot" style="background:#1D9E75"></div>
+      <div>
+        <div class="peer-name" style="color:#9FE1CB">TutorialMac <span class="peer-tag" style="background:#252525; color:#888">(you)</span></div>
+        <div class="peer-ip" style="color:#5aaa80">10.128.140.117</div>
+      </div>
+    </div>
+    <div class="cell-caption">Local peer — green tint</div>
+  </div>
+  <div>
+    <div class="peer-row" style="background:#080e1f; border-left:3px solid #1565C0">
+      <div class="peer-dot" style="background:#1565C0"></div>
+      <div>
+        <div class="peer-name" style="color:#90CAF9">Projection_IAS</div>
+        <div class="peer-ip" style="color:#5a8ac0">10.128.140.22</div>
+      </div>
+    </div>
+    <div class="cell-caption">Remote peer — blue tint</div>
+  </div>
+  <div>
+    <div class="peer-row" style="background:#001a1f; border-left:3px solid #00ACC1">
+      <div class="peer-dot" style="background:#00ACC1"></div>
+      <div>
+        <div class="peer-name" style="color:#80DEEA">MoCap_IAS</div>
+        <div class="peer-ip" style="color:#4a9aaa">10.128.140.55</div>
+      </div>
+    </div>
+    <div class="cell-caption">Remote peer — cyan tint</div>
+  </div>
+</div>
+
+<!-- ==================== DEVICE CELLS ==================== -->
+<h2>Device Cells — Empty</h2>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <svg class="plus" width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+    <div class="cell-caption">Empty (unlocked)</div>
+  </div>
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+    </div>
+    <div class="cell-caption">Empty (locked)</div>
+  </div>
+  <div class="cell-wrap">
+    <div class="cell selected" style="background:#333; border:1px solid #444">
+      <svg class="plus" width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+    <div class="cell-caption">Empty (selected)</div>
+  </div>
+</div>
+
+<!-- ==================== OSC CELLS ==================== -->
+<h2>OSC Device — States</h2>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">OSC</div>
+    </div>
+    <div class="cell-caption">Disabled<br>Gray icon + label</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #36ABFF">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#36ABFF">OSC</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>All arrows white (idle)</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #36ABFF">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#36ABFF" stroke="#36ABFF"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="none" stroke="#fff"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#36ABFF">OSC</div>
+    </div>
+    <div class="cell-caption">TX flowing<br>UpStream filled blue</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #36ABFF">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="none" stroke="#fff"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#36ABFF" stroke="#36ABFF"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#36ABFF">OSC</div>
+    </div>
+    <div class="cell-caption">RX flowing<br>DownStream filled blue</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #36ABFF">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#36ABFF" stroke="#36ABFF"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#36ABFF" stroke="#36ABFF"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#36ABFF">OSC</div>
+    </div>
+    <div class="cell-caption">Both flowing<br>Both arrows filled, sink white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell selected" style="background:#333; border:1px solid #36ABFF">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#36ABFF">OSC</div>
+    </div>
+    <div class="cell-caption">Selected<br>3px blue outline</div>
+  </div>
+</div>
+
+<!-- ==================== MOCAP TX CELLS ==================== -->
+<h2>MoCap TX Device — States</h2>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">MoCap</div>
+    </div>
+    <div class="cell-caption">Disabled</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FFA126">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FFA126">MoCap</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>All arrows white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FFA126">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#FFA126" stroke="#FFA126"/>
+          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z" fill="none" stroke="#fff"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FFA126">MoCap</div>
+    </div>
+    <div class="cell-caption">Major ↑ flowing<br>Minor idle</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FFA126">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#FFA126" stroke="#FFA126"/>
+          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z" fill="#FFA126" stroke="#FFA126"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FFA126">MoCap</div>
+    </div>
+    <div class="cell-caption">Both flowing<br>Major + minor filled</div>
+  </div>
+</div>
+
+<!-- ==================== MOCAP RX CELLS ==================== -->
+<h2>MoCap RX Device — States</h2>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+          <path d="m 135.74171,150.16519 -0.56693,-44.85035 h -9.64464 l 14.89216,-19.933489 14.89216,19.933489 h -10.21157 l 0.56692,44.85035 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">MoCap</div>
+    </div>
+    <div class="cell-caption">Disabled</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FFA126">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+          <path d="m 135.74171,150.16519 -0.56693,-44.85035 h -9.64464 l 14.89216,-19.933489 14.89216,19.933489 h -10.21157 l 0.56692,44.85035 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FFA126">MoCap</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>All arrows white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FFA126">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#FFA126" stroke="#FFA126"/>
+          <path d="m 135.74171,150.16519 -0.56693,-44.85035 h -9.64464 l 14.89216,-19.933489 14.89216,19.933489 h -10.21157 l 0.56692,44.85035 z" fill="none" stroke="#fff"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FFA126">MoCap</div>
+    </div>
+    <div class="cell-caption">Major ↓ flowing<br>Minor idle</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FFA126">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#FFA126" stroke="#FFA126"/>
+          <path d="m 135.74171,150.16519 -0.56693,-44.85035 h -9.64464 l 14.89216,-19.933489 14.89216,19.933489 h -10.21157 l 0.56692,44.85035 z" fill="#FFA126" stroke="#FFA126"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FFA126">MoCap</div>
+    </div>
+    <div class="cell-caption">Both flowing<br>Major + minor filled</div>
+  </div>
+</div>
+
+<!-- ==================== MOCAP LOCAL CELLS ==================== -->
+<h2>MoCap Send-to-Local — States</h2>
+<p style="font-size:11px; color:#888; margin-bottom:12px">Local loopback — MoCap data captured and displayed on the same machine. Icon: UpLocal + DownLocal composite.</p>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="m 110,60 40,0.254882 V 40 l 40,30 -40,30 V 80.254881 L 130,80 v 69.93036 l -20,0.13928 z"/>
+          <path d="m 69.326146,92.99619 v 31.94097 H 82.098857 L 62.93979,150.4517 43.780725,124.93716 h 12.77271 V 105.77258 H 31.05249 L 30.96354,92.996191 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">MoCap</div>
+    </div>
+    <div class="cell-caption">Disabled</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FFA126">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="m 110,60 40,0.254882 V 40 l 40,30 -40,30 V 80.254881 L 130,80 v 69.93036 l -20,0.13928 z"/>
+          <path d="m 69.326146,92.99619 v 31.94097 H 82.098857 L 62.93979,150.4517 43.780725,124.93716 h 12.77271 V 105.77258 H 31.05249 L 30.96354,92.996191 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FFA126">MoCap</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>All arrows white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FFA126">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="m 110,60 40,0.254882 V 40 l 40,30 -40,30 V 80.254881 L 130,80 v 69.93036 l -20,0.13928 z" fill="#FFA126" stroke="#FFA126"/>
+          <path d="m 69.326146,92.99619 v 31.94097 H 82.098857 L 62.93979,150.4517 43.780725,124.93716 h 12.77271 V 105.77258 H 31.05249 L 30.96354,92.996191 Z" fill="#FFA126" stroke="#FFA126"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FFA126">MoCap</div>
+    </div>
+    <div class="cell-caption">Flowing<br>Both arrows filled orange</div>
+  </div>
+</div>
+
+<!-- ==================== UG VIDEO TX CELLS ==================== -->
+<h2>UG Video TX (Send to Router) — States</h2>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">ultragrid</div>
+    </div>
+    <div class="cell-caption">Disabled</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #F0DE01">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#F0DE01">ultragrid</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>Arrow white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #F0DE01">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z" fill="#F0DE01" stroke="#F0DE01"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#F0DE01">ultragrid</div>
+    </div>
+    <div class="cell-caption">TX flowing<br>Arrow filled yellow</div>
+  </div>
+</div>
+
+<!-- ==================== UG AUDIO RX CELLS ==================== -->
+<h2>UG Audio RX (Receive from Router) — States</h2>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 109.42897,19.940146 110.57103,110 H 130 L 99.999999,149.94015 70,110 h 20.571029 l -1.14206,-90.059854 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">ultragrid</div>
+    </div>
+    <div class="cell-caption">Disabled</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #00E411">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 109.42897,19.940146 110.57103,110 H 130 L 99.999999,149.94015 70,110 h 20.571029 l -1.14206,-90.059854 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#00E411">ultragrid</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>Arrow white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #00E411">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 109.42897,19.940146 110.57103,110 H 130 L 99.999999,149.94015 70,110 h 20.571029 l -1.14206,-90.059854 z" fill="#00E411" stroke="#00E411"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#00E411">ultragrid</div>
+    </div>
+    <div class="cell-caption">RX flowing<br>Arrow filled green</div>
+  </div>
+</div>
+
+<!-- ==================== UG P2P TX CELLS ==================== -->
+<h2>UG Peer-to-Peer TX — States</h2>
+<p style="font-size:11px; color:#888; margin-bottom:12px">P2P auto or manual mode, sending to peer. Icon: ToPeerTX (right+up arrow).</p>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 89.470833,51.467598 149.47083,51.72248 V 31.467598 l 40,30 -40,30 V 71.722479 l -40,-0.254881 v 69.930342 l -19.999997,0.13928 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">ultragrid</div>
+    </div>
+    <div class="cell-caption">Disabled</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #F0DE01">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 89.470833,51.467598 149.47083,51.72248 V 31.467598 l 40,30 -40,30 V 71.722479 l -40,-0.254881 v 69.930342 l -19.999997,0.13928 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#F0DE01">ultragrid</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>Arrow white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #F0DE01">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 89.470833,51.467598 149.47083,51.72248 V 31.467598 l 40,30 -40,30 V 71.722479 l -40,-0.254881 v 69.930342 l -19.999997,0.13928 z" fill="#F0DE01" stroke="#F0DE01"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#F0DE01">ultragrid</div>
+    </div>
+    <div class="cell-caption">TX flowing<br>Arrow filled yellow</div>
+  </div>
+</div>
+
+<!-- ==================== UG P2P RX CELLS ==================== -->
+<h2>UG Peer-to-Peer RX — States</h2>
+<p style="font-size:11px; color:#888; margin-bottom:12px">P2P auto or manual mode, receiving from peer. Icon: ToPeerRX (down+right arrow).</p>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="m 90.045214,51.309795 0.25488,59.999995 H 70.045216 l 29.999984,40 30,-40 H 110.30008 L 110.0452,71.309795 h 69.93036 l 0.13928,-20 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">ultragrid</div>
+    </div>
+    <div class="cell-caption">Disabled</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #F0DE01">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="m 90.045214,51.309795 0.25488,59.999995 H 70.045216 l 29.999984,40 30,-40 H 110.30008 L 110.0452,71.309795 h 69.93036 l 0.13928,-20 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#F0DE01">ultragrid</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>Arrow white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #F0DE01">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="m 90.045214,51.309795 0.25488,59.999995 H 70.045216 l 29.999984,40 30,-40 H 110.30008 L 110.0452,71.309795 h 69.93036 l 0.13928,-20 z" fill="#F0DE01" stroke="#F0DE01"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#F0DE01">ultragrid</div>
+    </div>
+    <div class="cell-caption">RX flowing<br>Arrow filled yellow</div>
+  </div>
+</div>
+
+<!-- ==================== UG P2P BIDI CELLS ==================== -->
+<h2>UG Peer-to-Peer Bidi — States</h2>
+<p style="font-size:11px; color:#888; margin-bottom:12px">P2P auto or manual mode, both TX and RX. Icon: ToPeerRXTX (bidirectional peer arrows).</p>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="m 564.92969,118.93359 v 76.55274 L 338.1582,194.52344 v 226.53515 l 75.58985,-0.52539 V 270.11328 l 151.18164,0.96289 v 74.62891 L 716.10938,232.31836 Z M 338.1582,421.05859 H 261.60352 L 374.99023,572.24023 488.375,421.05859 h -74.62695 z" transform="scale(0.26458333)"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">ultragrid</div>
+    </div>
+    <div class="cell-caption">Disabled</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="m 564.92969,118.93359 v 76.55274 L 338.1582,194.52344 v 226.53515 l 75.58985,-0.52539 V 270.11328 l 151.18164,0.96289 v 74.62891 L 716.10938,232.31836 Z M 338.1582,421.05859 H 261.60352 L 374.99023,572.24023 488.375,421.05859 h -74.62695 z" transform="scale(0.26458333)"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>Arrows white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="m 564.92969,118.93359 v 76.55274 L 338.1582,194.52344 v 226.53515 l 75.58985,-0.52539 V 270.11328 l 151.18164,0.96289 v 74.62891 L 716.10938,232.31836 Z M 338.1582,421.05859 H 261.60352 L 374.99023,572.24023 488.375,421.05859 h -74.62695 z" transform="scale(0.26458333)" fill="#1BFEE9" stroke="#1BFEE9"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
+    </div>
+    <div class="cell-caption">Both flowing<br>Arrows filled cyan</div>
+  </div>
+</div>
+
+<!-- ==================== UG CAPTURE TO LOCAL CELLS ==================== -->
+<h2>UG Capture-to-Local — States</h2>
+<p style="font-size:11px; color:#888; margin-bottom:12px">Local loopback — capture + display on same machine, no network. Icon: FromLocal (down arrow + right turn into sink).</p>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="m 144.15955,60.595724 v 49.999996 h 20 l -30,39.94015 -30,-39.94015 h 20 V 80.595724 l -51.997483,0.393303 0.0838,70.085463 -22.350659,0.20395 0.09425,-90.602178 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">ultragrid</div>
+    </div>
+    <div class="cell-caption">Disabled</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #F0DE01">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="m 144.15955,60.595724 v 49.999996 h 20 l -30,39.94015 -30,-39.94015 h 20 V 80.595724 l -51.997483,0.393303 0.0838,70.085463 -22.350659,0.20395 0.09425,-90.602178 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#F0DE01">ultragrid</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>Arrow white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #F0DE01">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="m 144.15955,60.595724 v 49.999996 h 20 l -30,39.94015 -30,-39.94015 h 20 V 80.595724 l -51.997483,0.393303 0.0838,70.085463 -22.350659,0.20395 0.09425,-90.602178 z" fill="#F0DE01" stroke="#F0DE01"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#F0DE01">ultragrid</div>
+    </div>
+    <div class="cell-caption">Flowing<br>Arrow filled yellow</div>
+  </div>
+</div>
+
+<!-- ==================== UG V+A BIDI CELLS ==================== -->
+<h2>UG Video+Audio (Send+Receive via Router) — States</h2>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">ultragrid</div>
+    </div>
+    <div class="cell-caption">Disabled</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>All arrows white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#1BFEE9" stroke="#1BFEE9"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="none" stroke="#fff"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
+    </div>
+    <div class="cell-caption">TX flowing<br>UpStream filled cyan</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="none" stroke="#fff"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#1BFEE9" stroke="#1BFEE9"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
+    </div>
+    <div class="cell-caption">RX flowing<br>DownStream filled cyan</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#1BFEE9" stroke="#1BFEE9"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#1BFEE9" stroke="#1BFEE9"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
+    </div>
+    <div class="cell-caption">Both flowing<br>Both arrows filled, sink white</div>
+  </div>
+</div>
+
+<!-- ==================== STAGECONTROL CELLS ==================== -->
+<h2>StageControl Device — States</h2>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">StageC</div>
+    </div>
+    <div class="cell-caption">Disabled</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FE5FF5">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FE5FF5">StageC</div>
+    </div>
+    <div class="cell-caption">Enabled, no data<br>All arrows white</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FE5FF5">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#FE5FF5" stroke="#FE5FF5"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="none" stroke="#fff"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FE5FF5">StageC</div>
+    </div>
+    <div class="cell-caption">TX flowing<br>UpStream filled pink</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FE5FF5">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="none" stroke="#fff"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#FE5FF5" stroke="#FE5FF5"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FE5FF5">StageC</div>
+    </div>
+    <div class="cell-caption">RX flowing<br>DownStream filled pink</div>
+  </div>
+
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FE5FF5">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#FE5FF5" stroke="#FE5FF5"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#FE5FF5" stroke="#FE5FF5"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FE5FF5">StageC</div>
+    </div>
+    <div class="cell-caption">Both flowing<br>Both arrows filled, sink white</div>
+  </div>
+</div>
+
+<!-- ==================== ALL DEVICE TYPES ==================== -->
+<h2>All Device Types — Enabled (no data flow)</h2>
+<div class="row" style="gap:16px">
+  <!-- OSC -->
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #36ABFF">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#36ABFF" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#36ABFF">OSC</div>
+    </div>
+    <div class="cell-caption">OSC<br>Bidirectional</div>
+  </div>
+
+  <!-- MoCap TX -->
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FFA126">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#FFA126" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FFA126">MoCap</div>
+    </div>
+    <div class="cell-caption">MoCap TX<br>Up + minor down</div>
+  </div>
+
+  <!-- MoCap RX -->
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FFA126">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#FFA126" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+          <path d="m 135.74171,150.16519 -0.56693,-44.85035 h -9.64464 l 14.89216,-19.933489 14.89216,19.933489 h -10.21157 l 0.56692,44.85035 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FFA126">MoCap</div>
+    </div>
+    <div class="cell-caption">MoCap RX<br>Down + minor up</div>
+  </div>
+
+  <!-- UG Video TX -->
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #F0DE01">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#F0DE01" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#F0DE01">ultragrid</div>
+    </div>
+    <div class="cell-caption">UG Video TX<br>ToServer</div>
+  </div>
+
+  <!-- UG Audio RX -->
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #00E411">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#00E411" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 109.42897,19.940146 110.57103,110 H 130 L 99.999999,149.94015 70,110 h 20.571029 l -1.14206,-90.059854 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#00E411">ultragrid</div>
+    </div>
+    <div class="cell-caption">UG Audio RX<br>FromServer</div>
+  </div>
+
+  <!-- UG V+A P2P -->
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#1BFEE9" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 89.470833,51.467598 149.47083,51.72248 V 31.467598 l 40,30 -40,30 V 71.722479 l -40,-0.254881 v 69.930342 l -19.999997,0.13928 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
+    </div>
+    <div class="cell-caption">UG V+A P2P TX<br>ToPeerTX</div>
+  </div>
+
+  <!-- StageControl -->
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FE5FF5">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#FE5FF5" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FE5FF5">StageC</div>
+    </div>
+    <div class="cell-caption">StageControl<br>Bidirectional</div>
+  </div>
+</div>
+
+<!-- ==================== ALL DISABLED ==================== -->
+<h2>All Device Types — Disabled</h2>
+<div class="row" style="gap:16px">
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">OSC</div>
+    </div>
+    <div class="cell-caption">OSC disabled</div>
+  </div>
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">ultragrid</div>
+    </div>
+    <div class="cell-caption">UG disabled</div>
+  </div>
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">MoCap</div>
+    </div>
+    <div class="cell-caption">MoCap disabled</div>
+  </div>
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #444">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#999">StageC</div>
+    </div>
+    <div class="cell-caption">StageC disabled</div>
+  </div>
+</div>
+
+<!-- ==================== DATA FLOW EXAMPLES ==================== -->
+<h2>Data Flow Indication — Per-Arrow Highlighting</h2>
+<p style="font-size:11px; color:#888; margin-bottom:12px">Active arrows turn device color (filled). Inactive arrows stay white (stroke only). Label always keeps device color. Sink follows its own indicator.</p>
+
+<div class="row" style="gap:16px">
+  <!-- MoCap TX: major flowing, minor not -->
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #FFA126">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#FFA126" stroke="#FFA126"/>
+          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z" fill="none" stroke="#fff"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#FFA126">MoCap</div>
+    </div>
+    <div class="cell-caption">MoCap TX<br>Major ↑ flowing (filled), minor idle (white)</div>
+  </div>
+
+  <!-- UG V+A: TX video flowing -->
+  <div class="cell-wrap">
+    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
+      <div class="cell-icon">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z" fill="#1BFEE9" stroke="#1BFEE9"/>
+        </svg>
+      </div>
+      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
+    </div>
+    <div class="cell-caption">UG V+A TX<br>Arrow flowing (filled)</div>
+  </div>
+</div>
+
+<!-- ==================== FULL MATRIX DEMO ==================== -->
+<h2>Matrix Row Demo</h2>
+<div class="matrix-section">
+  <div style="display:flex; align-items:center; gap:8px">
+    <div style="min-width:160px">
+      <div class="peer-row" style="background:#0a1f18; border-left:3px solid #1D9E75; padding:8px 10px">
+        <div class="peer-dot" style="background:#1D9E75"></div>
+        <div>
+          <div class="peer-name" style="color:#9FE1CB">TutorialMac <span class="peer-tag" style="background:#1a1a1a; color:#666">(you)</span></div>
+          <div class="peer-ip" style="color:#5aaa80">10.128.140.117</div>
+        </div>
+      </div>
+    </div>
+    <div class="matrix-demo">
+      <!-- empty -->
+      <div class="cell" style="background:#333; border:1px solid #444; width:64px; height:58px">
+        <svg class="plus" width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <!-- empty -->
+      <div class="cell" style="background:#333; border:1px solid #444; width:64px; height:58px">
+        <svg class="plus" width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <!-- OSC enabled, both flowing -->
+      <div class="cell" style="background:#333; border:1px solid #36ABFF; width:64px; height:58px">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#36ABFF" stroke="#36ABFF"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#36ABFF" stroke="#36ABFF"/>
+        </svg>
+        <div class="cell-label" style="color:#36ABFF">OSC</div>
+      </div>
+      <!-- MoCap TX, major flowing -->
+      <div class="cell" style="background:#333; border:1px solid #FFA126; width:64px; height:58px">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="none" stroke="#fff"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#FFA126" stroke="#FFA126"/>
+          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z" fill="none" stroke="#fff"/>
+        </svg>
+        <div class="cell-label" style="color:#FFA126">MoCap</div>
+      </div>
+      <!-- empty -->
+      <div class="cell" style="background:#333; border:1px solid #444; width:64px; height:58px">
+        <svg class="plus" width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <!-- UG V+A TX disabled -->
+      <div class="cell" style="background:#333; border:1px solid #444; width:64px; height:58px">
+        <svg width="28" height="28" viewBox="0 0 200 200" fill="none" stroke="#999" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
+          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/>
+        </svg>
+        <div class="cell-label" style="color:#999">ultragrid</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== COLOR RULES SUMMARY ==================== -->
+<h2>Color Rules Summary</h2>
+<table style="font-size:12px; border-collapse:collapse; margin-top:8px">
+<tr style="border-bottom:1px solid #333">
+  <th style="text-align:left; padding:4px 12px 4px 0; color:#888">State</th>
+  <th style="text-align:left; padding:4px 12px 4px 0; color:#888">Icon Rendering</th>
+  <th style="text-align:left; padding:4px 12px 4px 0; color:#888">Label Color</th>
+  <th style="text-align:left; padding:4px 12px 4px 0; color:#888">Cell Border</th>
+</tr>
+<tr><td style="padding:3px 12px 3px 0">Disabled</td><td style="padding:3px 12px 3px 0"><span style="color:#999">#999</span> stroke only</td><td style="padding:3px 12px 3px 0"><span style="color:#999">#999</span></td><td style="padding:3px 12px 3px 0">#444</td></tr>
+<tr><td style="padding:3px 12px 3px 0">Enabled, no data flow</td><td style="padding:3px 12px 3px 0"><span style="color:#fff">#fff</span> stroke only (idle)</td><td style="padding:3px 12px 3px 0">Device color</td><td style="padding:3px 12px 3px 0">Device color</td></tr>
+<tr><td style="padding:3px 12px 3px 0">Enabled, arrow active</td><td style="padding:3px 12px 3px 0">Device color <b>filled</b></td><td style="padding:3px 12px 3px 0">Device color</td><td style="padding:3px 12px 3px 0">Device color</td></tr>
+<tr><td style="padding:3px 12px 3px 0">Enabled, arrow idle</td><td style="padding:3px 12px 3px 0"><span style="color:#fff">#fff</span> stroke only</td><td style="padding:3px 12px 3px 0">Device color</td><td style="padding:3px 12px 3px 0">Device color</td></tr>
+<tr><td style="padding:3px 12px 3px 0">Enabled, sink (ground)</td><td style="padding:3px 12px 3px 0"><span style="color:#fff">#fff</span> stroke only — <b>always white when active</b></td><td style="padding:3px 12px 3px 0">—</td><td style="padding:3px 12px 3px 0">—</td></tr>
+</table>
+
+</body>
+</html>
