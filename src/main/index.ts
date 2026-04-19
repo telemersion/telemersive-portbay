@@ -2,7 +2,7 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { join } from 'path'
 import { TBusClient } from './busClient'
 import { loadSettings, saveSettings } from './persistence/settings'
-import { loadRack, saveRack } from './persistence/rack'
+import { loadRack, saveRack, buildRackSnapshot, isRackEligibleTail } from './persistence/rack'
 import { topics } from '../shared/topics'
 import { DeviceRouter } from './deviceRouter'
 import { OscDevice } from './devices/OscDevice'
@@ -24,23 +24,15 @@ const retainedTopics = new Map<string, string>()
 const RACK_SAVE_DEBOUNCE_MS = 500
 let rackSaveTimer: NodeJS.Timeout | null = null
 
-function buildRackSnapshot(): Record<string, string> {
-  if (!localPeerId) return {}
-  const prefix = `/peer/${localPeerId}/`
-  const snap: Record<string, string> = {}
-  for (const [topic, value] of retainedTopics) {
-    if (topic.startsWith(prefix)) {
-      snap[topic.slice(prefix.length)] = value
-    }
-  }
-  return snap
+function currentRackSnapshot(): Record<string, string> {
+  return buildRackSnapshot(retainedTopics, localPeerId)
 }
 
 function scheduleRackSave(): void {
   if (rackSaveTimer) clearTimeout(rackSaveTimer)
   rackSaveTimer = setTimeout(() => {
     rackSaveTimer = null
-    try { saveRack(buildRackSnapshot()) } catch {}
+    try { saveRack(currentRackSnapshot()) } catch {}
   }, RACK_SAVE_DEBOUNCE_MS)
 }
 
@@ -49,7 +41,7 @@ function flushRackSave(): void {
     clearTimeout(rackSaveTimer)
     rackSaveTimer = null
   }
-  try { saveRack(buildRackSnapshot()) } catch {}
+  try { saveRack(currentRackSnapshot()) } catch {}
 }
 
 function createWindow(): void {
@@ -132,6 +124,7 @@ function publishInitSequence(): void {
   const savedRack = loadRack()
   if (Object.keys(savedRack).length > 0) {
     for (const [tail, value] of Object.entries(savedRack)) {
+      if (!isRackEligibleTail(tail)) continue
       trackedPublish(1, `/peer/${peerId}/${tail}`, value)
     }
   }
@@ -177,7 +170,8 @@ function setupBus(): void {
     peerJoined = joined
     mainWindow?.webContents.send('peer:joined', joined)
     if (joined) {
-      bus!.subscribe(`/peer/${localPeerId}/#`)
+      bus!.subscribe(topics.settingsSubscribe(localPeerId))
+      bus!.subscribe(topics.loadedSubscribe(localPeerId))
 
       deviceRouter = new DeviceRouter(
         bus!,

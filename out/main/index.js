@@ -214,6 +214,23 @@ function saveSettings(settings) {
   const path2 = settingsPath();
   fs.writeFileSync(path2, JSON.stringify(settings, null, 2), "utf-8");
 }
+function isRackEligibleTail(tail) {
+  if (tail.startsWith("settings/localMenus/")) return false;
+  if (tail.startsWith("settings/localProps/")) return false;
+  return true;
+}
+function buildRackSnapshot(retainedTopics2, peerId) {
+  if (!peerId) return {};
+  const prefix = `/peer/${peerId}/`;
+  const snap = {};
+  for (const [topic, value] of retainedTopics2) {
+    if (!topic.startsWith(prefix)) continue;
+    const tail = topic.slice(prefix.length);
+    if (!isRackEligibleTail(tail)) continue;
+    snap[tail] = value;
+  }
+  return snap;
+}
 function rackPath() {
   return path.join(electron.app.getPath("userData"), "rack.json");
 }
@@ -556,23 +573,15 @@ let peerJoined = false;
 const retainedTopics = /* @__PURE__ */ new Map();
 const RACK_SAVE_DEBOUNCE_MS = 500;
 let rackSaveTimer = null;
-function buildRackSnapshot() {
-  if (!localPeerId) return {};
-  const prefix = `/peer/${localPeerId}/`;
-  const snap = {};
-  for (const [topic, value] of retainedTopics) {
-    if (topic.startsWith(prefix)) {
-      snap[topic.slice(prefix.length)] = value;
-    }
-  }
-  return snap;
+function currentRackSnapshot() {
+  return buildRackSnapshot(retainedTopics, localPeerId);
 }
 function scheduleRackSave() {
   if (rackSaveTimer) clearTimeout(rackSaveTimer);
   rackSaveTimer = setTimeout(() => {
     rackSaveTimer = null;
     try {
-      saveRack(buildRackSnapshot());
+      saveRack(currentRackSnapshot());
     } catch {
     }
   }, RACK_SAVE_DEBOUNCE_MS);
@@ -583,7 +592,7 @@ function flushRackSave() {
     rackSaveTimer = null;
   }
   try {
-    saveRack(buildRackSnapshot());
+    saveRack(currentRackSnapshot());
   } catch {
   }
 }
@@ -655,6 +664,7 @@ function publishInitSequence() {
   const savedRack = loadRack();
   if (Object.keys(savedRack).length > 0) {
     for (const [tail, value] of Object.entries(savedRack)) {
+      if (!isRackEligibleTail(tail)) continue;
       trackedPublish(1, `/peer/${peerId}/${tail}`, value);
     }
   }
@@ -702,7 +712,8 @@ function setupBus() {
     peerJoined = joined;
     mainWindow?.webContents.send("peer:joined", joined);
     if (joined) {
-      bus.subscribe(`/peer/${localPeerId}/#`);
+      bus.subscribe(topics.settingsSubscribe(localPeerId));
+      bus.subscribe(topics.loadedSubscribe(localPeerId));
       deviceRouter = new DeviceRouter(
         bus,
         localPeerId,
