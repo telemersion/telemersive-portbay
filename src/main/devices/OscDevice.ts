@@ -4,6 +4,7 @@ import { allocateLocalPorts, allocateRoomPorts, type OscPorts } from '../portAll
 import type { DeviceHandler } from './types'
 
 type PublishFn = (retained: 0 | 1, topic: string, value: string) => void
+type HasRetainedFn = (topic: string) => boolean
 
 export class OscDevice implements DeviceHandler {
   readonly channelIndex: number
@@ -14,6 +15,7 @@ export class OscDevice implements DeviceHandler {
   private roomPorts: OscPorts
   private publishedTopics: string[] = []
   private publish: PublishFn
+  private hasRetained: HasRetainedFn
 
   private enabled = false
   private enableTwo = false
@@ -34,7 +36,8 @@ export class OscDevice implements DeviceHandler {
     localIP: string,
     roomId: number,
     publish: PublishFn,
-    deviceType: number = 1
+    deviceType: number = 1,
+    hasRetained: HasRetainedFn = () => false
   ) {
     this.channelIndex = channelIndex
     this.deviceType = deviceType
@@ -43,6 +46,7 @@ export class OscDevice implements DeviceHandler {
     this.localPorts = allocateLocalPorts(channelIndex)
     this.roomPorts = allocateRoomPorts(roomId, channelIndex)
     this.publish = publish
+    this.hasRetained = hasRetained
     this.outputIPOne = localIP
     this.outputIPTwo = localIP
   }
@@ -56,6 +60,7 @@ export class OscDevice implements DeviceHandler {
           : topics.deviceGui(this.peerId, this.channelIndex, field)
 
       this.publishedTopics.push(topic)
+      if (this.hasRetained(topic)) return
       this.publish(1, topic, value)
     }
 
@@ -92,10 +97,10 @@ export class OscDevice implements DeviceHandler {
         this.handleEnable(value === '1')
         break
       case 'gui/localudp/outputIPOne':
-        this.outputIPOne = value
+        if (value && value !== '0') this.outputIPOne = value
         break
       case 'gui/localudp/outputIPTwo':
-        this.outputIPTwo = value
+        if (value && value !== '0') this.outputIPTwo = value
         break
       case 'gui/localudp/enableTwo':
         this.enableTwo = value === '1'

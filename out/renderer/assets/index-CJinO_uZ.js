@@ -197,6 +197,9 @@ function looseEqual(a, b) {
   }
   return String(a) === String(b);
 }
+function looseIndexOf(arr, val) {
+  return arr.findIndex((item) => looseEqual(item, val));
+}
 const isRef$1 = (val) => {
   return !!(val && val["__v_isRef"] === true);
 };
@@ -6382,6 +6385,68 @@ const vModelText = {
     el.value = newValue;
   }
 };
+const vModelCheckbox = {
+  // #4096 array checkboxes need to be deep traversed
+  deep: true,
+  created(el, _, vnode) {
+    el[assignKey] = getModelAssigner(vnode);
+    addEventListener(el, "change", () => {
+      const modelValue = el._modelValue;
+      const elementValue = getValue(el);
+      const checked = el.checked;
+      const assign2 = el[assignKey];
+      if (isArray$1(modelValue)) {
+        const index = looseIndexOf(modelValue, elementValue);
+        const found = index !== -1;
+        if (checked && !found) {
+          assign2(modelValue.concat(elementValue));
+        } else if (!checked && found) {
+          const filtered = [...modelValue];
+          filtered.splice(index, 1);
+          assign2(filtered);
+        }
+      } else if (isSet(modelValue)) {
+        const cloned = new Set(modelValue);
+        if (checked) {
+          cloned.add(elementValue);
+        } else {
+          cloned.delete(elementValue);
+        }
+        assign2(cloned);
+      } else {
+        assign2(getCheckboxValue(el, checked));
+      }
+    });
+  },
+  // set initial checked on mount to wait for true-value/false-value
+  mounted: setChecked,
+  beforeUpdate(el, binding, vnode) {
+    el[assignKey] = getModelAssigner(vnode);
+    setChecked(el, binding, vnode);
+  }
+};
+function setChecked(el, { value, oldValue }, vnode) {
+  el._modelValue = value;
+  let checked;
+  if (isArray$1(value)) {
+    checked = looseIndexOf(value, vnode.props.value) > -1;
+  } else if (isSet(value)) {
+    checked = value.has(vnode.props.value);
+  } else {
+    if (value === oldValue) return;
+    checked = looseEqual(value, getCheckboxValue(el, true));
+  }
+  if (el.checked !== checked) {
+    el.checked = checked;
+  }
+}
+function getValue(el) {
+  return "_value" in el ? el._value : el.value;
+}
+function getCheckboxValue(el, checked) {
+  const key = checked ? "_trueValue" : "_falseValue";
+  return key in el ? el[key] : checked;
+}
 const systemModifiers = ["ctrl", "shift", "alt", "meta"];
 const modifierGuards = {
   stop: (e) => e.stopPropagation(),
@@ -6450,19 +6515,6 @@ function normalizeContainer(container) {
   }
   return container;
 }
-const _export_sfc = (sfc, props) => {
-  const target = sfc.__vccOpts || sfc;
-  for (const [key, val] of props) {
-    target[key] = val;
-  }
-  return target;
-};
-const _sfc_main$7 = {};
-function _sfc_render(_ctx, _cache) {
-  const _component_router_view = resolveComponent("router-view");
-  return openBlock(), createBlock(_component_router_view);
-}
-const App = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["render", _sfc_render]]);
 /*!
  * vue-router v5.0.4
  * (c) 2026 Eduardo San Martin Morote
@@ -6547,6 +6599,9 @@ const routeLocationKey = Symbol("");
 const routerViewLocationKey = Symbol("");
 function useRouter() {
   return inject(routerKey);
+}
+function useRoute(_name) {
+  return inject(routeLocationKey);
 }
 /*!
  * vue-router v5.0.4
@@ -7913,22 +7968,356 @@ function createRouter(options) {
   }
   return router2;
 }
-const _hoisted_1$6 = { class: "connect-view" };
-const _hoisted_2$5 = { class: "form-row" };
+const navItems = [
+  { id: "session", label: "Session", icon: "plug", kind: "route", target: "/", position: "top" },
+  { id: "matrix", label: "Matrix", icon: "grid", kind: "route", target: "/matrix", position: "top" },
+  { id: "log", label: "Activity log", icon: "list", kind: "panel", target: "log", position: "top" }
+];
+const ICONS = {
+  plug: "M7 3v5M17 3v5M5 8h14v3a7 7 0 0 1-14 0zM12 18v3",
+  grid: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
+  list: "M4 6h16M4 12h16M4 18h10"
+};
+const panelState = /* @__PURE__ */ reactive({
+  openPanelId: null
+});
+function togglePanel(id) {
+  panelState.openPanelId = panelState.openPanelId === id ? null : id;
+}
+const _hoisted_1$7 = {
+  class: "icon-bar",
+  "aria-label": "Primary navigation"
+};
+const _hoisted_2$7 = { class: "group" };
+const _hoisted_3$6 = ["title", "aria-label", "onClick"];
+const _hoisted_4$6 = {
+  viewBox: "0 0 24 24",
+  width: "20",
+  height: "20",
+  fill: "none",
+  stroke: "currentColor",
+  "stroke-width": "1.8",
+  "stroke-linecap": "round",
+  "stroke-linejoin": "round"
+};
+const _hoisted_5$4 = ["d"];
+const _hoisted_6$4 = { class: "group bottom" };
+const _hoisted_7$4 = ["title", "aria-label", "onClick"];
+const _hoisted_8$4 = {
+  viewBox: "0 0 24 24",
+  width: "20",
+  height: "20",
+  fill: "none",
+  stroke: "currentColor",
+  "stroke-width": "1.8",
+  "stroke-linecap": "round",
+  "stroke-linejoin": "round"
+};
+const _hoisted_9$4 = ["d"];
+const _sfc_main$8 = /* @__PURE__ */ defineComponent({
+  __name: "IconBar",
+  setup(__props) {
+    const route = useRoute();
+    const router2 = useRouter();
+    const topItems = computed(() => navItems.filter((i) => i.position === "top"));
+    const bottomItems = computed(() => navItems.filter((i) => i.position === "bottom"));
+    function activate(item) {
+      if (item.kind === "route") {
+        router2.push(item.target);
+      } else {
+        togglePanel(item.target);
+      }
+    }
+    function isActive(item) {
+      if (item.kind === "route") return route.path === item.target;
+      return panelState.openPanelId === item.target;
+    }
+    return (_ctx, _cache) => {
+      return openBlock(), createElementBlock("nav", _hoisted_1$7, [
+        createBaseVNode("div", _hoisted_2$7, [
+          (openBlock(true), createElementBlock(Fragment, null, renderList(topItems.value, (item) => {
+            return openBlock(), createElementBlock("button", {
+              key: item.id,
+              class: normalizeClass(["icon-btn", { active: isActive(item) }]),
+              title: item.label,
+              "aria-label": item.label,
+              onClick: ($event) => activate(item)
+            }, [
+              (openBlock(), createElementBlock("svg", _hoisted_4$6, [
+                createBaseVNode("path", {
+                  d: unref(ICONS)[item.icon]
+                }, null, 8, _hoisted_5$4)
+              ]))
+            ], 10, _hoisted_3$6);
+          }), 128))
+        ]),
+        createBaseVNode("div", _hoisted_6$4, [
+          (openBlock(true), createElementBlock(Fragment, null, renderList(bottomItems.value, (item) => {
+            return openBlock(), createElementBlock("button", {
+              key: item.id,
+              class: normalizeClass(["icon-btn", { active: isActive(item) }]),
+              title: item.label,
+              "aria-label": item.label,
+              onClick: ($event) => activate(item)
+            }, [
+              (openBlock(), createElementBlock("svg", _hoisted_8$4, [
+                createBaseVNode("path", {
+                  d: unref(ICONS)[item.icon]
+                }, null, 8, _hoisted_9$4)
+              ]))
+            ], 10, _hoisted_7$4);
+          }), 128))
+        ])
+      ]);
+    };
+  }
+});
+const _export_sfc = (sfc, props) => {
+  const target = sfc.__vccOpts || sfc;
+  for (const [key, val] of props) {
+    target[key] = val;
+  }
+  return target;
+};
+const IconBar = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["__scopeId", "data-v-dff99c03"]]);
+const _hoisted_1$6 = { class: "log-panel" };
+const _hoisted_2$6 = { class: "head" };
+const _hoisted_3$5 = { class: "count" };
+const _hoisted_4$5 = { class: "filters" };
+const _hoisted_5$3 = { class: "ts" };
+const _hoisted_6$3 = { class: "kind" };
+const _hoisted_7$3 = { class: "topic" };
+const _hoisted_8$3 = {
+  key: 0,
+  class: "value"
+};
+const _hoisted_9$3 = {
+  key: 0,
+  class: "empty"
+};
+const _hoisted_10$3 = { class: "actions" };
+const _sfc_main$7 = /* @__PURE__ */ defineComponent({
+  __name: "LogPanel",
+  setup(__props) {
+    const entries = /* @__PURE__ */ ref([]);
+    const showSub = /* @__PURE__ */ ref(true);
+    const showPub = /* @__PURE__ */ ref(true);
+    const showRecv = /* @__PURE__ */ ref(true);
+    const autoScroll = /* @__PURE__ */ ref(true);
+    const listEl = /* @__PURE__ */ ref(null);
+    const copyFlash = /* @__PURE__ */ ref(false);
+    const visible = computed(() => entries.value.filter((e) => {
+      if (e.kind === "sub" || e.kind === "unsub") return showSub.value;
+      if (e.kind === "pub") return showPub.value;
+      if (e.kind === "recv") return showRecv.value;
+      return true;
+    }));
+    function formatTs(ts) {
+      const d = new Date(ts);
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const ss = String(d.getSeconds()).padStart(2, "0");
+      const ms = String(d.getMilliseconds()).padStart(3, "0");
+      return `${hh}:${mm}:${ss}.${ms}`;
+    }
+    function kindLabel(e) {
+      switch (e.kind) {
+        case "sub":
+          return "SUB  ";
+        case "unsub":
+          return "UNSUB";
+        case "pub":
+          return e.retained ? "PUB r" : "PUB  ";
+        case "recv":
+          return "RECV ";
+      }
+    }
+    function formatEntry(e) {
+      const base = `[${formatTs(e.ts)}] ${kindLabel(e)} ${e.topic}`;
+      return e.value ? `${base} ${e.value}` : base;
+    }
+    function onListScroll() {
+      const el = listEl.value;
+      if (!el) return;
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 20;
+      autoScroll.value = atBottom;
+    }
+    watch(visible, async () => {
+      if (!autoScroll.value) return;
+      await nextTick();
+      const el = listEl.value;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
+    function onEntry(entry) {
+      entries.value.push(entry);
+      if (entries.value.length > 500) entries.value.splice(0, entries.value.length - 500);
+    }
+    async function clear() {
+      await window.api.invoke("log:clear");
+      entries.value = [];
+    }
+    async function copy() {
+      const text = visible.value.map(formatEntry).join("\n");
+      try {
+        await navigator.clipboard.writeText(text);
+        copyFlash.value = true;
+        setTimeout(() => {
+          copyFlash.value = false;
+        }, 1200);
+      } catch {
+      }
+    }
+    onMounted(async () => {
+      const initial = await window.api.invoke("log:get");
+      entries.value = initial ?? [];
+      window.api.on("log:entry", onEntry);
+      await nextTick();
+      const el = listEl.value;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
+    onUnmounted(() => {
+      window.api.removeAllListeners("log:entry");
+    });
+    return (_ctx, _cache) => {
+      return openBlock(), createElementBlock("aside", _hoisted_1$6, [
+        createBaseVNode("header", _hoisted_2$6, [
+          _cache[3] || (_cache[3] = createBaseVNode("span", { class: "title" }, "Activity log", -1)),
+          createBaseVNode("span", _hoisted_3$5, toDisplayString(visible.value.length) + " / " + toDisplayString(entries.value.length), 1)
+        ]),
+        createBaseVNode("div", _hoisted_4$5, [
+          createBaseVNode("label", null, [
+            withDirectives(createBaseVNode("input", {
+              type: "checkbox",
+              "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => showSub.value = $event)
+            }, null, 512), [
+              [vModelCheckbox, showSub.value]
+            ]),
+            _cache[4] || (_cache[4] = createTextVNode(" Sub", -1))
+          ]),
+          createBaseVNode("label", null, [
+            withDirectives(createBaseVNode("input", {
+              type: "checkbox",
+              "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => showPub.value = $event)
+            }, null, 512), [
+              [vModelCheckbox, showPub.value]
+            ]),
+            _cache[5] || (_cache[5] = createTextVNode(" Pub", -1))
+          ]),
+          createBaseVNode("label", null, [
+            withDirectives(createBaseVNode("input", {
+              type: "checkbox",
+              "onUpdate:modelValue": _cache[2] || (_cache[2] = ($event) => showRecv.value = $event)
+            }, null, 512), [
+              [vModelCheckbox, showRecv.value]
+            ]),
+            _cache[6] || (_cache[6] = createTextVNode(" Recv", -1))
+          ])
+        ]),
+        createBaseVNode("div", {
+          ref_key: "listEl",
+          ref: listEl,
+          class: "list",
+          onScroll: onListScroll
+        }, [
+          (openBlock(true), createElementBlock(Fragment, null, renderList(visible.value, (e) => {
+            return openBlock(), createElementBlock("div", {
+              key: e.seq,
+              class: normalizeClass(["row", "k-" + e.kind])
+            }, [
+              createBaseVNode("span", _hoisted_5$3, toDisplayString(formatTs(e.ts)), 1),
+              createBaseVNode("span", _hoisted_6$3, toDisplayString(kindLabel(e)), 1),
+              createBaseVNode("span", _hoisted_7$3, toDisplayString(e.topic), 1),
+              e.value ? (openBlock(), createElementBlock("span", _hoisted_8$3, toDisplayString(e.value), 1)) : createCommentVNode("", true)
+            ], 2);
+          }), 128)),
+          visible.value.length === 0 ? (openBlock(), createElementBlock("div", _hoisted_9$3, "No entries.")) : createCommentVNode("", true)
+        ], 544),
+        createBaseVNode("footer", _hoisted_10$3, [
+          createBaseVNode("button", {
+            class: "btn",
+            onClick: clear
+          }, "Clear"),
+          createBaseVNode("button", {
+            class: "btn",
+            onClick: copy
+          }, toDisplayString(copyFlash.value ? "Copied!" : "Copy to clipboard"), 1)
+        ])
+      ]);
+    };
+  }
+});
+const LogPanel = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["__scopeId", "data-v-bbf8eb4a"]]);
+const ICON_BAR_WIDTH = 48;
+const LOG_PANEL_WIDTH = 400;
+const _sfc_main$6 = /* @__PURE__ */ defineComponent({
+  __name: "App",
+  setup(__props) {
+    const contentLeft = computed(() => {
+      const base = ICON_BAR_WIDTH;
+      return panelState.openPanelId === "log" ? base + LOG_PANEL_WIDTH : base;
+    });
+    return (_ctx, _cache) => {
+      const _component_router_view = resolveComponent("router-view");
+      return openBlock(), createElementBlock(Fragment, null, [
+        createVNode(IconBar),
+        unref(panelState).openPanelId === "log" ? (openBlock(), createBlock(LogPanel, { key: 0 })) : createCommentVNode("", true),
+        createBaseVNode("main", {
+          class: "app-content",
+          style: normalizeStyle({ marginLeft: contentLeft.value + "px" })
+        }, [
+          createVNode(_component_router_view)
+        ], 4)
+      ], 64);
+    };
+  }
+});
+const _hoisted_1$5 = { class: "session-view" };
+const _hoisted_2$5 = { class: "card" };
 const _hoisted_3$4 = { class: "form-row" };
-const _hoisted_4$4 = { class: "form-row" };
+const _hoisted_4$4 = ["disabled"];
 const _hoisted_5$2 = { class: "form-row" };
 const _hoisted_6$2 = ["disabled"];
-const _hoisted_7$2 = {
+const _hoisted_7$2 = { class: "form-row" };
+const _hoisted_8$2 = ["disabled"];
+const _hoisted_9$2 = { class: "form-row" };
+const _hoisted_10$2 = ["disabled"];
+const _hoisted_11$2 = { class: "btn-row" };
+const _hoisted_12$2 = ["disabled"];
+const _hoisted_13$2 = ["disabled"];
+const _hoisted_14$1 = {
   key: 0,
   class: "error"
 };
-const _sfc_main$6 = /* @__PURE__ */ defineComponent({
-  __name: "ConnectView",
+const _hoisted_15$1 = {
+  key: 0,
+  class: "card"
+};
+const _hoisted_16$1 = {
+  key: 0,
+  class: "room-list"
+};
+const _hoisted_17$1 = { class: "form-row" };
+const _hoisted_18 = ["value", "disabled"];
+const _hoisted_19 = ["value"];
+const _hoisted_20 = { class: "form-row" };
+const _hoisted_21 = ["disabled"];
+const _hoisted_22 = { class: "form-row" };
+const _hoisted_23 = ["disabled"];
+const _hoisted_24 = { class: "form-row" };
+const _hoisted_25 = ["disabled"];
+const _hoisted_26 = { class: "btn-row" };
+const _hoisted_27 = ["disabled"];
+const _hoisted_28 = ["disabled"];
+const _sfc_main$5 = /* @__PURE__ */ defineComponent({
+  __name: "SessionView",
   setup(__props) {
     const router2 = useRouter();
     const error = /* @__PURE__ */ ref("");
     const connecting = /* @__PURE__ */ ref(false);
+    const joining = /* @__PURE__ */ ref(false);
+    const isConnected = /* @__PURE__ */ ref(false);
+    const isJoined = /* @__PURE__ */ ref(false);
+    const rooms = /* @__PURE__ */ ref([]);
     const config = /* @__PURE__ */ reactive({
       host: "telemersion.zhdk.ch",
       port: 3883,
@@ -7936,109 +8325,6 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
       password: "telemersion2021",
       localIP: ""
     });
-    window.api.invoke("settings:load").then((settings) => {
-      if (settings) {
-        config.host = settings.brokerUrl || config.host;
-        config.port = settings.brokerPort || config.port;
-        config.username = settings.brokerUser || config.username;
-        config.password = settings.brokerPwd || config.password;
-      }
-    });
-    window.api.on("peer:localIP", (ip) => {
-      config.localIP = ip;
-    });
-    window.api.on("broker:connected", (connected) => {
-      if (connected) {
-        connecting.value = false;
-        router2.push("/rooms");
-      } else {
-        connecting.value = false;
-        error.value = "Connection failed";
-      }
-    });
-    async function connect() {
-      error.value = "";
-      connecting.value = true;
-      window.api.send("bus:configure", { ...config });
-      try {
-        await window.api.invoke("bus:connect");
-      } catch (e) {
-        connecting.value = false;
-        error.value = e.message || "Connection failed";
-      }
-    }
-    return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("div", _hoisted_1$6, [
-        _cache[8] || (_cache[8] = createBaseVNode("h2", null, "Connect to Broker", -1)),
-        createBaseVNode("div", _hoisted_2$5, [
-          _cache[4] || (_cache[4] = createBaseVNode("label", null, "Host", -1)),
-          withDirectives(createBaseVNode("input", {
-            "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => config.host = $event)
-          }, null, 512), [
-            [vModelText, config.host]
-          ])
-        ]),
-        createBaseVNode("div", _hoisted_3$4, [
-          _cache[5] || (_cache[5] = createBaseVNode("label", null, "Port", -1)),
-          withDirectives(createBaseVNode("input", {
-            "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => config.port = $event),
-            type: "number"
-          }, null, 512), [
-            [
-              vModelText,
-              config.port,
-              void 0,
-              { number: true }
-            ]
-          ])
-        ]),
-        createBaseVNode("div", _hoisted_4$4, [
-          _cache[6] || (_cache[6] = createBaseVNode("label", null, "Username", -1)),
-          withDirectives(createBaseVNode("input", {
-            "onUpdate:modelValue": _cache[2] || (_cache[2] = ($event) => config.username = $event)
-          }, null, 512), [
-            [vModelText, config.username]
-          ])
-        ]),
-        createBaseVNode("div", _hoisted_5$2, [
-          _cache[7] || (_cache[7] = createBaseVNode("label", null, "Password", -1)),
-          withDirectives(createBaseVNode("input", {
-            "onUpdate:modelValue": _cache[3] || (_cache[3] = ($event) => config.password = $event),
-            type: "password"
-          }, null, 512), [
-            [vModelText, config.password]
-          ])
-        ]),
-        createBaseVNode("button", {
-          onClick: connect,
-          disabled: connecting.value
-        }, toDisplayString(connecting.value ? "Connecting..." : "Connect"), 9, _hoisted_6$2),
-        error.value ? (openBlock(), createElementBlock("p", _hoisted_7$2, toDisplayString(error.value), 1)) : createCommentVNode("", true)
-      ]);
-    };
-  }
-});
-const ConnectView = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-78056551"]]);
-const _hoisted_1$5 = { class: "room-picker" };
-const _hoisted_2$4 = {
-  key: 0,
-  class: "room-list"
-};
-const _hoisted_3$3 = ["onClick"];
-const _hoisted_4$3 = {
-  key: 1,
-  class: "muted"
-};
-const _hoisted_5$1 = { class: "form-row" };
-const _hoisted_6$1 = { class: "form-row" };
-const _hoisted_7$1 = { class: "form-row" };
-const _hoisted_8$1 = ["disabled"];
-const _sfc_main$5 = /* @__PURE__ */ defineComponent({
-  __name: "RoomPickerView",
-  setup(__props) {
-    const router2 = useRouter();
-    const rooms = /* @__PURE__ */ ref([]);
-    const joining = /* @__PURE__ */ ref(false);
     const form = /* @__PURE__ */ reactive({
       peerName: "",
       roomName: "",
@@ -8046,9 +8332,24 @@ const _sfc_main$5 = /* @__PURE__ */ defineComponent({
     });
     window.api.invoke("settings:load").then((settings) => {
       if (settings) {
+        config.host = settings.brokerUrl || config.host;
+        config.port = settings.brokerPort || config.port;
+        config.username = settings.brokerUser || config.username;
+        config.password = settings.brokerPwd || config.password;
         form.peerName = settings.peerName || "";
         form.roomName = settings.lastRoomName || "";
         form.roomPwd = settings.lastRoomPwd || "";
+      }
+    });
+    window.api.on("peer:localIP", (ip) => {
+      config.localIP = ip;
+    });
+    window.api.on("broker:connected", (connected) => {
+      connecting.value = false;
+      isConnected.value = connected;
+      if (!connected) {
+        isJoined.value = false;
+        if (!error.value) error.value = "Disconnected";
       }
     });
     window.api.on("rooms:clear", () => {
@@ -8058,68 +8359,193 @@ const _sfc_main$5 = /* @__PURE__ */ defineComponent({
       rooms.value.push(name);
     });
     window.api.on("peer:joined", (joined) => {
-      if (joined) {
-        joining.value = false;
-        router2.push("/matrix");
-      }
+      joining.value = false;
+      isJoined.value = joined;
+      if (joined) router2.push("/matrix");
     });
+    async function connect() {
+      error.value = "";
+      connecting.value = true;
+      const settings = await window.api.invoke("settings:load");
+      await window.api.invoke("settings:save", {
+        ...settings,
+        brokerUrl: config.host,
+        brokerPort: config.port,
+        brokerUser: config.username,
+        brokerPwd: config.password
+      });
+      window.api.send("bus:configure", { ...config });
+      try {
+        await window.api.invoke("bus:connect");
+      } catch (e) {
+        connecting.value = false;
+        error.value = e.message || "Connection failed";
+      }
+    }
+    async function disconnect() {
+      error.value = "";
+      if (isJoined.value) {
+        try {
+          await window.api.invoke("bus:leave");
+        } catch {
+        }
+        isJoined.value = false;
+      }
+      try {
+        await window.api.invoke("bus:disconnect");
+      } catch {
+      }
+      isConnected.value = false;
+      rooms.value = [];
+    }
     function selectRoom(name) {
       form.roomName = name;
     }
     async function join() {
       joining.value = true;
+      const settings = await window.api.invoke("settings:load");
+      await window.api.invoke("settings:save", {
+        ...settings,
+        peerName: form.peerName,
+        lastRoomName: form.roomName,
+        lastRoomPwd: form.roomPwd
+      });
       await window.api.invoke("bus:join", form.peerName, form.roomName, form.roomPwd);
+    }
+    async function leave() {
+      try {
+        await window.api.invoke("bus:leave");
+      } catch {
+      }
+      isJoined.value = false;
     }
     return (_ctx, _cache) => {
       return openBlock(), createElementBlock("div", _hoisted_1$5, [
-        _cache[7] || (_cache[7] = createBaseVNode("h2", null, "Join Room", -1)),
-        rooms.value.length > 0 ? (openBlock(), createElementBlock("div", _hoisted_2$4, [
-          _cache[3] || (_cache[3] = createBaseVNode("h3", null, "Available Rooms", -1)),
-          (openBlock(true), createElementBlock(Fragment, null, renderList(rooms.value, (name) => {
-            return openBlock(), createElementBlock("div", {
-              key: name,
-              class: normalizeClass(["room-item", { selected: form.roomName === name }]),
-              onClick: ($event) => selectRoom(name)
-            }, toDisplayString(name), 11, _hoisted_3$3);
-          }), 128))
-        ])) : (openBlock(), createElementBlock("p", _hoisted_4$3, "No rooms found — type a name to create one.")),
-        createBaseVNode("div", _hoisted_5$1, [
-          _cache[4] || (_cache[4] = createBaseVNode("label", null, "Peer Name", -1)),
-          withDirectives(createBaseVNode("input", {
-            "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => form.peerName = $event),
-            placeholder: "your display name"
-          }, null, 512), [
-            [vModelText, form.peerName]
-          ])
+        createBaseVNode("section", _hoisted_2$5, [
+          _cache[12] || (_cache[12] = createBaseVNode("h3", null, "connect to the telemersive-router", -1)),
+          createBaseVNode("div", _hoisted_3$4, [
+            _cache[8] || (_cache[8] = createBaseVNode("label", null, "RouterURL", -1)),
+            withDirectives(createBaseVNode("input", {
+              "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => config.host = $event),
+              disabled: isConnected.value
+            }, null, 8, _hoisted_4$4), [
+              [vModelText, config.host]
+            ])
+          ]),
+          createBaseVNode("div", _hoisted_5$2, [
+            _cache[9] || (_cache[9] = createBaseVNode("label", null, "RouterPort", -1)),
+            withDirectives(createBaseVNode("input", {
+              "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => config.port = $event),
+              type: "number",
+              disabled: isConnected.value
+            }, null, 8, _hoisted_6$2), [
+              [
+                vModelText,
+                config.port,
+                void 0,
+                { number: true }
+              ]
+            ])
+          ]),
+          createBaseVNode("div", _hoisted_7$2, [
+            _cache[10] || (_cache[10] = createBaseVNode("label", null, "RouterUser", -1)),
+            withDirectives(createBaseVNode("input", {
+              "onUpdate:modelValue": _cache[2] || (_cache[2] = ($event) => config.username = $event),
+              disabled: isConnected.value
+            }, null, 8, _hoisted_8$2), [
+              [vModelText, config.username]
+            ])
+          ]),
+          createBaseVNode("div", _hoisted_9$2, [
+            _cache[11] || (_cache[11] = createBaseVNode("label", null, "RouterPwd", -1)),
+            withDirectives(createBaseVNode("input", {
+              "onUpdate:modelValue": _cache[3] || (_cache[3] = ($event) => config.password = $event),
+              type: "password",
+              disabled: isConnected.value
+            }, null, 8, _hoisted_10$2), [
+              [vModelText, config.password]
+            ])
+          ]),
+          createBaseVNode("div", _hoisted_11$2, [
+            createBaseVNode("button", {
+              class: normalizeClass(["btn-connect", { active: isConnected.value, pending: connecting.value }]),
+              disabled: isConnected.value || connecting.value,
+              onClick: connect
+            }, toDisplayString(isConnected.value ? "connected" : connecting.value ? "connecting…" : "connect"), 11, _hoisted_12$2),
+            createBaseVNode("button", {
+              class: "btn-disconnect",
+              disabled: !isConnected.value,
+              onClick: disconnect
+            }, " disconnect ", 8, _hoisted_13$2)
+          ]),
+          error.value ? (openBlock(), createElementBlock("p", _hoisted_14$1, toDisplayString(error.value), 1)) : createCommentVNode("", true)
         ]),
-        createBaseVNode("div", _hoisted_6$1, [
-          _cache[5] || (_cache[5] = createBaseVNode("label", null, "Room", -1)),
-          withDirectives(createBaseVNode("input", {
-            "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => form.roomName = $event),
-            placeholder: "room name"
-          }, null, 512), [
-            [vModelText, form.roomName]
+        isConnected.value ? (openBlock(), createElementBlock("section", _hoisted_15$1, [
+          _cache[18] || (_cache[18] = createBaseVNode("h3", null, "create / join a room", -1)),
+          rooms.value.length > 0 ? (openBlock(), createElementBlock("div", _hoisted_16$1, [
+            createBaseVNode("div", _hoisted_17$1, [
+              _cache[14] || (_cache[14] = createBaseVNode("label", null, "All Rooms:", -1)),
+              createBaseVNode("select", {
+                value: form.roomName,
+                onChange: _cache[4] || (_cache[4] = ($event) => selectRoom($event.target.value)),
+                disabled: isJoined.value
+              }, [
+                _cache[13] || (_cache[13] = createBaseVNode("option", { value: "" }, "— pick a room —", -1)),
+                (openBlock(true), createElementBlock(Fragment, null, renderList(rooms.value, (name) => {
+                  return openBlock(), createElementBlock("option", {
+                    key: name,
+                    value: name
+                  }, toDisplayString(name), 9, _hoisted_19);
+                }), 128))
+              ], 40, _hoisted_18)
+            ])
+          ])) : createCommentVNode("", true),
+          createBaseVNode("div", _hoisted_20, [
+            _cache[15] || (_cache[15] = createBaseVNode("label", null, "PeerName", -1)),
+            withDirectives(createBaseVNode("input", {
+              "onUpdate:modelValue": _cache[5] || (_cache[5] = ($event) => form.peerName = $event),
+              disabled: isJoined.value
+            }, null, 8, _hoisted_21), [
+              [vModelText, form.peerName]
+            ])
+          ]),
+          createBaseVNode("div", _hoisted_22, [
+            _cache[16] || (_cache[16] = createBaseVNode("label", null, "RoomName", -1)),
+            withDirectives(createBaseVNode("input", {
+              "onUpdate:modelValue": _cache[6] || (_cache[6] = ($event) => form.roomName = $event),
+              disabled: isJoined.value
+            }, null, 8, _hoisted_23), [
+              [vModelText, form.roomName]
+            ])
+          ]),
+          createBaseVNode("div", _hoisted_24, [
+            _cache[17] || (_cache[17] = createBaseVNode("label", null, "RoomPwd", -1)),
+            withDirectives(createBaseVNode("input", {
+              "onUpdate:modelValue": _cache[7] || (_cache[7] = ($event) => form.roomPwd = $event),
+              type: "password",
+              disabled: isJoined.value
+            }, null, 8, _hoisted_25), [
+              [vModelText, form.roomPwd]
+            ])
+          ]),
+          createBaseVNode("div", _hoisted_26, [
+            createBaseVNode("button", {
+              class: normalizeClass(["btn-connect", { active: isJoined.value, pending: joining.value }]),
+              disabled: isJoined.value || joining.value || !form.peerName || !form.roomName,
+              onClick: join
+            }, toDisplayString(isJoined.value ? "joined" : joining.value ? "joining…" : "join"), 11, _hoisted_27),
+            createBaseVNode("button", {
+              class: "btn-disconnect",
+              disabled: !isJoined.value,
+              onClick: leave
+            }, " leave ", 8, _hoisted_28)
           ])
-        ]),
-        createBaseVNode("div", _hoisted_7$1, [
-          _cache[6] || (_cache[6] = createBaseVNode("label", null, "Password", -1)),
-          withDirectives(createBaseVNode("input", {
-            "onUpdate:modelValue": _cache[2] || (_cache[2] = ($event) => form.roomPwd = $event),
-            type: "password",
-            placeholder: "room password"
-          }, null, 512), [
-            [vModelText, form.roomPwd]
-          ])
-        ]),
-        createBaseVNode("button", {
-          onClick: join,
-          disabled: joining.value || !form.peerName || !form.roomName
-        }, toDisplayString(joining.value ? "Joining..." : "Join"), 9, _hoisted_8$1)
+        ])) : createCommentVNode("", true)
       ]);
     };
   }
 });
-const RoomPickerView = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["__scopeId", "data-v-66c6de43"]]);
+const SessionView = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["__scopeId", "data-v-4c7196cb"]]);
 function ensurePath(obj, keys) {
   let current = obj;
   for (const key of keys) {
@@ -8172,9 +8598,45 @@ function createRoster() {
   }
   return { entries, addPeer, removePeer, setLocalPeer };
 }
-const _hoisted_1$4 = {
+const _hoisted_1$4 = { class: "cell-inner" };
+const _hoisted_2$4 = { class: "dev-icon" };
+const _hoisted_3$3 = {
   key: 0,
-  class: "cell-indicator"
+  width: "28",
+  height: "28",
+  viewBox: "0 0 200 200",
+  "stroke-width": "10",
+  "stroke-linejoin": "round",
+  "stroke-linecap": "round"
+};
+const _hoisted_4$3 = ["stroke"];
+const _hoisted_5$1 = ["fill", "stroke"];
+const _hoisted_6$1 = ["fill", "stroke"];
+const _hoisted_7$1 = {
+  key: 1,
+  width: "28",
+  height: "28",
+  viewBox: "0 0 200 200",
+  "stroke-width": "10",
+  "stroke-linejoin": "round",
+  "stroke-linecap": "round"
+};
+const _hoisted_8$1 = ["stroke"];
+const _hoisted_9$1 = ["fill", "stroke"];
+const _hoisted_10$1 = {
+  key: 2,
+  width: "28",
+  height: "28",
+  viewBox: "0 0 200 200",
+  "stroke-width": "10",
+  "stroke-linejoin": "round",
+  "stroke-linecap": "round"
+};
+const _hoisted_11$1 = ["stroke"];
+const _hoisted_12$1 = ["fill", "stroke"];
+const _hoisted_13$1 = {
+  key: 0,
+  class: "cell-plus"
 };
 const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   __name: "DeviceCell",
@@ -8182,6 +8644,8 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
     loaded: {},
     description: {},
     enable: {},
+    inputIndicator: {},
+    outputIndicator: {},
     isLocal: { type: Boolean },
     isLocked: { type: Boolean },
     selected: { type: Boolean }
@@ -8191,56 +8655,134 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
     const props = __props;
     const emit2 = __emit;
     const isEmpty = computed(() => props.loaded === "0" || props.loaded === "");
-    const deviceColor = computed(() => {
+    const isEnabled = computed(() => props.enable === "1");
+    const DEVICE_STYLES = {
+      "1": { color: "#36ABFF", label: "OSC" },
+      "2": { color: "#FFA126", label: "MoCap" },
+      "3": { color: "#F0DE01", label: "ultragrid" },
+      "4": { color: "#1BFEE9", label: "ultragrid" },
+      "5": { color: "#00E411", label: "ultragrid" }
+    };
+    const style = computed(() => DEVICE_STYLES[props.loaded] ?? { color: "#888", label: "device" });
+    const label = computed(() => props.description || style.value.label);
+    const labelColor = computed(() => isEnabled.value ? style.value.color : "#999");
+    const borderColor = computed(() => {
+      if (isEmpty.value) return "#444";
+      return isEnabled.value ? style.value.color : "#444";
+    });
+    const direction = computed(() => {
       switch (props.loaded) {
         case "1":
-          return "#36ABFF";
-        case "2":
-          return "#EF9F27";
-        case "3":
-          return "#1D9E75";
         case "4":
-          return "#36ABFF";
+          return "bidi";
+        case "2":
+          return "tx";
         default:
-          return "transparent";
+          return "tx";
       }
     });
-    const isEnabled = computed(() => props.enable === "1");
+    const txActive = computed(() => isEnabled.value && Number(props.inputIndicator) > 0);
+    const rxActive = computed(() => isEnabled.value && Number(props.outputIndicator) > 0);
+    const deviceColor = computed(() => style.value.color);
+    const txStroke = computed(() => !isEnabled.value ? "#999" : txActive.value ? deviceColor.value : "#fff");
+    const txFill = computed(() => !isEnabled.value ? "none" : txActive.value ? deviceColor.value : "none");
+    const rxStroke = computed(() => !isEnabled.value ? "#999" : rxActive.value ? deviceColor.value : "#fff");
+    const rxFill = computed(() => !isEnabled.value ? "none" : rxActive.value ? deviceColor.value : "none");
+    const sinkStroke = computed(() => isEnabled.value ? "#fff" : "#999");
     return (_ctx, _cache) => {
       return openBlock(), createElementBlock("div", {
-        class: normalizeClass(["device-cell", { empty: isEmpty.value, enabled: isEnabled.value, locked: __props.isLocked && !__props.isLocal, selected: __props.selected }]),
-        style: normalizeStyle({ borderColor: isEmpty.value ? "transparent" : deviceColor.value }),
+        class: normalizeClass(["device-cell", { empty: isEmpty.value, selected: __props.selected }]),
+        style: normalizeStyle({ borderColor: borderColor.value }),
         onClick: _cache[1] || (_cache[1] = ($event) => isEmpty.value ? void 0 : emit2("click"))
       }, [
         isEmpty.value ? (openBlock(), createElementBlock(Fragment, { key: 0 }, [
-          !__props.isLocked || __props.isLocal ? (openBlock(), createElementBlock("button", {
+          !__props.isLocked || __props.isLocal ? (openBlock(), createElementBlock("div", {
             key: 0,
-            class: "add-btn",
-            onClick: _cache[0] || (_cache[0] = withModifiers(($event) => emit2("add", 1), ["stop"])),
-            title: "Add device"
-          }, "+")) : createCommentVNode("", true)
+            class: "empty-plus",
+            onClick: _cache[0] || (_cache[0] = withModifiers(($event) => emit2("add", 1), ["stop"]))
+          }, [..._cache[2] || (_cache[2] = [
+            createBaseVNode("svg", {
+              width: "16",
+              height: "16",
+              viewBox: "0 0 16 16"
+            }, [
+              createBaseVNode("path", {
+                d: "M8 3v10M3 8h10",
+                stroke: "currentColor",
+                "stroke-width": "1.5",
+                "stroke-linecap": "round"
+              })
+            ], -1)
+          ])])) : createCommentVNode("", true)
         ], 64)) : (openBlock(), createElementBlock(Fragment, { key: 1 }, [
-          createBaseVNode("span", {
-            class: "cell-label",
-            style: normalizeStyle({ color: deviceColor.value })
-          }, toDisplayString(__props.description || "device"), 5),
-          isEnabled.value ? (openBlock(), createElementBlock("span", _hoisted_1$4)) : createCommentVNode("", true)
+          createBaseVNode("div", _hoisted_1$4, [
+            createBaseVNode("div", _hoisted_2$4, [
+              direction.value === "bidi" ? (openBlock(), createElementBlock("svg", _hoisted_3$3, [
+                createBaseVNode("path", {
+                  d: "m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z",
+                  fill: "none",
+                  stroke: sinkStroke.value
+                }, null, 8, _hoisted_4$3),
+                createBaseVNode("path", {
+                  d: "M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z",
+                  fill: txFill.value,
+                  stroke: txStroke.value
+                }, null, 8, _hoisted_5$1),
+                createBaseVNode("path", {
+                  d: "m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z",
+                  fill: rxFill.value,
+                  stroke: rxStroke.value
+                }, null, 8, _hoisted_6$1)
+              ])) : direction.value === "tx" ? (openBlock(), createElementBlock("svg", _hoisted_7$1, [
+                createBaseVNode("path", {
+                  d: "m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z",
+                  fill: "none",
+                  stroke: sinkStroke.value
+                }, null, 8, _hoisted_8$1),
+                createBaseVNode("path", {
+                  d: "M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z",
+                  fill: txFill.value,
+                  stroke: txStroke.value
+                }, null, 8, _hoisted_9$1)
+              ])) : (openBlock(), createElementBlock("svg", _hoisted_10$1, [
+                createBaseVNode("path", {
+                  d: "m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z",
+                  fill: "none",
+                  stroke: sinkStroke.value
+                }, null, 8, _hoisted_11$1),
+                createBaseVNode("path", {
+                  d: "M 109.42897,19.940146 110.57103,110 H 130 L 99.999999,149.94015 70,110 h 20.571029 l -1.14206,-90.059854 z",
+                  fill: rxFill.value,
+                  stroke: rxStroke.value
+                }, null, 8, _hoisted_12$1)
+              ]))
+            ]),
+            createBaseVNode("div", {
+              class: "dev-label",
+              style: normalizeStyle({ color: labelColor.value })
+            }, toDisplayString(label.value), 5)
+          ]),
+          !__props.isLocked || __props.isLocal ? (openBlock(), createElementBlock("div", _hoisted_13$1, "+")) : createCommentVNode("", true)
         ], 64))
       ], 6);
     };
   }
 });
-const DeviceCell = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-c391135f"]]);
+const DeviceCell = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-9dcbb986"]]);
 const _hoisted_1$3 = { class: "peer-row" };
-const _hoisted_2$3 = { class: "peer-header" };
-const _hoisted_3$2 = { class: "peer-name" };
-const _hoisted_4$2 = { class: "peer-channels" };
+const _hoisted_2$3 = { class: "peer-text" };
+const _hoisted_3$2 = {
+  key: 0,
+  class: "peer-tag"
+};
+const _hoisted_4$2 = { class: "peer-cells" };
 const _sfc_main$3 = /* @__PURE__ */ defineComponent({
   __name: "PeerRow",
   props: {
     peerId: {},
     peerName: {},
     peerColor: {},
+    peerIp: {},
     isLocal: { type: Boolean },
     isLocked: { type: Boolean },
     channels: {},
@@ -8257,27 +8799,57 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
       return {
         loaded: ch?.loaded ?? "0",
         description: ch?.device?.gui?.description ?? "",
-        enable: ch?.device?.gui?.enable ?? "0"
+        enable: ch?.device?.gui?.enable ?? "0",
+        inputIndicator: ch?.device?.gui?.inputIndicator ?? "0",
+        outputIndicator: ch?.device?.gui?.outputIndicator ?? "0"
       };
     }
-    const colorStyle = computed(() => {
-      if (!props.peerColor) return {};
+    const peerColors = computed(() => {
+      if (!props.peerColor) {
+        return {
+          dot: "#666",
+          bg: "#222",
+          border: "#666",
+          name: "#ccc",
+          ip: "#888"
+        };
+      }
       const parts = props.peerColor.split(" ").map(Number);
-      if (parts.length < 3) return {};
-      const r = Math.round(parts[0] * 255);
-      const g = Math.round(parts[1] * 255);
-      const b = Math.round(parts[2] * 255);
-      return { backgroundColor: `rgb(${r},${g},${b})` };
+      if (parts.length < 3) {
+        return { dot: "#666", bg: "#222", border: "#666", name: "#ccc", ip: "#888" };
+      }
+      const r = parts[0], g = parts[1], b = parts[2];
+      const dot = `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)})`;
+      const bg = `rgb(${Math.round(r * 30)},${Math.round(g * 30)},${Math.round(b * 30)})`;
+      const name = `rgb(${Math.round(140 + r * 115)},${Math.round(140 + g * 115)},${Math.round(140 + b * 115)})`;
+      const ip = `rgb(${Math.round(60 + r * 120)},${Math.round(60 + g * 120)},${Math.round(60 + b * 120)})`;
+      return { dot, bg, border: dot, name, ip };
     });
     return (_ctx, _cache) => {
       return openBlock(), createElementBlock("div", _hoisted_1$3, [
-        createBaseVNode("div", _hoisted_2$3, [
+        createBaseVNode("div", {
+          class: "peer-info",
+          style: normalizeStyle({ background: peerColors.value.bg, borderLeftColor: peerColors.value.border })
+        }, [
           createBaseVNode("div", {
-            class: "peer-color",
-            style: normalizeStyle(colorStyle.value)
+            class: "peer-dot",
+            style: normalizeStyle({ background: peerColors.value.dot })
           }, null, 4),
-          createBaseVNode("span", _hoisted_3$2, toDisplayString(__props.peerName) + toDisplayString(__props.isLocal ? " (you)" : ""), 1)
-        ]),
+          createBaseVNode("div", _hoisted_2$3, [
+            createBaseVNode("div", {
+              class: "peer-name",
+              style: normalizeStyle({ color: peerColors.value.name })
+            }, [
+              createTextVNode(toDisplayString(__props.peerName) + " ", 1),
+              __props.isLocal ? (openBlock(), createElementBlock("span", _hoisted_3$2, "(you)")) : createCommentVNode("", true)
+            ], 4),
+            __props.peerIp ? (openBlock(), createElementBlock("div", {
+              key: 0,
+              class: "peer-ip",
+              style: normalizeStyle({ color: peerColors.value.ip })
+            }, toDisplayString(__props.peerIp), 5)) : createCommentVNode("", true)
+          ])
+        ], 4),
         createBaseVNode("div", _hoisted_4$2, [
           (openBlock(true), createElementBlock(Fragment, null, renderList(__props.channelCount, (i) => {
             return openBlock(), createBlock(DeviceCell, {
@@ -8285,21 +8857,23 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
               loaded: channelData(i - 1).loaded,
               description: channelData(i - 1).description,
               enable: channelData(i - 1).enable,
+              "input-indicator": channelData(i - 1).inputIndicator,
+              "output-indicator": channelData(i - 1).outputIndicator,
               "is-local": __props.isLocal,
               "is-locked": __props.isLocked,
               selected: __props.selectedChannel === i - 1,
               onClick: ($event) => emit2("cellClick", i - 1),
               onAdd: (type) => emit2("addDevice", i - 1, type)
-            }, null, 8, ["loaded", "description", "enable", "is-local", "is-locked", "selected", "onClick", "onAdd"]);
+            }, null, 8, ["loaded", "description", "enable", "input-indicator", "output-indicator", "is-local", "is-locked", "selected", "onClick", "onAdd"]);
           }), 128))
         ])
       ]);
     };
   }
 });
-const PeerRow = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-v-76395643"]]);
-function useMqttBinding(getValue, topic) {
-  const value = computed(() => getValue() ?? "");
+const PeerRow = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-v-67295b0d"]]);
+function useMqttBinding(getValue2, topic) {
+  const value = computed(() => getValue2() ?? "");
   function set(newValue) {
     window.api.invoke("mqtt:publish", true, topic, String(newValue));
   }
@@ -8498,14 +9072,15 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent({
   }
 });
 const DevicePanel = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-ace81e70"]]);
-const _hoisted_1 = { class: "matrix-view" };
-const _hoisted_2 = { class: "matrix-header" };
-const _hoisted_3 = { class: "channel-numbers" };
+const _hoisted_1 = { class: "matrix-scroll" };
+const _hoisted_2 = { class: "matrix-grid" };
+const _hoisted_3 = { class: "header-cells" };
 const _hoisted_4 = {
   key: 0,
   class: "muted"
 };
 const CHANNEL_COUNT = 20;
+const PANEL_WIDTH = 380;
 const _sfc_main = /* @__PURE__ */ defineComponent({
   __name: "MatrixView",
   setup(__props) {
@@ -8560,6 +9135,9 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
     function peerColor(peerId) {
       return peerState.peers[peerId]?.settings?.background?.color ?? "";
     }
+    function peerIP(peerId) {
+      return roster.entries[peerId]?.localIP ?? "";
+    }
     function isLocked(peerId) {
       return peerState.peers[peerId]?.settings?.lock?.enable === "1";
     }
@@ -8582,33 +9160,39 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
       await window.api.invoke("mqtt:publish", true, topic, String(deviceType));
     }
     return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("div", _hoisted_1, [
-        createBaseVNode("div", _hoisted_2, [
-          _cache[0] || (_cache[0] = createBaseVNode("span", { class: "header-label" }, "Peer", -1)),
-          createBaseVNode("div", _hoisted_3, [
-            (openBlock(), createElementBlock(Fragment, null, renderList(CHANNEL_COUNT, (i) => {
-              return createBaseVNode("span", {
-                key: i - 1,
-                class: "ch-num"
-              }, toDisplayString(i - 1), 1);
-            }), 64))
+      return openBlock(), createElementBlock("div", {
+        class: "matrix-view",
+        style: normalizeStyle({ marginRight: panelOpen.value ? PANEL_WIDTH + "px" : "0" })
+      }, [
+        createBaseVNode("div", _hoisted_1, [
+          createBaseVNode("div", _hoisted_2, [
+            _cache[0] || (_cache[0] = createBaseVNode("div", { class: "header-label" }, "Peer", -1)),
+            createBaseVNode("div", _hoisted_3, [
+              (openBlock(), createElementBlock(Fragment, null, renderList(CHANNEL_COUNT, (i) => {
+                return createBaseVNode("span", {
+                  key: i - 1,
+                  class: "ch-num"
+                }, toDisplayString(i - 1), 1);
+              }), 64))
+            ]),
+            (openBlock(true), createElementBlock(Fragment, null, renderList(sortedPeerIds.value, (peerId) => {
+              return openBlock(), createBlock(PeerRow, {
+                key: peerId,
+                "peer-id": peerId,
+                "peer-name": unref(roster).entries[peerId]?.peerName ?? peerId.slice(0, 6),
+                "peer-color": peerColor(peerId),
+                "peer-ip": peerIP(peerId),
+                "is-local": peerId === ownPeerId.value,
+                "is-locked": isLocked(peerId),
+                channels: peerChannels(peerId),
+                "channel-count": CHANNEL_COUNT,
+                "selected-channel": panelOpen.value && panelPeerId.value === peerId ? panelChannel.value : null,
+                onCellClick: (ch) => onCellClick(peerId, ch),
+                onAddDevice: (ch, type) => onAddDevice(peerId, ch, type)
+              }, null, 8, ["peer-id", "peer-name", "peer-color", "peer-ip", "is-local", "is-locked", "channels", "selected-channel", "onCellClick", "onAddDevice"]);
+            }), 128))
           ])
         ]),
-        (openBlock(true), createElementBlock(Fragment, null, renderList(sortedPeerIds.value, (peerId) => {
-          return openBlock(), createBlock(PeerRow, {
-            key: peerId,
-            "peer-id": peerId,
-            "peer-name": unref(roster).entries[peerId]?.peerName ?? peerId.slice(0, 6),
-            "peer-color": peerColor(peerId),
-            "is-local": peerId === ownPeerId.value,
-            "is-locked": isLocked(peerId),
-            channels: peerChannels(peerId),
-            "channel-count": CHANNEL_COUNT,
-            "selected-channel": panelOpen.value && panelPeerId.value === peerId ? panelChannel.value : null,
-            onCellClick: (ch) => onCellClick(peerId, ch),
-            onAddDevice: (ch, type) => onAddDevice(peerId, ch, type)
-          }, null, 8, ["peer-id", "peer-name", "peer-color", "is-local", "is-locked", "channels", "selected-channel", "onCellClick", "onAddDevice"]);
-        }), 128)),
         sortedPeerIds.value.length === 0 ? (openBlock(), createElementBlock("p", _hoisted_4, "Waiting for peer data...")) : createCommentVNode("", true),
         panelOpen.value ? (openBlock(), createBlock(DevicePanel, {
           key: `${panelPeerId.value}-${panelChannel.value}`,
@@ -8620,17 +9204,16 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
           "is-local": panelPeerId.value === ownPeerId.value,
           onClose: closePanel
         }, null, 8, ["peer-id", "channel-index", "peer-name", "device-state", "is-local"])) : createCommentVNode("", true)
-      ]);
+      ], 4);
     };
   }
 });
-const MatrixView = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-ea93c035"]]);
+const MatrixView = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-fd3a3187"]]);
 const router = createRouter({
   history: createMemoryHistory(),
   routes: [
-    { path: "/", name: "connect", component: ConnectView },
-    { path: "/rooms", name: "rooms", component: RoomPickerView },
+    { path: "/", name: "session", component: SessionView },
     { path: "/matrix", name: "matrix", component: MatrixView }
   ]
 });
-createApp(App).use(router).mount("#app");
+createApp(_sfc_main$6).use(router).mount("#app");

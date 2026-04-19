@@ -1,13 +1,11 @@
 import { createRouter, createMemoryHistory } from 'vue-router'
-import ConnectView from './views/ConnectView.vue'
-import RoomPickerView from './views/RoomPickerView.vue'
+import SessionView from './views/SessionView.vue'
 import MatrixView from './views/MatrixView.vue'
 
 export const router = createRouter({
   history: createMemoryHistory(),
   routes: [
-    { path: '/', name: 'connect', component: ConnectView },
-    { path: '/rooms', name: 'rooms', component: RoomPickerView },
+    { path: '/', name: 'session', component: SessionView },
     { path: '/matrix', name: 'matrix', component: MatrixView }
   ]
 })

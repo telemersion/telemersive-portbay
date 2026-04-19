@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events'
 import type { BrokerConfig, RemotePeerInfo } from '../shared/types'
+import { logEvent } from './logBus'
 
 const APPVERSION = 'TeGateway_v0612'
 
@@ -60,10 +61,12 @@ export class TBusClient extends EventEmitter {
 
   subscribe(topic: string): void {
     this.client.peer.mqttClient.subscribe(topic)
+    logEvent({ kind: 'sub', topic })
   }
 
   unsubscribe(topic: string): void {
     this.client.peer.mqttClient.unsubscribe(topic)
+    logEvent({ kind: 'unsub', topic })
   }
 
   private handleCallback(message: string, content: any[]): void {
@@ -71,7 +74,9 @@ export class TBusClient extends EventEmitter {
       this.parseBusEvent(content)
     } else if (message === 'mqtt') {
       const [topic, ...rest] = content
-      this.emit('mqtt:message', { topic, payload: rest.join(' ') })
+      const payload = rest.join(' ')
+      logEvent({ kind: 'recv', topic, value: payload })
+      this.emit('mqtt:message', { topic, payload })
     } else if (message === 'chat') {
       this.emit('chat', content)
     }

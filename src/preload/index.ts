@@ -2,9 +2,10 @@ import { contextBridge, ipcRenderer } from 'electron'
 
 const SEND_CHANNELS = ['bus:configure'] as const
 const INVOKE_CHANNELS = [
-  'bus:init', 'bus:connect', 'bus:disconnect', 'bus:join', 'bus:leave', 'bus:localPeer',
+  'bus:init', 'bus:connect', 'bus:disconnect', 'bus:join', 'bus:leave', 'bus:localPeer', 'bus:state',
   'mqtt:publish', 'mqtt:subscribe', 'mqtt:unsubscribe',
-  'settings:load', 'settings:save'
+  'settings:load', 'settings:save',
+  'log:get', 'log:clear'
 ] as const
 const RECEIVE_CHANNELS = [
   'broker:connected', 'peer:joined', 'peer:id', 'peer:name',
@@ -12,7 +13,8 @@ const RECEIVE_CHANNELS = [
   'peer:room:uuid', 'rooms:clear', 'rooms:append', 'rooms:listing',
   'rooms:done', 'peers:remote:joined', 'peers:remote:left',
   'peers:clear', 'peers:append', 'peers:done',
-  'ready', 'mqtt:message', 'chat'
+  'ready', 'mqtt:message', 'chat',
+  'log:entry'
 ] as const
 
 contextBridge.exposeInMainWorld('api', {

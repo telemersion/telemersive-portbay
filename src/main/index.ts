@@ -2,20 +2,55 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { join } from 'path'
 import { TBusClient } from './busClient'
 import { loadSettings, saveSettings } from './persistence/settings'
-import { loadRack } from './persistence/rack'
+import { loadRack, saveRack } from './persistence/rack'
 import { topics } from '../shared/topics'
 import { DeviceRouter } from './deviceRouter'
 import { OscDevice } from './devices/OscDevice'
 import { performShutdown } from './shutdown'
+import { logEvent, setLogSink, getLogBuffer, clearLogBuffer } from './logBus'
 
 let mainWindow: BrowserWindow | null = null
 let bus: TBusClient | null = null
 let deviceRouter: DeviceRouter | null = null
 let localPeerId = ''
 let localPeerName = ''
+let roomName = ''
 let roomId = 0
 let localIP = ''
-const retainedTopics = new Set<string>()
+let brokerConnected = false
+let peerJoined = false
+const retainedTopics = new Map<string, string>()
+
+const RACK_SAVE_DEBOUNCE_MS = 500
+let rackSaveTimer: NodeJS.Timeout | null = null
+
+function buildRackSnapshot(): Record<string, string> {
+  if (!localPeerId) return {}
+  const prefix = `/peer/${localPeerId}/`
+  const snap: Record<string, string> = {}
+  for (const [topic, value] of retainedTopics) {
+    if (topic.startsWith(prefix)) {
+      snap[topic.slice(prefix.length)] = value
+    }
+  }
+  return snap
+}
+
+function scheduleRackSave(): void {
+  if (rackSaveTimer) clearTimeout(rackSaveTimer)
+  rackSaveTimer = setTimeout(() => {
+    rackSaveTimer = null
+    try { saveRack(buildRackSnapshot()) } catch {}
+  }, RACK_SAVE_DEBOUNCE_MS)
+}
+
+function flushRackSave(): void {
+  if (rackSaveTimer) {
+    clearTimeout(rackSaveTimer)
+    rackSaveTimer = null
+  }
+  try { saveRack(buildRackSnapshot()) } catch {}
+}
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -37,18 +72,28 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  setLogSink(mainWindow)
+  mainWindow.on('closed', () => setLogSink(null))
 }
 
 function trackedPublish(retained: 0 | 1, topic: string, ...values: any[]): void {
+  const value = values.join(' ')
+  let rackMutated = false
   if (retained && localPeerId && topic.includes(`/peer/${localPeerId}/`)) {
-    const value = values.join(' ')
     if (value !== '') {
-      retainedTopics.add(topic)
-    } else {
-      retainedTopics.delete(topic)
+      const prev = retainedTopics.get(topic)
+      if (prev !== value) {
+        retainedTopics.set(topic, value)
+        rackMutated = true
+      }
+    } else if (retainedTopics.delete(topic)) {
+      rackMutated = true
     }
   }
   bus!.publish(retained, topic, ...values)
+  logEvent({ kind: 'pub', topic, value, retained: retained === 1 })
+  if (rackMutated) scheduleRackSave()
 }
 
 function forwardToRenderer(channel: string): void {
@@ -116,9 +161,20 @@ function setupBus(): void {
 
   bus.on('peer:id', (id: string) => { localPeerId = id })
   bus.on('peer:room:id', (id: number) => { roomId = id })
+  bus.on('peer:room:name', (name: string) => { roomName = name })
   bus.on('peer:localIP', (ip: string) => { if (ip) localIP = ip })
 
+  bus.on('broker:connected', (connected: boolean) => {
+    brokerConnected = connected
+    if (!connected) {
+      peerJoined = false
+      roomName = ''
+      roomId = 0
+    }
+  })
+
   bus.on('peer:joined', (joined: boolean) => {
+    peerJoined = joined
     mainWindow?.webContents.send('peer:joined', joined)
     if (joined) {
       bus!.subscribe(`/peer/${localPeerId}/#`)
@@ -130,7 +186,8 @@ function setupBus(): void {
           if (type === 1 || type === 4) {
             return new OscDevice(channel, localPeerId, localIP, roomId,
               (retained, topic, value) => trackedPublish(retained, topic, value),
-              type
+              type,
+              (topic: string) => retainedTopics.has(topic)
             )
           }
           return null
@@ -211,12 +268,30 @@ function setupIpcHandlers(): void {
     return { peerId: localPeerId, peerName: localPeerName, localIP, roomId }
   })
 
+  ipcMain.handle('bus:state', () => {
+    return {
+      connected: brokerConnected,
+      joined: peerJoined,
+      peerName: localPeerName,
+      roomName,
+      roomId
+    }
+  })
+
   ipcMain.handle('settings:load', () => {
     return loadSettings()
   })
 
   ipcMain.handle('settings:save', (_event, settings) => {
     saveSettings(settings)
+  })
+
+  ipcMain.handle('log:get', () => {
+    return getLogBuffer()
+  })
+
+  ipcMain.handle('log:clear', () => {
+    clearLogBuffer()
   })
 }
 
@@ -262,8 +337,9 @@ app.on('before-quit', (e) => {
   if (isShuttingDown) return
   isShuttingDown = true
   e.preventDefault()
+  flushRackSave()
   if (bus) {
-    performShutdown(bus, deviceRouter, [...retainedTopics])
+    performShutdown(bus, deviceRouter, [...retainedTopics.keys()])
   }
   setTimeout(() => app.exit(0), 500)
 })

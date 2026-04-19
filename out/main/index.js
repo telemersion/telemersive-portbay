@@ -21,6 +21,27 @@ function _interopNamespaceDefault(e) {
   return Object.freeze(n);
 }
 const dgram__namespace = /* @__PURE__ */ _interopNamespaceDefault(dgram);
+const BUFFER_CAP = 500;
+const buffer = [];
+let seq = 0;
+let sink = null;
+function setLogSink(win) {
+  sink = win;
+}
+function logEvent(ev) {
+  const entry = { seq: ++seq, ts: Date.now(), ...ev };
+  buffer.push(entry);
+  if (buffer.length > BUFFER_CAP) buffer.shift();
+  if (sink && !sink.isDestroyed()) {
+    sink.webContents.send("log:entry", entry);
+  }
+}
+function getLogBuffer() {
+  return buffer.slice();
+}
+function clearLogBuffer() {
+  buffer.length = 0;
+}
 const APPVERSION = "TeGateway_v0612";
 let BusClientClass;
 try {
@@ -57,8 +78,8 @@ class TBusClient extends events.EventEmitter {
   disconnect() {
     this.client.disconnectServer();
   }
-  join(peerName, roomName, roomPwd) {
-    this.client.join(peerName, roomName, roomPwd);
+  join(peerName, roomName2, roomPwd) {
+    this.client.join(peerName, roomName2, roomPwd);
   }
   leave() {
     this.client.leave();
@@ -68,16 +89,20 @@ class TBusClient extends events.EventEmitter {
   }
   subscribe(topic) {
     this.client.peer.mqttClient.subscribe(topic);
+    logEvent({ kind: "sub", topic });
   }
   unsubscribe(topic) {
     this.client.peer.mqttClient.unsubscribe(topic);
+    logEvent({ kind: "unsub", topic });
   }
   handleCallback(message, content) {
     if (message === "bus") {
       this.parseBusEvent(content);
     } else if (message === "mqtt") {
       const [topic, ...rest] = content;
-      this.emit("mqtt:message", { topic, payload: rest.join(" ") });
+      const payload = rest.join(" ");
+      logEvent({ kind: "recv", topic, value: payload });
+      this.emit("mqtt:message", { topic, payload });
     } else if (message === "chat") {
       this.emit("chat", content);
     }
@@ -201,6 +226,10 @@ function loadRack() {
   } catch {
     return {};
   }
+}
+function saveRack(snapshot) {
+  const path2 = rackPath();
+  fs.writeFileSync(path2, JSON.stringify(snapshot, null, 2), "utf-8");
 }
 const topics = {
   channelLoaded(peerId, channel) {
@@ -337,6 +366,7 @@ class OscDevice {
   roomPorts;
   publishedTopics = [];
   publish;
+  hasRetained;
   enabled = false;
   enableTwo = false;
   outputIPOne;
@@ -349,7 +379,7 @@ class OscDevice {
   get isRunning() {
     return this._isRunning;
   }
-  constructor(channelIndex, peerId, localIP2, roomId2, publish, deviceType = 1) {
+  constructor(channelIndex, peerId, localIP2, roomId2, publish, deviceType = 1, hasRetained = () => false) {
     this.channelIndex = channelIndex;
     this.deviceType = deviceType;
     this.peerId = peerId;
@@ -357,6 +387,7 @@ class OscDevice {
     this.localPorts = allocateLocalPorts(channelIndex);
     this.roomPorts = allocateRoomPorts(roomId2, channelIndex);
     this.publish = publish;
+    this.hasRetained = hasRetained;
     this.outputIPOne = localIP2;
     this.outputIPTwo = localIP2;
   }
@@ -364,6 +395,7 @@ class OscDevice {
     const pub = (field, value) => {
       const topic = this.isLocaludp(field) ? topics.localudp(this.peerId, this.channelIndex, field) : this.isMonitor(field) ? topics.monitor(this.peerId, this.channelIndex, field) : topics.deviceGui(this.peerId, this.channelIndex, field);
       this.publishedTopics.push(topic);
+      if (this.hasRetained(topic)) return;
       this.publish(1, topic, value);
     };
     pub("peerLocalIP", this.localIP);
@@ -402,10 +434,10 @@ class OscDevice {
         this.handleEnable(value === "1");
         break;
       case "gui/localudp/outputIPOne":
-        this.outputIPOne = value;
+        if (value && value !== "0") this.outputIPOne = value;
         break;
       case "gui/localudp/outputIPTwo":
-        this.outputIPTwo = value;
+        if (value && value !== "0") this.outputIPTwo = value;
         break;
       case "gui/localudp/enableTwo":
         this.enableTwo = value === "1";
@@ -516,9 +548,45 @@ let bus = null;
 let deviceRouter = null;
 let localPeerId = "";
 let localPeerName = "";
+let roomName = "";
 let roomId = 0;
 let localIP = "";
-const retainedTopics = /* @__PURE__ */ new Set();
+let brokerConnected = false;
+let peerJoined = false;
+const retainedTopics = /* @__PURE__ */ new Map();
+const RACK_SAVE_DEBOUNCE_MS = 500;
+let rackSaveTimer = null;
+function buildRackSnapshot() {
+  if (!localPeerId) return {};
+  const prefix = `/peer/${localPeerId}/`;
+  const snap = {};
+  for (const [topic, value] of retainedTopics) {
+    if (topic.startsWith(prefix)) {
+      snap[topic.slice(prefix.length)] = value;
+    }
+  }
+  return snap;
+}
+function scheduleRackSave() {
+  if (rackSaveTimer) clearTimeout(rackSaveTimer);
+  rackSaveTimer = setTimeout(() => {
+    rackSaveTimer = null;
+    try {
+      saveRack(buildRackSnapshot());
+    } catch {
+    }
+  }, RACK_SAVE_DEBOUNCE_MS);
+}
+function flushRackSave() {
+  if (rackSaveTimer) {
+    clearTimeout(rackSaveTimer);
+    rackSaveTimer = null;
+  }
+  try {
+    saveRack(buildRackSnapshot());
+  } catch {
+  }
+}
 function createWindow() {
   mainWindow = new electron.BrowserWindow({
     width: 1200,
@@ -537,17 +605,26 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
+  setLogSink(mainWindow);
+  mainWindow.on("closed", () => setLogSink(null));
 }
 function trackedPublish(retained, topic, ...values) {
+  const value = values.join(" ");
+  let rackMutated = false;
   if (retained && localPeerId && topic.includes(`/peer/${localPeerId}/`)) {
-    const value = values.join(" ");
     if (value !== "") {
-      retainedTopics.add(topic);
-    } else {
-      retainedTopics.delete(topic);
+      const prev = retainedTopics.get(topic);
+      if (prev !== value) {
+        retainedTopics.set(topic, value);
+        rackMutated = true;
+      }
+    } else if (retainedTopics.delete(topic)) {
+      rackMutated = true;
     }
   }
   bus.publish(retained, topic, ...values);
+  logEvent({ kind: "pub", topic, value, retained: retained === 1 });
+  if (rackMutated) scheduleRackSave();
 }
 function forwardToRenderer(channel) {
   bus.on(channel, (...args) => {
@@ -607,10 +684,22 @@ function setupBus() {
   bus.on("peer:room:id", (id) => {
     roomId = id;
   });
+  bus.on("peer:room:name", (name) => {
+    roomName = name;
+  });
   bus.on("peer:localIP", (ip) => {
     if (ip) localIP = ip;
   });
+  bus.on("broker:connected", (connected) => {
+    brokerConnected = connected;
+    if (!connected) {
+      peerJoined = false;
+      roomName = "";
+      roomId = 0;
+    }
+  });
   bus.on("peer:joined", (joined) => {
+    peerJoined = joined;
     mainWindow?.webContents.send("peer:joined", joined);
     if (joined) {
       bus.subscribe(`/peer/${localPeerId}/#`);
@@ -625,7 +714,8 @@ function setupBus() {
               localIP,
               roomId,
               (retained, topic, value) => trackedPublish(retained, topic, value),
-              type
+              type,
+              (topic) => retainedTopics.has(topic)
             );
           }
           return null;
@@ -684,9 +774,9 @@ function setupIpcHandlers() {
   electron.ipcMain.handle("bus:disconnect", () => {
     bus.disconnect();
   });
-  electron.ipcMain.handle("bus:join", (_event, peerName, roomName, roomPwd) => {
+  electron.ipcMain.handle("bus:join", (_event, peerName, roomName2, roomPwd) => {
     localPeerName = peerName;
-    bus.join(peerName, roomName, roomPwd);
+    bus.join(peerName, roomName2, roomPwd);
   });
   electron.ipcMain.handle("bus:leave", () => {
     bus.leave();
@@ -703,11 +793,26 @@ function setupIpcHandlers() {
   electron.ipcMain.handle("bus:localPeer", () => {
     return { peerId: localPeerId, peerName: localPeerName, localIP, roomId };
   });
+  electron.ipcMain.handle("bus:state", () => {
+    return {
+      connected: brokerConnected,
+      joined: peerJoined,
+      peerName: localPeerName,
+      roomName,
+      roomId
+    };
+  });
   electron.ipcMain.handle("settings:load", () => {
     return loadSettings();
   });
   electron.ipcMain.handle("settings:save", (_event, settings) => {
     saveSettings(settings);
+  });
+  electron.ipcMain.handle("log:get", () => {
+    return getLogBuffer();
+  });
+  electron.ipcMain.handle("log:clear", () => {
+    clearLogBuffer();
   });
 }
 electron.app.whenReady().then(async () => {
@@ -746,8 +851,9 @@ electron.app.on("before-quit", (e) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
   e.preventDefault();
+  flushRackSave();
   if (bus) {
-    performShutdown(bus, deviceRouter, [...retainedTopics]);
+    performShutdown(bus, deviceRouter, [...retainedTopics.keys()]);
   }
   setTimeout(() => electron.app.exit(0), 500);
 });

@@ -9,6 +9,7 @@ const props = defineProps<{
   roomName: string
   deviceState: any
   isLocal: boolean
+  targetLocked: boolean
 }>()
 
 const emit = defineEmits<{ close: [] }>()
@@ -34,6 +35,7 @@ function onKeydown(e: KeyboardEvent) {
       :channel-index="channelIndex"
       :device-state="deviceState"
       :is-local="isLocal"
+      :target-locked="targetLocked"
       @remove="emit('close')"
     />
 

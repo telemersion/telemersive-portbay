@@ -8,11 +8,14 @@ const INVOKE_CHANNELS = [
   "bus:join",
   "bus:leave",
   "bus:localPeer",
+  "bus:state",
   "mqtt:publish",
   "mqtt:subscribe",
   "mqtt:unsubscribe",
   "settings:load",
-  "settings:save"
+  "settings:save",
+  "log:get",
+  "log:clear"
 ];
 const RECEIVE_CHANNELS = [
   "broker:connected",
@@ -35,7 +38,8 @@ const RECEIVE_CHANNELS = [
   "peers:done",
   "ready",
   "mqtt:message",
-  "chat"
+  "chat",
+  "log:entry"
 ];
 electron.contextBridge.exposeInMainWorld("api", {
   send(channel, ...args) {

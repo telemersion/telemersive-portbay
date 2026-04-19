@@ -125,7 +125,7 @@ async function onAddDevice(peerId: string, channelIndex: number, deviceType: num
           :peer-color="peerColor(peerId)"
           :peer-ip="peerIP(peerId)"
           :is-local="peerId === ownPeerId"
-          :is-locked="isLocked(peerId)"
+          :is-locked="peerId !== ownPeerId && isLocked(peerId)"
           :channels="peerChannels(peerId)"
           :channel-count="CHANNEL_COUNT"
           :selected-channel="panelOpen && panelPeerId === peerId ? panelChannel : null"
@@ -146,6 +146,7 @@ async function onAddDevice(peerId: string, channelIndex: number, deviceType: num
       :room-name="''"
       :device-state="peerChannels(panelPeerId)[`channel.${panelChannel}`]"
       :is-local="panelPeerId === ownPeerId"
+      :target-locked="isLocked(panelPeerId)"
       @close="closePanel"
     />
   </div>

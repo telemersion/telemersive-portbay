@@ -77,7 +77,7 @@ const sinkStroke = computed(() => isEnabled.value ? '#fff' : '#999')
     <!-- Empty cell: centered + icon -->
     <template v-if="isEmpty">
       <div
-        v-if="!isLocked || isLocal"
+        v-if="!isLocked"
         class="empty-plus"
         @click.stop="emit('add', 1)"
       >
@@ -115,7 +115,7 @@ const sinkStroke = computed(() => isEnabled.value ? '#fff' : '#999')
           {{ label }}
         </div>
       </div>
-      <div v-if="!isLocked || isLocal" class="cell-plus">+</div>
+      <div v-if="!isLocked" class="cell-plus">+</div>
     </template>
   </div>
 </template>

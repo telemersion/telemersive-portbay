@@ -7,12 +7,13 @@ const props = defineProps<{
   channelIndex: number
   deviceState: any
   isLocal: boolean
+  targetLocked: boolean
 }>()
 
 const gui = computed(() => props.deviceState?.device?.gui ?? {})
 const udp = computed(() => gui.value?.localudp ?? {})
 const isEnabled = computed(() => gui.value?.enable === '1')
-const isLocked = computed(() => !props.isLocal || isEnabled.value)
+const isLocked = computed(() => isEnabled.value || (!props.isLocal && props.targetLocked))
 
 const prefix = computed(() =>
   `/peer/${props.peerId}/rack/page_0/channel.${props.channelIndex}/device/gui`
@@ -50,6 +51,7 @@ async function removeDevice() {
       <button
         class="enable-btn"
         :class="{ active: isEnabled }"
+        :disabled="!isLocal && targetLocked"
         @click="toggleEnable"
       >
         {{ isEnabled ? 'ON' : 'OFF' }}
@@ -128,7 +130,7 @@ async function removeDevice() {
     </section>
 
     <div class="panel-actions">
-      <button class="remove-btn" @click="removeDevice" :disabled="isEnabled">
+      <button class="remove-btn" @click="removeDevice" :disabled="isEnabled || (!isLocal && targetLocked)">
         Remove Device
       </button>
     </div>
