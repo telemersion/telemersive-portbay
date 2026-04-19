@@ -185,7 +185,8 @@ function setupBus(): void {
             )
           }
           return null
-        }
+        },
+        (retained, topic, value) => trackedPublish(retained, topic, value)
       )
 
       publishInitSequence()

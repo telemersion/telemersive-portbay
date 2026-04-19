@@ -7,15 +7,18 @@ export class DeviceRouter {
   private ownPeerId: string
   private bus: TBusClient
   private handlerFactory: (type: number, channel: number) => DeviceHandler | null
+  private publish: (retained: 0 | 1, topic: string, value: string) => void
 
   constructor(
     bus: TBusClient,
     ownPeerId: string,
-    handlerFactory: (type: number, channel: number) => DeviceHandler | null
+    handlerFactory: (type: number, channel: number) => DeviceHandler | null,
+    publish: (retained: 0 | 1, topic: string, value: string) => void
   ) {
     this.bus = bus
     this.ownPeerId = ownPeerId
     this.handlerFactory = handlerFactory
+    this.publish = publish
   }
 
   onMqttMessage(topic: string, value: string): void {
@@ -64,7 +67,7 @@ export class DeviceRouter {
 
     const publishedTopics = handler.teardown()
     for (const t of publishedTopics) {
-      this.bus.publish(1, t, '')
+      this.publish(1, t, '')
     }
 
     handler.destroy()

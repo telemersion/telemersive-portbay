@@ -301,10 +301,12 @@ class DeviceRouter {
   ownPeerId;
   bus;
   handlerFactory;
-  constructor(bus2, ownPeerId, handlerFactory) {
+  publish;
+  constructor(bus2, ownPeerId, handlerFactory, publish) {
     this.bus = bus2;
     this.ownPeerId = ownPeerId;
     this.handlerFactory = handlerFactory;
+    this.publish = publish;
   }
   onMqttMessage(topic, value) {
     const parsed = parseTopic(topic);
@@ -343,7 +345,7 @@ class DeviceRouter {
     this.bus.unsubscribe(topics.deviceSubscribe(this.ownPeerId, channel));
     const publishedTopics = handler.teardown();
     for (const t of publishedTopics) {
-      this.bus.publish(1, t, "");
+      this.publish(1, t, "");
     }
     handler.destroy();
     this.handlers.delete(channel);
@@ -730,7 +732,8 @@ function setupBus() {
             );
           }
           return null;
-        }
+        },
+        (retained, topic, value) => trackedPublish(retained, topic, value)
       );
       publishInitSequence();
     }
