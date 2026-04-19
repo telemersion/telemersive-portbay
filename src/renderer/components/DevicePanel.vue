@@ -17,6 +17,16 @@ const emit = defineEmits<{ close: [] }>()
 const loaded = computed(() => props.deviceState?.loaded ?? '0')
 const description = computed(() => props.deviceState?.device?.gui?.description ?? 'device')
 
+const deviceTypeLabel = computed(() => {
+  switch (loaded.value) {
+    case '1': return 'OSC'
+    case '4': return 'StageControl'
+    case '2': case '3': case '5': return 'UltraGrid'
+    case '6': return 'MoCap'
+    default: return ''
+  }
+})
+
 function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') emit('close')
 }
@@ -27,6 +37,7 @@ function onKeydown(e: KeyboardEvent) {
     <div class="panel-breadcrumb">
       {{ roomName }} &gt; {{ peerName }} &gt; {{ description }} &gt; channel {{ channelIndex }}
     </div>
+    <div v-if="deviceTypeLabel" class="panel-type-label">{{ deviceTypeLabel }}</div>
     <button class="close-btn" @click="emit('close')">X</button>
 
     <OscPanel
@@ -51,7 +62,8 @@ function onKeydown(e: KeyboardEvent) {
   background: #1a1a1a; border-left: 1px solid #333;
   display: flex; flex-direction: column; z-index: 100;
 }
-.panel-breadcrumb { font-size: 11px; color: #888; padding: 8px 12px; font-family: monospace; }
+.panel-breadcrumb { font-size: 11px; color: #888; padding: 8px 12px 2px; font-family: monospace; }
+.panel-type-label { font-size: 10px; color: #aaa; padding: 0 12px 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 .close-btn { position: absolute; top: 8px; right: 12px; background: none; border: none; color: #888; cursor: pointer; font-size: 14px; }
 .unsupported { padding: 24px; color: #666; text-align: center; }
 </style>

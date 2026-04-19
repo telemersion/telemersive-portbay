@@ -14,8 +14,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   click: []
-  add: [deviceType: number]
+  openPopup: [rect: DOMRect]
 }>()
+
+function handleOpenPopup(e: MouseEvent) {
+  const target = e.currentTarget as HTMLElement
+  emit('openPopup', target.getBoundingClientRect())
+}
 
 const isEmpty = computed(() => props.loaded === '0' || props.loaded === '')
 const isEnabled = computed(() => props.enable === '1')
@@ -79,7 +84,7 @@ const sinkStroke = computed(() => isEnabled.value ? '#fff' : '#999')
       <div
         v-if="!isLocked"
         class="empty-plus"
-        @click.stop="emit('add', 1)"
+        @click.stop="handleOpenPopup"
       >
         <svg width="16" height="16" viewBox="0 0 16 16">
           <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -115,7 +120,11 @@ const sinkStroke = computed(() => isEnabled.value ? '#fff' : '#999')
           {{ label }}
         </div>
       </div>
-      <div v-if="!isLocked" class="cell-plus">+</div>
+      <div
+        v-if="!isLocked"
+        class="cell-plus"
+        @click.stop="handleOpenPopup"
+      >+</div>
     </template>
   </div>
 </template>

@@ -7984,12 +7984,12 @@ const panelState = /* @__PURE__ */ reactive({
 function togglePanel(id) {
   panelState.openPanelId = panelState.openPanelId === id ? null : id;
 }
-const _hoisted_1$7 = {
+const _hoisted_1$8 = {
   class: "icon-bar",
   "aria-label": "Primary navigation"
 };
-const _hoisted_2$7 = { class: "group" };
-const _hoisted_3$6 = ["title", "aria-label", "onClick"];
+const _hoisted_2$8 = { class: "group" };
+const _hoisted_3$8 = ["title", "aria-label", "onClick"];
 const _hoisted_4$6 = {
   viewBox: "0 0 24 24",
   width: "20",
@@ -8014,7 +8014,7 @@ const _hoisted_8$4 = {
   "stroke-linejoin": "round"
 };
 const _hoisted_9$4 = ["d"];
-const _sfc_main$8 = /* @__PURE__ */ defineComponent({
+const _sfc_main$9 = /* @__PURE__ */ defineComponent({
   __name: "IconBar",
   setup(__props) {
     const route = useRoute();
@@ -8033,8 +8033,8 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
       return panelState.openPanelId === item.target;
     }
     return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("nav", _hoisted_1$7, [
-        createBaseVNode("div", _hoisted_2$7, [
+      return openBlock(), createElementBlock("nav", _hoisted_1$8, [
+        createBaseVNode("div", _hoisted_2$8, [
           (openBlock(true), createElementBlock(Fragment, null, renderList(topItems.value, (item) => {
             return openBlock(), createElementBlock("button", {
               key: item.id,
@@ -8048,7 +8048,7 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
                   d: unref(ICONS)[item.icon]
                 }, null, 8, _hoisted_5$4)
               ]))
-            ], 10, _hoisted_3$6);
+            ], 10, _hoisted_3$8);
           }), 128))
         ]),
         createBaseVNode("div", _hoisted_6$4, [
@@ -8079,10 +8079,10 @@ const _export_sfc = (sfc, props) => {
   }
   return target;
 };
-const IconBar = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["__scopeId", "data-v-dff99c03"]]);
-const _hoisted_1$6 = { class: "log-panel" };
-const _hoisted_2$6 = { class: "head" };
-const _hoisted_3$5 = { class: "count" };
+const IconBar = /* @__PURE__ */ _export_sfc(_sfc_main$9, [["__scopeId", "data-v-dff99c03"]]);
+const _hoisted_1$7 = { class: "log-panel" };
+const _hoisted_2$7 = { class: "head" };
+const _hoisted_3$7 = { class: "count" };
 const _hoisted_4$5 = { class: "filters" };
 const _hoisted_5$3 = { class: "ts" };
 const _hoisted_6$3 = { class: "kind" };
@@ -8096,7 +8096,7 @@ const _hoisted_9$3 = {
   class: "empty"
 };
 const _hoisted_10$3 = { class: "actions" };
-const _sfc_main$7 = /* @__PURE__ */ defineComponent({
+const _sfc_main$8 = /* @__PURE__ */ defineComponent({
   __name: "LogPanel",
   setup(__props) {
     const entries = /* @__PURE__ */ ref([]);
@@ -8179,10 +8179,10 @@ const _sfc_main$7 = /* @__PURE__ */ defineComponent({
       window.api.removeAllListeners("log:entry");
     });
     return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("aside", _hoisted_1$6, [
-        createBaseVNode("header", _hoisted_2$6, [
+      return openBlock(), createElementBlock("aside", _hoisted_1$7, [
+        createBaseVNode("header", _hoisted_2$7, [
           _cache[3] || (_cache[3] = createBaseVNode("span", { class: "title" }, "Activity log", -1)),
-          createBaseVNode("span", _hoisted_3$5, toDisplayString(visible.value.length) + " / " + toDisplayString(entries.value.length), 1)
+          createBaseVNode("span", _hoisted_3$7, toDisplayString(visible.value.length) + " / " + toDisplayString(entries.value.length), 1)
         ]),
         createBaseVNode("div", _hoisted_4$5, [
           createBaseVNode("label", null, [
@@ -8246,10 +8246,10 @@ const _sfc_main$7 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const LogPanel = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["__scopeId", "data-v-bbf8eb4a"]]);
+const LogPanel = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["__scopeId", "data-v-bbf8eb4a"]]);
 const ICON_BAR_WIDTH = 48;
 const LOG_PANEL_WIDTH = 400;
-const _sfc_main$6 = /* @__PURE__ */ defineComponent({
+const _sfc_main$7 = /* @__PURE__ */ defineComponent({
   __name: "App",
   setup(__props) {
     const contentLeft = computed(() => {
@@ -8271,9 +8271,9 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const _hoisted_1$5 = { class: "session-view" };
-const _hoisted_2$5 = { class: "card" };
-const _hoisted_3$4 = { class: "form-row" };
+const _hoisted_1$6 = { class: "session-view" };
+const _hoisted_2$6 = { class: "card" };
+const _hoisted_3$6 = { class: "form-row" };
 const _hoisted_4$4 = ["disabled"];
 const _hoisted_5$2 = { class: "form-row" };
 const _hoisted_6$2 = ["disabled"];
@@ -8283,7 +8283,7 @@ const _hoisted_9$2 = { class: "form-row" };
 const _hoisted_10$2 = ["disabled"];
 const _hoisted_11$2 = { class: "btn-row" };
 const _hoisted_12$2 = ["disabled"];
-const _hoisted_13$2 = ["disabled"];
+const _hoisted_13$1 = ["disabled"];
 const _hoisted_14$1 = {
   key: 0,
   class: "error"
@@ -8297,7 +8297,7 @@ const _hoisted_16$1 = {
   class: "room-list"
 };
 const _hoisted_17$1 = { class: "form-row" };
-const _hoisted_18 = ["value", "disabled"];
+const _hoisted_18$1 = ["value", "disabled"];
 const _hoisted_19 = ["value"];
 const _hoisted_20 = { class: "form-row" };
 const _hoisted_21 = ["disabled"];
@@ -8308,7 +8308,7 @@ const _hoisted_25 = ["disabled"];
 const _hoisted_26 = { class: "btn-row" };
 const _hoisted_27 = ["disabled"];
 const _hoisted_28 = ["disabled"];
-const _sfc_main$5 = /* @__PURE__ */ defineComponent({
+const _sfc_main$6 = /* @__PURE__ */ defineComponent({
   __name: "SessionView",
   setup(__props) {
     const router2 = useRouter();
@@ -8339,6 +8339,15 @@ const _sfc_main$5 = /* @__PURE__ */ defineComponent({
         form.peerName = settings.peerName || "";
         form.roomName = settings.lastRoomName || "";
         form.roomPwd = settings.lastRoomPwd || "";
+      }
+    });
+    onMounted(async () => {
+      const state = await window.api.invoke("bus:state");
+      if (state) {
+        isConnected.value = state.connected;
+        isJoined.value = state.joined;
+        if (state.peerName) form.peerName = state.peerName;
+        if (state.roomName) form.roomName = state.roomName;
       }
     });
     window.api.on("peer:localIP", (ip) => {
@@ -8420,10 +8429,10 @@ const _sfc_main$5 = /* @__PURE__ */ defineComponent({
       isJoined.value = false;
     }
     return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("div", _hoisted_1$5, [
-        createBaseVNode("section", _hoisted_2$5, [
+      return openBlock(), createElementBlock("div", _hoisted_1$6, [
+        createBaseVNode("section", _hoisted_2$6, [
           _cache[12] || (_cache[12] = createBaseVNode("h3", null, "connect to the telemersive-router", -1)),
-          createBaseVNode("div", _hoisted_3$4, [
+          createBaseVNode("div", _hoisted_3$6, [
             _cache[8] || (_cache[8] = createBaseVNode("label", null, "RouterURL", -1)),
             withDirectives(createBaseVNode("input", {
               "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => config.host = $event),
@@ -8476,7 +8485,7 @@ const _sfc_main$5 = /* @__PURE__ */ defineComponent({
               class: "btn-disconnect",
               disabled: !isConnected.value,
               onClick: disconnect
-            }, " disconnect ", 8, _hoisted_13$2)
+            }, " disconnect ", 8, _hoisted_13$1)
           ]),
           error.value ? (openBlock(), createElementBlock("p", _hoisted_14$1, toDisplayString(error.value), 1)) : createCommentVNode("", true)
         ]),
@@ -8497,7 +8506,7 @@ const _sfc_main$5 = /* @__PURE__ */ defineComponent({
                     value: name
                   }, toDisplayString(name), 9, _hoisted_19);
                 }), 128))
-              ], 40, _hoisted_18)
+              ], 40, _hoisted_18$1)
             ])
           ])) : createCommentVNode("", true),
           createBaseVNode("div", _hoisted_20, [
@@ -8545,7 +8554,7 @@ const _sfc_main$5 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const SessionView = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["__scopeId", "data-v-4c7196cb"]]);
+const SessionView = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-5c9a52f0"]]);
 function ensurePath(obj, keys) {
   let current = obj;
   for (const key of keys) {
@@ -8598,9 +8607,9 @@ function createRoster() {
   }
   return { entries, addPeer, removePeer, setLocalPeer };
 }
-const _hoisted_1$4 = { class: "cell-inner" };
-const _hoisted_2$4 = { class: "dev-icon" };
-const _hoisted_3$3 = {
+const _hoisted_1$5 = { class: "cell-inner" };
+const _hoisted_2$5 = { class: "dev-icon" };
+const _hoisted_3$5 = {
   key: 0,
   width: "28",
   height: "28",
@@ -8634,11 +8643,7 @@ const _hoisted_10$1 = {
 };
 const _hoisted_11$1 = ["stroke"];
 const _hoisted_12$1 = ["fill", "stroke"];
-const _hoisted_13$1 = {
-  key: 0,
-  class: "cell-plus"
-};
-const _sfc_main$4 = /* @__PURE__ */ defineComponent({
+const _sfc_main$5 = /* @__PURE__ */ defineComponent({
   __name: "DeviceCell",
   props: {
     loaded: {},
@@ -8650,10 +8655,14 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
     isLocked: { type: Boolean },
     selected: { type: Boolean }
   },
-  emits: ["click", "add"],
+  emits: ["click", "openPopup"],
   setup(__props, { emit: __emit }) {
     const props = __props;
     const emit2 = __emit;
+    function handleOpenPopup(e) {
+      const target = e.currentTarget;
+      emit2("openPopup", target.getBoundingClientRect());
+    }
     const isEmpty = computed(() => props.loaded === "0" || props.loaded === "");
     const isEnabled = computed(() => props.enable === "1");
     const DEVICE_STYLES = {
@@ -8693,14 +8702,14 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
       return openBlock(), createElementBlock("div", {
         class: normalizeClass(["device-cell", { empty: isEmpty.value, selected: __props.selected }]),
         style: normalizeStyle({ borderColor: borderColor.value }),
-        onClick: _cache[1] || (_cache[1] = ($event) => isEmpty.value ? void 0 : emit2("click"))
+        onClick: _cache[0] || (_cache[0] = ($event) => isEmpty.value ? void 0 : emit2("click"))
       }, [
         isEmpty.value ? (openBlock(), createElementBlock(Fragment, { key: 0 }, [
-          !__props.isLocked || __props.isLocal ? (openBlock(), createElementBlock("div", {
+          !__props.isLocked ? (openBlock(), createElementBlock("div", {
             key: 0,
             class: "empty-plus",
-            onClick: _cache[0] || (_cache[0] = withModifiers(($event) => emit2("add", 1), ["stop"]))
-          }, [..._cache[2] || (_cache[2] = [
+            onClick: withModifiers(handleOpenPopup, ["stop"])
+          }, [..._cache[1] || (_cache[1] = [
             createBaseVNode("svg", {
               width: "16",
               height: "16",
@@ -8715,9 +8724,9 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
             ], -1)
           ])])) : createCommentVNode("", true)
         ], 64)) : (openBlock(), createElementBlock(Fragment, { key: 1 }, [
-          createBaseVNode("div", _hoisted_1$4, [
-            createBaseVNode("div", _hoisted_2$4, [
-              direction.value === "bidi" ? (openBlock(), createElementBlock("svg", _hoisted_3$3, [
+          createBaseVNode("div", _hoisted_1$5, [
+            createBaseVNode("div", _hoisted_2$5, [
+              direction.value === "bidi" ? (openBlock(), createElementBlock("svg", _hoisted_3$5, [
                 createBaseVNode("path", {
                   d: "m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z",
                   fill: "none",
@@ -8762,21 +8771,25 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
               style: normalizeStyle({ color: labelColor.value })
             }, toDisplayString(label.value), 5)
           ]),
-          !__props.isLocked || __props.isLocal ? (openBlock(), createElementBlock("div", _hoisted_13$1, "+")) : createCommentVNode("", true)
+          !__props.isLocked ? (openBlock(), createElementBlock("div", {
+            key: 0,
+            class: "cell-plus",
+            onClick: withModifiers(handleOpenPopup, ["stop"])
+          }, "+")) : createCommentVNode("", true)
         ], 64))
       ], 6);
     };
   }
 });
-const DeviceCell = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-9dcbb986"]]);
-const _hoisted_1$3 = { class: "peer-row" };
-const _hoisted_2$3 = { class: "peer-text" };
-const _hoisted_3$2 = {
+const DeviceCell = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["__scopeId", "data-v-d94eee9d"]]);
+const _hoisted_1$4 = { class: "peer-row" };
+const _hoisted_2$4 = { class: "peer-text" };
+const _hoisted_3$4 = {
   key: 0,
   class: "peer-tag"
 };
 const _hoisted_4$2 = { class: "peer-cells" };
-const _sfc_main$3 = /* @__PURE__ */ defineComponent({
+const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   __name: "PeerRow",
   props: {
     peerId: {},
@@ -8789,7 +8802,7 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
     channelCount: {},
     selectedChannel: {}
   },
-  emits: ["cellClick", "addDevice"],
+  emits: ["cellClick", "openPopup"],
   setup(__props, { emit: __emit }) {
     const props = __props;
     const emit2 = __emit;
@@ -8826,7 +8839,7 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
       return { dot, bg, border: dot, name, ip };
     });
     return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("div", _hoisted_1$3, [
+      return openBlock(), createElementBlock("div", _hoisted_1$4, [
         createBaseVNode("div", {
           class: "peer-info",
           style: normalizeStyle({ background: peerColors.value.bg, borderLeftColor: peerColors.value.border })
@@ -8835,13 +8848,13 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
             class: "peer-dot",
             style: normalizeStyle({ background: peerColors.value.dot })
           }, null, 4),
-          createBaseVNode("div", _hoisted_2$3, [
+          createBaseVNode("div", _hoisted_2$4, [
             createBaseVNode("div", {
               class: "peer-name",
               style: normalizeStyle({ color: peerColors.value.name })
             }, [
               createTextVNode(toDisplayString(__props.peerName) + " ", 1),
-              __props.isLocal ? (openBlock(), createElementBlock("span", _hoisted_3$2, "(you)")) : createCommentVNode("", true)
+              __props.isLocal ? (openBlock(), createElementBlock("span", _hoisted_3$4, "(you)")) : createCommentVNode("", true)
             ], 4),
             __props.peerIp ? (openBlock(), createElementBlock("div", {
               key: 0,
@@ -8863,15 +8876,15 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
               "is-locked": __props.isLocked,
               selected: __props.selectedChannel === i - 1,
               onClick: ($event) => emit2("cellClick", i - 1),
-              onAdd: (type) => emit2("addDevice", i - 1, type)
-            }, null, 8, ["loaded", "description", "enable", "input-indicator", "output-indicator", "is-local", "is-locked", "selected", "onClick", "onAdd"]);
+              onOpenPopup: (rect) => emit2("openPopup", i - 1, rect)
+            }, null, 8, ["loaded", "description", "enable", "input-indicator", "output-indicator", "is-local", "is-locked", "selected", "onClick", "onOpenPopup"]);
           }), 128))
         ])
       ]);
     };
   }
 });
-const PeerRow = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-v-67295b0d"]]);
+const PeerRow = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-6833961a"]]);
 function useMqttBinding(getValue2, topic) {
   const value = computed(() => getValue2() ?? "");
   function set(newValue) {
@@ -8879,33 +8892,35 @@ function useMqttBinding(getValue2, topic) {
   }
   return { value, set };
 }
-const _hoisted_1$2 = { class: "osc-panel" };
-const _hoisted_2$2 = { class: "panel-header" };
-const _hoisted_3$1 = ["value", "disabled"];
-const _hoisted_4$1 = { class: "field-row" };
-const _hoisted_5 = ["value", "disabled"];
+const _hoisted_1$3 = { class: "osc-panel" };
+const _hoisted_2$3 = { class: "panel-header" };
+const _hoisted_3$3 = ["disabled"];
+const _hoisted_4$1 = ["value", "disabled"];
+const _hoisted_5 = { class: "field-row" };
 const _hoisted_6 = ["value", "disabled"];
-const _hoisted_7 = { class: "field-row" };
-const _hoisted_8 = ["disabled"];
-const _hoisted_9 = {
+const _hoisted_7 = ["value", "disabled"];
+const _hoisted_8 = { class: "field-row" };
+const _hoisted_9 = ["disabled"];
+const _hoisted_10 = {
   key: 0,
   class: "field-row"
 };
-const _hoisted_10 = ["value", "disabled"];
 const _hoisted_11 = ["value", "disabled"];
-const _hoisted_12 = { class: "field-row" };
-const _hoisted_13 = ["value"];
-const _hoisted_14 = { class: "field-row" };
-const _hoisted_15 = ["value"];
-const _hoisted_16 = { class: "panel-actions" };
-const _hoisted_17 = ["disabled"];
-const _sfc_main$2 = /* @__PURE__ */ defineComponent({
+const _hoisted_12 = ["value", "disabled"];
+const _hoisted_13 = { class: "field-row" };
+const _hoisted_14 = ["value"];
+const _hoisted_15 = { class: "field-row" };
+const _hoisted_16 = ["value"];
+const _hoisted_17 = { class: "panel-actions" };
+const _hoisted_18 = ["disabled"];
+const _sfc_main$3 = /* @__PURE__ */ defineComponent({
   __name: "OscPanel",
   props: {
     peerId: {},
     channelIndex: {},
     deviceState: {},
-    isLocal: { type: Boolean }
+    isLocal: { type: Boolean },
+    targetLocked: { type: Boolean }
   },
   emits: ["remove"],
   setup(__props, { emit: __emit }) {
@@ -8913,7 +8928,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
     const gui = computed(() => props.deviceState?.device?.gui ?? {});
     const udp = computed(() => gui.value?.localudp ?? {});
     const isEnabled = computed(() => gui.value?.enable === "1");
-    const isLocked = computed(() => !props.isLocal || isEnabled.value);
+    const isLocked = computed(() => isEnabled.value || !props.isLocal && props.targetLocked);
     const prefix = computed(
       () => `/peer/${props.peerId}/rack/page_0/channel.${props.channelIndex}/device/gui`
     );
@@ -8938,98 +8953,103 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
       emit2("remove");
     }
     return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("div", _hoisted_1$2, [
-        createBaseVNode("div", _hoisted_2$2, [
+      return openBlock(), createElementBlock("div", _hoisted_1$3, [
+        createBaseVNode("div", _hoisted_2$3, [
           createBaseVNode("button", {
             class: normalizeClass(["enable-btn", { active: isEnabled.value }]),
+            disabled: !__props.isLocal && __props.targetLocked,
             onClick: toggleEnable
-          }, toDisplayString(isEnabled.value ? "ON" : "OFF"), 3),
+          }, toDisplayString(isEnabled.value ? "ON" : "OFF"), 11, _hoisted_3$3),
           createBaseVNode("input", {
             class: "description-input",
             value: unref(descBinding).value.value,
             disabled: isLocked.value,
             onChange: _cache[0] || (_cache[0] = ($event) => unref(descBinding).set($event.target.value))
-          }, null, 40, _hoisted_3$1)
+          }, null, 40, _hoisted_4$1)
         ]),
         createBaseVNode("section", null, [
           _cache[9] || (_cache[9] = createBaseVNode("h4", null, "Forward to", -1)),
-          createBaseVNode("div", _hoisted_4$1, [
+          createBaseVNode("div", _hoisted_5, [
             _cache[6] || (_cache[6] = createBaseVNode("label", null, "output 1", -1)),
             createBaseVNode("input", {
               value: unref(outputIPOne).value.value,
               disabled: isLocked.value,
               placeholder: "IP address",
               onChange: _cache[1] || (_cache[1] = ($event) => unref(outputIPOne).set($event.target.value))
-            }, null, 40, _hoisted_5),
+            }, null, 40, _hoisted_6),
             createBaseVNode("input", {
               class: "port-input",
               value: unref(outputPortOne).value.value,
               disabled: isLocked.value,
               placeholder: "port",
               onChange: _cache[2] || (_cache[2] = ($event) => unref(outputPortOne).set($event.target.value))
-            }, null, 40, _hoisted_6)
+            }, null, 40, _hoisted_7)
           ]),
-          createBaseVNode("div", _hoisted_7, [
+          createBaseVNode("div", _hoisted_8, [
             _cache[7] || (_cache[7] = createBaseVNode("label", null, "output 2", -1)),
             createBaseVNode("button", {
               class: normalizeClass(["toggle-btn", { on: unref(enableTwo).value.value === "1" }]),
               disabled: isLocked.value,
               onClick: _cache[3] || (_cache[3] = ($event) => unref(enableTwo).set(unref(enableTwo).value.value === "1" ? "0" : "1"))
-            }, toDisplayString(unref(enableTwo).value.value === "1" ? "enabled" : "disabled"), 11, _hoisted_8)
+            }, toDisplayString(unref(enableTwo).value.value === "1" ? "enabled" : "disabled"), 11, _hoisted_9)
           ]),
-          unref(enableTwo).value.value === "1" ? (openBlock(), createElementBlock("div", _hoisted_9, [
+          unref(enableTwo).value.value === "1" ? (openBlock(), createElementBlock("div", _hoisted_10, [
             _cache[8] || (_cache[8] = createBaseVNode("label", null, null, -1)),
             createBaseVNode("input", {
               value: unref(outputIPTwo).value.value,
               disabled: isLocked.value,
               placeholder: "IP address",
               onChange: _cache[4] || (_cache[4] = ($event) => unref(outputIPTwo).set($event.target.value))
-            }, null, 40, _hoisted_10),
+            }, null, 40, _hoisted_11),
             createBaseVNode("input", {
               class: "port-input",
               value: unref(outputPortTwo).value.value,
               disabled: isLocked.value,
               placeholder: "port",
               onChange: _cache[5] || (_cache[5] = ($event) => unref(outputPortTwo).set($event.target.value))
-            }, null, 40, _hoisted_11)
+            }, null, 40, _hoisted_12)
           ])) : createCommentVNode("", true)
         ]),
         createBaseVNode("section", null, [
           _cache[12] || (_cache[12] = createBaseVNode("h4", null, "Receiving at", -1)),
-          createBaseVNode("div", _hoisted_12, [
+          createBaseVNode("div", _hoisted_13, [
             _cache[10] || (_cache[10] = createBaseVNode("label", null, "local IP", -1)),
             createBaseVNode("input", {
               value: udp.value.peerLocalIP,
               disabled: ""
-            }, null, 8, _hoisted_13)
+            }, null, 8, _hoisted_14)
           ]),
-          createBaseVNode("div", _hoisted_14, [
+          createBaseVNode("div", _hoisted_15, [
             _cache[11] || (_cache[11] = createBaseVNode("label", null, "input port", -1)),
             createBaseVNode("input", {
               class: "port-input",
               value: unref(inputPort).value.value,
               disabled: ""
-            }, null, 8, _hoisted_15)
+            }, null, 8, _hoisted_16)
           ])
         ]),
-        createBaseVNode("div", _hoisted_16, [
+        createBaseVNode("div", _hoisted_17, [
           createBaseVNode("button", {
             class: "remove-btn",
             onClick: removeDevice,
-            disabled: isEnabled.value
-          }, " Remove Device ", 8, _hoisted_17)
+            disabled: isEnabled.value || !__props.isLocal && __props.targetLocked
+          }, " Remove Device ", 8, _hoisted_18)
         ])
       ]);
     };
   }
 });
-const OscPanel = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["__scopeId", "data-v-006baa0d"]]);
-const _hoisted_1$1 = { class: "panel-breadcrumb" };
-const _hoisted_2$1 = {
-  key: 1,
+const OscPanel = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-v-eac365bd"]]);
+const _hoisted_1$2 = { class: "panel-breadcrumb" };
+const _hoisted_2$2 = {
+  key: 0,
+  class: "panel-type-label"
+};
+const _hoisted_3$2 = {
+  key: 2,
   class: "unsupported"
 };
-const _sfc_main$1 = /* @__PURE__ */ defineComponent({
+const _sfc_main$2 = /* @__PURE__ */ defineComponent({
   __name: "DevicePanel",
   props: {
     peerId: {},
@@ -9037,7 +9057,8 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent({
     peerName: {},
     roomName: {},
     deviceState: {},
-    isLocal: { type: Boolean }
+    isLocal: { type: Boolean },
+    targetLocked: { type: Boolean }
   },
   emits: ["close"],
   setup(__props, { emit: __emit }) {
@@ -9045,6 +9066,22 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent({
     const emit2 = __emit;
     const loaded = computed(() => props.deviceState?.loaded ?? "0");
     const description = computed(() => props.deviceState?.device?.gui?.description ?? "device");
+    const deviceTypeLabel = computed(() => {
+      switch (loaded.value) {
+        case "1":
+          return "OSC";
+        case "4":
+          return "StageControl";
+        case "2":
+        case "3":
+        case "5":
+          return "UltraGrid";
+        case "6":
+          return "MoCap";
+        default:
+          return "";
+      }
+    });
     function onKeydown(e) {
       if (e.key === "Escape") emit2("close");
     }
@@ -9054,24 +9091,104 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent({
         onKeydown,
         tabindex: "0"
       }, [
-        createBaseVNode("div", _hoisted_1$1, toDisplayString(__props.roomName) + " > " + toDisplayString(__props.peerName) + " > " + toDisplayString(description.value) + " > channel " + toDisplayString(__props.channelIndex), 1),
+        createBaseVNode("div", _hoisted_1$2, toDisplayString(__props.roomName) + " > " + toDisplayString(__props.peerName) + " > " + toDisplayString(description.value) + " > channel " + toDisplayString(__props.channelIndex), 1),
+        deviceTypeLabel.value ? (openBlock(), createElementBlock("div", _hoisted_2$2, toDisplayString(deviceTypeLabel.value), 1)) : createCommentVNode("", true),
         createBaseVNode("button", {
           class: "close-btn",
           onClick: _cache[0] || (_cache[0] = ($event) => emit2("close"))
         }, "X"),
         loaded.value === "1" || loaded.value === "4" ? (openBlock(), createBlock(OscPanel, {
-          key: 0,
+          key: 1,
           "peer-id": __props.peerId,
           "channel-index": __props.channelIndex,
           "device-state": __props.deviceState,
           "is-local": __props.isLocal,
+          "target-locked": __props.targetLocked,
           onRemove: _cache[1] || (_cache[1] = ($event) => emit2("close"))
-        }, null, 8, ["peer-id", "channel-index", "device-state", "is-local"])) : (openBlock(), createElementBlock("div", _hoisted_2$1, " Device type " + toDisplayString(loaded.value) + " is not yet supported in this milestone. ", 1))
+        }, null, 8, ["peer-id", "channel-index", "device-state", "is-local", "target-locked"])) : (openBlock(), createElementBlock("div", _hoisted_3$2, " Device type " + toDisplayString(loaded.value) + " is not yet supported in this milestone. ", 1))
       ], 32);
     };
   }
 });
-const DevicePanel = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-ace81e70"]]);
+const DevicePanel = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["__scopeId", "data-v-b4380dbe"]]);
+const _hoisted_1$1 = { class: "tile-grid" };
+const _hoisted_2$1 = ["disabled", "title", "onClick"];
+const _hoisted_3$1 = { class: "tile-label" };
+const POPUP_WIDTH = 180;
+const POPUP_HEIGHT = 188;
+const _sfc_main$1 = /* @__PURE__ */ defineComponent({
+  __name: "AddDevicePopup",
+  props: {
+    anchorRect: {}
+  },
+  emits: ["select", "close"],
+  setup(__props, { emit: __emit }) {
+    const props = __props;
+    const emit2 = __emit;
+    const tiles = [
+      { type: 1, label: "OSC", color: "#36ABFF", enabled: true },
+      { type: 4, label: "StageControl", color: "#1BFEE9", enabled: true },
+      { type: 2, label: "UltraGrid", color: "#F0DE01", enabled: false },
+      { type: 6, label: "MoCap", color: "#FFA126", enabled: false }
+    ];
+    const style = computePosition();
+    function computePosition() {
+      const r = props.anchorRect;
+      let left = r.left + r.width / 2 - POPUP_WIDTH / 2;
+      let top = r.bottom + 4;
+      const maxLeft = window.innerWidth - POPUP_WIDTH - 8;
+      if (left > maxLeft) left = maxLeft;
+      if (left < 8) left = 8;
+      if (top + POPUP_HEIGHT > window.innerHeight - 8) {
+        top = r.top - POPUP_HEIGHT - 4;
+      }
+      return { left: `${left}px`, top: `${top}px`, width: `${POPUP_WIDTH}px` };
+    }
+    function onTileClick(tile) {
+      if (!tile.enabled) return;
+      emit2("select", tile.type);
+    }
+    function onKeydown(e) {
+      if (e.key === "Escape") emit2("close");
+    }
+    function onDocClick(e) {
+      const target = e.target;
+      if (!target.closest(".add-device-popup")) emit2("close");
+    }
+    onMounted(() => {
+      document.addEventListener("keydown", onKeydown);
+      setTimeout(() => document.addEventListener("click", onDocClick), 0);
+    });
+    onBeforeUnmount(() => {
+      document.removeEventListener("keydown", onKeydown);
+      document.removeEventListener("click", onDocClick);
+    });
+    return (_ctx, _cache) => {
+      return openBlock(), createElementBlock("div", {
+        class: "add-device-popup",
+        style: normalizeStyle(unref(style))
+      }, [
+        _cache[1] || (_cache[1] = createBaseVNode("div", { class: "popup-title" }, "Add device", -1)),
+        createBaseVNode("div", _hoisted_1$1, [
+          (openBlock(), createElementBlock(Fragment, null, renderList(tiles, (tile) => {
+            return createBaseVNode("button", {
+              key: tile.type,
+              class: normalizeClass(["tile", { disabled: !tile.enabled }]),
+              style: normalizeStyle({ "--tile-color": tile.color }),
+              disabled: !tile.enabled,
+              title: tile.enabled ? tile.label : `${tile.label} (not yet available)`,
+              onClick: ($event) => onTileClick(tile)
+            }, [
+              _cache[0] || (_cache[0] = createBaseVNode("div", { class: "tile-dot" }, null, -1)),
+              createBaseVNode("div", _hoisted_3$1, toDisplayString(tile.label), 1)
+            ], 14, _hoisted_2$1);
+          }), 64))
+        ])
+      ], 4);
+    };
+  }
+});
+const AddDevicePopup = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-162a6586"]]);
 const _hoisted_1 = { class: "matrix-scroll" };
 const _hoisted_2 = { class: "matrix-grid" };
 const _hoisted_3 = { class: "header-cells" };
@@ -9159,6 +9276,26 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
       const topic = `/peer/${peerId}/rack/page_0/channel.${channelIndex}/loaded`;
       await window.api.invoke("mqtt:publish", true, topic, String(deviceType));
     }
+    const popupOpen = /* @__PURE__ */ ref(false);
+    const popupPeerId = /* @__PURE__ */ ref("");
+    const popupChannel = /* @__PURE__ */ ref(0);
+    const popupRect = /* @__PURE__ */ ref(null);
+    function onOpenPopup(peerId, channelIndex, rect) {
+      if (peerId !== ownPeerId.value) return;
+      popupPeerId.value = peerId;
+      popupChannel.value = channelIndex;
+      popupRect.value = rect;
+      popupOpen.value = true;
+    }
+    function onPopupSelect(deviceType) {
+      const peerId = popupPeerId.value;
+      const channel = popupChannel.value;
+      popupOpen.value = false;
+      onAddDevice(peerId, channel, deviceType);
+    }
+    function closePopup() {
+      popupOpen.value = false;
+    }
     return (_ctx, _cache) => {
       return openBlock(), createElementBlock("div", {
         class: "matrix-view",
@@ -9183,17 +9320,23 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
                 "peer-color": peerColor(peerId),
                 "peer-ip": peerIP(peerId),
                 "is-local": peerId === ownPeerId.value,
-                "is-locked": isLocked(peerId),
+                "is-locked": peerId !== ownPeerId.value && isLocked(peerId),
                 channels: peerChannels(peerId),
                 "channel-count": CHANNEL_COUNT,
                 "selected-channel": panelOpen.value && panelPeerId.value === peerId ? panelChannel.value : null,
                 onCellClick: (ch) => onCellClick(peerId, ch),
-                onAddDevice: (ch, type) => onAddDevice(peerId, ch, type)
-              }, null, 8, ["peer-id", "peer-name", "peer-color", "peer-ip", "is-local", "is-locked", "channels", "selected-channel", "onCellClick", "onAddDevice"]);
+                onOpenPopup: (ch, rect) => onOpenPopup(peerId, ch, rect)
+              }, null, 8, ["peer-id", "peer-name", "peer-color", "peer-ip", "is-local", "is-locked", "channels", "selected-channel", "onCellClick", "onOpenPopup"]);
             }), 128))
           ])
         ]),
         sortedPeerIds.value.length === 0 ? (openBlock(), createElementBlock("p", _hoisted_4, "Waiting for peer data...")) : createCommentVNode("", true),
+        popupOpen.value && popupRect.value ? (openBlock(), createBlock(AddDevicePopup, {
+          key: 1,
+          "anchor-rect": popupRect.value,
+          onSelect: onPopupSelect,
+          onClose: closePopup
+        }, null, 8, ["anchor-rect"])) : createCommentVNode("", true),
         panelOpen.value ? (openBlock(), createBlock(DevicePanel, {
           key: `${panelPeerId.value}-${panelChannel.value}`,
           "peer-id": panelPeerId.value,
@@ -9202,13 +9345,14 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
           "room-name": "",
           "device-state": peerChannels(panelPeerId.value)[`channel.${panelChannel.value}`],
           "is-local": panelPeerId.value === ownPeerId.value,
+          "target-locked": isLocked(panelPeerId.value),
           onClose: closePanel
-        }, null, 8, ["peer-id", "channel-index", "peer-name", "device-state", "is-local"])) : createCommentVNode("", true)
+        }, null, 8, ["peer-id", "channel-index", "peer-name", "device-state", "is-local", "target-locked"])) : createCommentVNode("", true)
       ], 4);
     };
   }
 });
-const MatrixView = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-fd3a3187"]]);
+const MatrixView = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-b487a436"]]);
 const router = createRouter({
   history: createMemoryHistory(),
   routes: [
@@ -9216,4 +9360,4 @@ const router = createRouter({
     { path: "/matrix", name: "matrix", component: MatrixView }
   ]
 });
-createApp(_sfc_main$6).use(router).mount("#app");
+createApp(_sfc_main$7).use(router).mount("#app");

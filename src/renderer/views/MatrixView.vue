@@ -4,6 +4,7 @@ import { createPeerState } from '../state/peerState'
 import { createRoster } from '../state/roster'
 import PeerRow from '../components/PeerRow.vue'
 import DevicePanel from '../components/DevicePanel.vue'
+import AddDevicePopup from '../components/AddDevicePopup.vue'
 
 const peerState = createPeerState()
 const roster = createRoster()
@@ -101,6 +102,30 @@ async function onAddDevice(peerId: string, channelIndex: number, deviceType: num
   const topic = `/peer/${peerId}/rack/page_0/channel.${channelIndex}/loaded`
   await window.api.invoke('mqtt:publish', true, topic, String(deviceType))
 }
+
+const popupOpen = ref(false)
+const popupPeerId = ref('')
+const popupChannel = ref(0)
+const popupRect = ref<DOMRect | null>(null)
+
+function onOpenPopup(peerId: string, channelIndex: number, rect: DOMRect) {
+  if (peerId !== ownPeerId.value) return
+  popupPeerId.value = peerId
+  popupChannel.value = channelIndex
+  popupRect.value = rect
+  popupOpen.value = true
+}
+
+function onPopupSelect(deviceType: number) {
+  const peerId = popupPeerId.value
+  const channel = popupChannel.value
+  popupOpen.value = false
+  onAddDevice(peerId, channel, deviceType)
+}
+
+function closePopup() {
+  popupOpen.value = false
+}
 </script>
 
 <template>
@@ -130,12 +155,19 @@ async function onAddDevice(peerId: string, channelIndex: number, deviceType: num
           :channel-count="CHANNEL_COUNT"
           :selected-channel="panelOpen && panelPeerId === peerId ? panelChannel : null"
           @cell-click="(ch) => onCellClick(peerId, ch)"
-          @add-device="(ch, type) => onAddDevice(peerId, ch, type)"
+          @open-popup="(ch, rect) => onOpenPopup(peerId, ch, rect)"
         />
       </div>
     </div>
 
     <p v-if="sortedPeerIds.length === 0" class="muted">Waiting for peer data...</p>
+
+    <AddDevicePopup
+      v-if="popupOpen && popupRect"
+      :anchor-rect="popupRect"
+      @select="onPopupSelect"
+      @close="closePopup"
+    />
 
     <DevicePanel
       v-if="panelOpen"

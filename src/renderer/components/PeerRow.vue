@@ -16,7 +16,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   cellClick: [channelIndex: number]
-  addDevice: [channelIndex: number, deviceType: number]
+  openPopup: [channelIndex: number, rect: DOMRect]
 }>()
 
 function channelData(index: number) {
@@ -90,7 +90,7 @@ const peerColors = computed(() => {
         :is-locked="isLocked"
         :selected="selectedChannel === i - 1"
         @click="emit('cellClick', i - 1)"
-        @add="(type) => emit('addDevice', i - 1, type)"
+        @open-popup="(rect) => emit('openPopup', i - 1, rect)"
       />
     </div>
   </div>
