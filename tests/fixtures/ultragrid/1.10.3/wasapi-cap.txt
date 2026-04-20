@@ -1,0 +1,6 @@
+MasterPortDestroyer is armed
+UltraGrid 1.10.3 (tags/v1.10.3 rev 12e2705 built Feb 20 2026 15:07:39)
+
+Unknown audio capture driver: wasapi
+Exit
+MasterPortDestroyer triggered

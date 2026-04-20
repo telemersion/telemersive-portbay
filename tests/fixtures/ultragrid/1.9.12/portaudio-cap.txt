@@ -1,0 +1,23 @@
+UltraGrid 1.9.12 (tags/v1.9.12 rev 669a27d built Oct 21 2025 08:09:11)
+
+[PortAudio] Using PortAudio V19.7.0-devel, revision 147dd722548358763a8b649b3e4b41dfffbcfbb6
+PortAudio capture usage:
+	-s portaudio[:<index>[:latency=<l>]]
+or
+	-s portaudio[:device=<dev>][:latency=<l>]
+
+options:
+	 <l> 	suggested latency in sec (experimental, use in case of problems)
+	<dev>	device name (or a part of it); device index is also accepted here
+
+Available PortAudio capture devices:
+	portaudio - use default Portaudio device (marked with star)
+	portaudio:0 - NDI Audio (output channels: 0; input channels: 2; Core Audio)
+	portaudio:1 - BlackHole 16ch (output channels: 16; input channels: 16; Core Audio)
+	portaudio:2 - BlackHole 2ch (output channels: 2; input channels: 2; Core Audio)
+	portaudio:3 - BlackHole 64ch (output channels: 64; input channels: 64; Core Audio)
+(*) 	portaudio:4 - MacBook Pro Microphone (output channels: 0; input channels: 1; Core Audio)
+	portaudio:6 - Microsoft Teams Audio (output channels: 1; input channels: 1; Core Audio)
+	portaudio:8 - ZoomAudioDevice (output channels: 2; input channels: 2; Core Audio)
+	portaudio:9 - Hauptgeraet (output channels: 16; input channels: 16; Core Audio)
+Exit

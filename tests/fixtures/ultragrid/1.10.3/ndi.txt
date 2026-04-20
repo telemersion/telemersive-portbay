@@ -1,0 +1,36 @@
+MasterPortDestroyer is armed
+UltraGrid 1.10.3 (tags/v1.10.3 rev 12e2705 built Feb 20 2026 15:07:39)
+
+This application uses NDI® available from https://ndi.video/
+NDI® is a registered trademark of Vizrt NDI AB.
+
+[NDI] NDI_RUNTIME_DIR_V6 environment variable not defined. Trying fallback folders
+[NDI] Failed to open the library libndi.dylib: dlopen(libndi.dylib, 0x0005): tried: 'libndi.dylib' (relative path not allowed in hardened program), '/System/Volumes/Preboot/Cryptexes/OSlibndi.dylib' (no such file), '/Volumes/Ddrive/04_projects/Telematics/01_telemersion/telemersive-portbay/vendor/ultragrid/1.10.3/uv-qt.app/Contents/libs/libndi.dylib' (no such file), '/Volumes/Ddrive/04_projects/Telematics/01_telemersion/telemersive-portbay/vendor/ultragrid/1.10.3/uv-qt.app/Contents/libs/libndi.dylib' (no such file), '/usr/lib/libndi.dylib' (no such file, not in dyld cache), 'libndi.dylib' (relative path not allowed in hardened program)
+[NDI] Trying to load from fallback location: /usr/local/lib
+NDI version NDI SDK APPLE 09:16:25 Dec 20 2024 6.1.1
+Usage:
+	-t ndi[:name=<n>][:url=<u>][:audio_level=<l>][:bandwidth=<b>][:color=<c>][:extra_ips=<ip>][:progressive]
+	-t ndi:help[:extra_ips=<ip>]
+where
+	name
+		name of the NDI source in form "MACHINE_NAME (NDI_SOURCE_NAME)"
+		source or machine name can be also used alone
+	url
+		URL, typically <ip> or <ip>:<port>
+	audio_level
+		audio headroom above reference level (in dB, or mic/line, default 0)
+	bandwidth
+		required bandwidth, 10 - audio only, 0 - lowest, 100 - highest (default)
+	color
+		color format, 0 - BGRX/BGRA, 1 - UYVY/BGRA, 2 - RGBX/RGBA, 3 - UYVY/RGBA, 100 - fastest (UYVY), 101 - best (default, P216/UYVY)
+		Selection is on NDI runtime and usually depends on presence of alpha channel. UG ignores alpha channel for YCbCr codecs.
+	extra_ips
+		additional IP addresses for query in format "12.0.0.8,13.0.12.8". Can be used if DNS-SD is not usable.
+	progressive
+		prefer progressive capture for interlaced input
+
+available sources (tentative, format: name - url):
+	NX-41545 (Test Patterns) - 127.0.0.1:5961
+
+Exit
+MasterPortDestroyer triggered

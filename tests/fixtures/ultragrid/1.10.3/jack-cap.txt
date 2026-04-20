@@ -1,0 +1,18 @@
+MasterPortDestroyer is armed
+UltraGrid 1.10.3 (tags/v1.10.3 rev 12e2705 built Feb 20 2026 15:07:39)
+
+Usage:
+	-s jack[:first_channel=<f>][:name=<n>][:<device>]
+	where
+		<f> - index of first channel to capture (default: 0)
+		<n> - name of the JACK client (default: UltraGrid)
+
+Available devices:
+Cannot connect to server socket err = No such file or directory
+Cannot connect to server request channel
+jack server is not running or cannot be started
+JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+Opening JACK client failed.
+Exit
+MasterPortDestroyer triggered

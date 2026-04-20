@@ -1,0 +1,20 @@
+MasterPortDestroyer is armed
+UltraGrid 1.10.3 (tags/v1.10.3 rev 12e2705 built Feb 20 2026 15:07:39)
+
+Core Audio capture usage:
+	-s coreaudio[:<index>|:<name>]
+where
+	<name> - device name substring (case sensitive)
+
+Available Core Audio capture devices:
+	coreaudio    : Default CoreAudio capture
+	coreaudio:158: NDI Audio
+	coreaudio:100: BlackHole 16ch
+	coreaudio:116: BlackHole 2ch
+	coreaudio:132: BlackHole 64ch
+	coreaudio:95 : MacBook Pro Microphone
+	coreaudio:148: Microsoft Teams Audio
+	coreaudio:175: ZoomAudioDevice
+	coreaudio:61 : Hauptgeraet
+Exit
+MasterPortDestroyer triggered

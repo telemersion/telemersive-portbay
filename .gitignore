@@ -1,1 +1,5 @@
 node_modules
+
+# UltraGrid binaries — per-version installs; fixtures under tests/fixtures/ultragrid/ are tracked.
+vendor/ultragrid/*/
+vendor/ultragrid/active

@@ -1,0 +1,15 @@
+UltraGrid 1.9.12 (tags/v1.9.12 rev 669a27d built Oct 21 2025 08:09:11)
+
+Cannot connect to server socket err = No such file or directory
+Cannot connect to server request channel
+jack server is not running or cannot be started
+JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+JackShmReadWritePtr::~JackShmReadWritePtr - Init not done for -1, skipping unlock
+Opening JACK client failed.
+Usage:
+	-s jack[:first_channel=<f>][:name=<n>][:<device>]
+	where
+		<f> - index of first channel to capture (default: 0)
+		<n> - name of the JACK client (default: UltraGrid)
+
+Exit

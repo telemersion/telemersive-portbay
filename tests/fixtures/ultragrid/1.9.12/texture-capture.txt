@@ -1,0 +1,21 @@
+UltraGrid 1.9.12 (tags/v1.9.12 rev 669a27d built Oct 21 2025 08:09:11)
+
+Available capture devices:
+	aggregate
+	aja
+	avfoundation
+	decklink
+	deltacast
+	deltacast-dv
+	file
+	import
+	ndi
+	rtsp
+	screen
+	switcher
+	swmix
+	syphon
+	testcard
+	testcard2
+	ug_input
+	ximea

@@ -1,0 +1,22 @@
+UltraGrid 1.9.12 (tags/v1.9.12 rev 669a27d built Oct 21 2025 08:09:11)
+
+[PortAudio] Using PortAudio V19.7.0-devel, revision 147dd722548358763a8b649b3e4b41dfffbcfbb6
+PortAudio playback usage:
+	-r portaudio[:<index>]
+or
+	-r portaudio[:device=<dev>]
+
+options:
+	<dev>	device name (or a part of it); device index is also accepted here
+
+Available PortAudio playback devices:
+	portaudio - use default Portaudio device (marked with star)
+	portaudio:1 - BlackHole 16ch (output channels: 16; input channels: 16; Core Audio)
+	portaudio:2 - BlackHole 2ch (output channels: 2; input channels: 2; Core Audio)
+	portaudio:3 - BlackHole 64ch (output channels: 64; input channels: 64; Core Audio)
+(*) 	portaudio:5 - MacBook Pro Speakers (output channels: 2; input channels: 0; Core Audio)
+	portaudio:6 - Microsoft Teams Audio (output channels: 1; input channels: 1; Core Audio)
+	portaudio:7 - NDI Audio (output channels: 6; input channels: 0; Core Audio)
+	portaudio:8 - ZoomAudioDevice (output channels: 2; input channels: 2; Core Audio)
+	portaudio:9 - Hauptgeraet (output channels: 16; input channels: 16; Core Audio)
+Exit

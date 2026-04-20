@@ -1,5 +1,6 @@
 import { spawn, type SpawnOptions } from 'child_process'
 import { existsSync } from 'fs'
+import { resolve } from 'path'
 
 export interface SpawnCliResult {
   stdout: string
@@ -26,8 +27,10 @@ export function resolveUgPath(): string | null {
     return existsSync(process.env.UG_PATH) ? process.env.UG_PATH : null
   }
   if (process.platform === 'darwin') {
-    const mac = '/Applications/UltraGrid.app/Contents/MacOS/uv'
-    return existsSync(mac) ? mac : null
+    const vendored = resolve(process.cwd(), 'vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv')
+    if (existsSync(vendored)) return vendored
+    const system = '/Applications/uv-qt.app/Contents/MacOS/uv'
+    return existsSync(system) ? system : null
   }
   if (process.platform === 'linux') {
     const linux = '/usr/local/bin/uv'

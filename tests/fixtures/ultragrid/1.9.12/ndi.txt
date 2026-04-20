@@ -1,0 +1,32 @@
+UltraGrid 1.9.12 (tags/v1.9.12 rev 669a27d built Oct 21 2025 08:09:11)
+
+This application uses NDI® available from https://ndi.video/
+NDI® is a registered trademark of Vizrt NDI AB.
+
+[NDI] Failed to open the library: dlopen(libndi.dylib, 0x0005): tried: 'libndi.dylib' (relative path not allowed in hardened program), '/System/Volumes/Preboot/Cryptexes/OSlibndi.dylib' (no such file), '/Volumes/Ddrive/04_projects/Telematics/01_telemersion/telemersive-portbay/vendor/ultragrid/1.9.12/uv-qt.app/Contents/libs/libndi.dylib' (no such file), '/Volumes/Ddrive/04_projects/Telematics/01_telemersion/telemersive-portbay/vendor/ultragrid/1.9.12/uv-qt.app/Contents/libs/libndi.dylib' (no such file), '/usr/lib/libndi.dylib' (no such file, not in dyld cache), 'libndi.dylib' (relative path not allowed in hardened program)
+[NDI] Trying to load from fallback location: /usr/local/lib
+Usage:
+	-t ndi[:help][:name=<n>][:url=<u>][:audio_level=<l>][:bandwidth=<b>][:color=<c>][:extra_ips=<ip>][:progressive] | -t ndi:help[:extra_ips=<ip>]
+where
+	name
+		name of the NDI source in form "MACHINE_NAME (NDI_SOURCE_NAME)"
+	url
+		URL, typically <ip> or <ip>:<port>
+	audio_level
+		audio headroom above reference level (in dB, or mic/line, default 0)
+	bandwidth
+		required bandwidth, 10 - audio only, 0 - lowest, 100 - highest (default)
+	color
+		color format, 0 - BGRX/BGRA, 1 - UYVY/BGRA, 2 - RGBX/RGBA, 3 - UYVY/RGBA, 100 - fastest (UYVY), 101 - best (default, P216/UYVY)
+		Selection is on NDI runtime and usually depends on presence of alpha channel. UG ignores alpha channel for YCbCr codecs.
+	extra_ips
+		additional IP addresses for query in format "12.0.0.8,13.0.12.8". Can be used if DNS-SD is not usable.
+	progressive
+		prefer progressive capture for interlaced input
+
+available sources (tentative, format: name - url):
+[NDI cap.] No sources found!
+[NDI cap.] You can pass "extra_ips" if mDNS is not operable.
+
+NDI 2025-08-21 r146761 v6.2.1.0
+Exit

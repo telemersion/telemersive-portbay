@@ -1,0 +1,23 @@
+MasterPortDestroyer is armed
+UltraGrid 1.10.3 (tags/v1.10.3 rev 12e2705 built Feb 20 2026 15:07:39)
+
+[PortAudio] Using PortAudio V19.7.0-devel, revision 147dd722548358763a8b649b3e4b41dfffbcfbb6
+PortAudio playback usage:
+	-s portaudio:[full]help
+	-r portaudio[:<index>]
+or
+	-r portaudio[:device=<dev>]
+
+options:
+	<dev>	device name (or a part of it); device index is also accepted here
+
+
+Available PortAudio playback devices (max channels; API):
+	portaudio - use default Portaudio device (marked with star)
+	portaudio:0 - NDI Audio (0; Core Audio)
+	portaudio:4 - MacBook Pro Microphone (0; Core Audio)
+
+Examples:
+	vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv-real -r portaudio:d="MacBook Pro"
+Exit
+MasterPortDestroyer triggered
