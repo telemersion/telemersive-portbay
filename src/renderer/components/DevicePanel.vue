@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import OscPanel from './panels/OscPanel.vue'
+import UltraGridPanel from './panels/UltraGridPanel.vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -8,6 +9,7 @@ const props = defineProps<{
   peerName: string
   roomName: string
   deviceState: any
+  peerSettings?: any
   isLocal: boolean
   targetLocked: boolean
 }>()
@@ -45,6 +47,17 @@ function onKeydown(e: KeyboardEvent) {
       :peer-id="peerId"
       :channel-index="channelIndex"
       :device-state="deviceState"
+      :is-local="isLocal"
+      :target-locked="targetLocked"
+      @remove="emit('close')"
+    />
+
+    <UltraGridPanel
+      v-else-if="loaded === '2'"
+      :peer-id="peerId"
+      :channel-index="channelIndex"
+      :device-state="deviceState"
+      :peer-settings="peerSettings"
       :is-local="isLocal"
       :target-locked="targetLocked"
       @remove="emit('close')"

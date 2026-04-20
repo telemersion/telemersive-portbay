@@ -69,6 +69,10 @@ function peerChannels(peerId: string) {
   return peerState.peers[peerId]?.rack?.page_0 ?? {}
 }
 
+function peerSettings(peerId: string) {
+  return peerState.peers[peerId]?.settings ?? {}
+}
+
 function peerColor(peerId: string) {
   return peerState.peers[peerId]?.settings?.background?.color ?? ''
 }
@@ -176,6 +180,7 @@ function closePopup() {
       :peer-name="roster.entries[panelPeerId]?.peerName ?? ''"
       :room-name="''"
       :device-state="peerChannels(panelPeerId)[`channel.${panelChannel}`]"
+      :peer-settings="peerSettings(panelPeerId)"
       :is-local="panelPeerId === ownPeerId"
       :target-locked="isLocked(panelPeerId)"
       @close="closePanel"
