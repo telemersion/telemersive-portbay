@@ -20,7 +20,7 @@ interface Tile {
 const tiles: Tile[] = [
   { type: 1, label: 'OSC',          color: '#36ABFF', enabled: true  },
   { type: 4, label: 'StageControl', color: '#1BFEE9', enabled: true  },
-  { type: 2, label: 'UltraGrid',    color: '#F0DE01', enabled: false },
+  { type: 2, label: 'UltraGrid',    color: '#F0DE01', enabled: true  },
   { type: 6, label: 'MoCap',        color: '#FFA126', enabled: false }
 ]
 
