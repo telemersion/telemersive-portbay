@@ -1,0 +1,1 @@
+--param log-color=no -t spout:name='Spout Sender' -c libavcodec:codec=H.264:bitrate=10M -s portaudio:12 --audio-codec OPUS:bitrate=64000 --audio-capture-format channels=1 -d gl:spout='room_channel_0' -r portaudio:11

@@ -587,8 +587,7 @@ docs/logs/
 - [ ] **Step 2: Compose `ChildProcessLifecycle`.** On enable-flip-to-1: resolve UG path (reuse `resolveUgPath` from M2a spawnCli), allocate ports, `buildUvArgs`, start. On enable-flip-to-0: `lifecycle.stop()`.
 
 - [ ] **Step 3: Lifecycle callbacks.**
-  - `onStdout` → passed to `monitorLog` for bounded ring-buffer publish to `monitor/log`.
-  - `onStderr` → same; stderr lines are the interesting ones.
+  - `onStdout` / `onStderr` → always append to a local bounded ring buffer (~50 lines). **Publish to `monitor/log` ONLY when `monitor/monitorGate = 1`** (gate is pull-only — see capture notes). On `monitorGate` flipping 0→1, publish the current buffer contents. On 1→0, stop publishing. Rationale: 20 UG channels streaming stderr unconditionally would flood the broker with data nobody is watching.
   - `onExit('spawn-failure', code)` → log warning; leave enable=1 (user decides whether to retry).
   - `onExit('crash', code)` → log warning; publish empty to `gui/enable` (sets enable=0 via echo).
   - `onExit('killed', code)` → silent (we caused it).

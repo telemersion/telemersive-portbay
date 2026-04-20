@@ -1,0 +1,122 @@
+[15:35:51.890] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/texture/menu/selection 0
+[15:35:51.892] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/texture/menu/selection 0
+[15:35:51.892] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/texture/menu/selection -default-
+[15:35:51.892] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/custom/customFlags/flags -none-
+[15:35:51.892] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/ndi/menu/selection 0
+[15:35:51.892] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/ndi/menu/selection 0
+[15:35:51.892] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/ndi/menu/selection -default-
+[15:35:51.892] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/advanced/compress/bitrate 0
+[15:35:51.892] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/advanced/compress/codec 0
+[15:35:51.893] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/advanced/compress/codec 2
+[15:35:51.893] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/advanced/compress/bitrate 10
+[15:35:51.893] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/advanced/texture/fps 0
+[15:35:51.893] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/advanced/filter/params 0
+[15:35:51.893] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/advanced/filter/params 0
+[15:35:51.894] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/advanced/filter/params -none-
+[15:35:51.894] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/type 0
+[15:35:51.894] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoReciever/texture/closedWindow 0
+[15:35:51.894] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoReciever/texture/name s_channel_0
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoReciever/custom/customFlags/flags -none-
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoReciever/ndi/name s_channel_0
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoReciever/advanced/postprocessor/params 0
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoReciever/advanced/postprocessor/params 0
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoReciever/advanced/postprocessor/params -none-
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoReciever/type 0
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/custom/customFlags/flags -none-
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/portaudio/menu/selection 0
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/portaudio/menu/selection 0
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/portaudio/menu/selection -default-
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/testcard/frequency 100
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/testcard/volume 0
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/testcard/volume -18
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/testcard/frequency 440
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/coreaudio/menu/selection 0
+[15:35:51.896] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/coreaudio/menu/selection 0
+[15:35:51.898] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/coreaudio/menu/selection -default-
+[15:35:51.898] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/wasapi/menu/selection 0
+[15:35:51.898] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/wasapi/menu/selection 0
+[15:35:51.898] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/wasapi/menu/selection -default-
+[15:35:51.898] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/advanced/compress/bitrate 0
+[15:35:51.898] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/advanced/compress/codec 0
+[15:35:51.898] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/advanced/compress/samplerate 0
+[15:35:51.898] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/advanced/compress/samplerate 32000
+[15:35:51.900] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/advanced/compress/codec 1
+[15:35:51.900] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/advanced/compress/bitrate 64000
+[15:35:51.900] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/advanced/channels/channels 1
+[15:35:51.900] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/jack/menu/selection 0
+[15:35:51.900] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/jack/menu/selection 0
+[15:35:51.900] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/jack/menu/selection -default-
+[15:35:51.900] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/type 0
+[15:35:51.900] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/custom/customFlags/flags -none-
+[15:35:51.902] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/portaudio/menu/selection 0
+[15:35:51.902] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/portaudio/menu/selection 0
+[15:35:51.902] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/portaudio/menu/selection -default-
+[15:35:51.902] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/coreaudio/menu/selection 0
+[15:35:51.902] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/coreaudio/menu/selection 0
+[15:35:51.902] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/coreaudio/menu/selection -default-
+[15:35:51.902] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/wasapi/menu/selection 0
+[15:35:51.902] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/wasapi/menu/selection 0
+[15:35:51.903] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/wasapi/menu/selection -default-
+[15:35:51.903] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/advanced/channels/params 0
+[15:35:51.903] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/advanced/channels/params 0
+[15:35:51.903] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/advanced/channels/params -none-
+[15:35:51.903] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/jack/menu/selection 0
+[15:35:51.903] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/jack/menu/selection 0
+[15:35:51.903] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/jack/menu/selection -default-
+[15:35:51.903] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/type 0
+[15:35:51.903] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/advanced/custom/customFlags/flags -none-
+[15:35:51.906] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/advanced/advanced/params/params 0
+[15:35:51.906] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/advanced/advanced/params/params 0
+[15:35:51.906] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/advanced/advanced/params/params -none-
+[15:35:51.906] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/advanced/advanced/encryption/key 0
+[15:35:51.906] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/advanced/advanced/encryption/key 0
+[15:35:51.906] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/advanced/advanced/encryption/key -none-
+[15:35:51.906] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/connection 0
+[15:35:51.906] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/transmission 0
+[15:35:51.906] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/transmission 2
+[15:35:51.906] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/connection 2
+[15:35:51.909] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/network/holepuncher/stunServer stun4.l.google.com:19302
+[15:35:51.909] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/network/local/customSending 0.0.0.0:11000
+[15:35:51.909] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/network/ports/alternativeChannel 0
+[15:35:51.909] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/network/ports/receiveChannel 0
+[15:35:51.909] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/network/mode 0
+[15:35:51.909] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/network/mode 5
+[15:35:51.913] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/monitor/monitorGate 0
+[15:35:51.913] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/monitor/log 0
+[15:35:51.913] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/monitor/log 0
+[15:35:51.913] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/remoteValues/local_os 0
+[15:35:51.913] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/remoteValues/local_os 0
+[15:35:51.913] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/network/local/customSending 0.0.0.0:11002
+[15:35:51.913] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoReciever/ndi/name room_channel_0
+[15:35:51.913] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoReciever/texture/name room_channel_0
+[15:35:51.913] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/updateMenu 0
+[15:35:51.913] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/updateMenu 0
+[15:35:51.913] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/updateMenu audioCapture jack
+[15:35:51.915] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/print_cli 0
+[15:35:51.915] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/print_cli 0
+[15:35:51.915] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/indicators 0
+[15:35:51.915] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/indicators 0
+[15:35:51.915] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/description ultragrid
+[15:35:51.916] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/enable 0
+[15:35:51.916] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/remoteValues/local_os windows
+[15:35:51.959] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/loaded 2
+[15:35:53.518] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/indicators 0 0 0 0 0 0
+[15:35:58.738] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/network/mode 4
+[15:36:25.876] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/updateMenu texture
+[15:36:25.987] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/settings/localMenus/textureCaptureRange -default-|name='Spout Sender'
+[15:36:28.335] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/videoCapture/texture/menu/selection name='Spout Sender'
+[15:36:29.150] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/updateMenu audioCapture portaudio
+[15:36:29.460] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/settings/localMenus/portaudioCaptureRange 0 Microsoft Sound Mapper Input (out: 0 in: 2 MME)|1 Microphone (Scarlett 2i2 4th Ge (out: 0 in: 4 MME)|2 Webcam 2 (NDI Webcam Audio) (out: 0 in: 2 MME)|3 Webcam 1 (NDI Webcam Audio) (out: 0 in: 2 MME)|4 Webcam 3 (NDI Webcam Audio) (out: 0 in: 2 MME)|5 Webcam 4 (NDI Webcam Audio) (out: 0 in: 2 MME)|12 Primary Sound Capture Driver (out: 0 in: 2 Windows DirectSound)|13 Microphone (Scarlett 2i2 4th Gen) (out: 0 in: 4 Windows DirectSound)|14 Webcam 2 (NDI Webcam Audio) (out: 0 in: 2 Windows DirectSound)|15 Webcam 1 (NDI Webcam Audio) (out: 0 in: 2 Windows DirectSound)|16 Webcam 3 (NDI Webcam Audio) (out: 0 in: 2 Windows DirectSound)|17 Webcam 4 (NDI Webcam Audio) (out: 0 in: 2 Windows DirectSound)|29 Microphone (Scarlett 2i2 4th Gen) (out: 0 in: 4 Windows WASAPI)|30 Webcam 2 (NDI Webcam Audio) (out: 0 in: 2 Windows WASAPI)|31 Webcam 1 (NDI Webcam Audio) (out: 0 in: 2 Windows WASAPI)|32 Webcam 3 (NDI Webcam Audio) (out: 0 in: 2 Windows WASAPI)|33 Webcam 4 (NDI Webcam Audio) (out: 0 in: 2 Windows WASAPI)|34 Webcam 1 (Web Camera Wave Mic 1) (out: 0 in: 2 Windows WDMKS)|35 Webcam 2 (Web Camera Wave Mic 2) (out: 0 in: 2 Windows WDMKS)|36 Webcam 3 (Web Camera Wave Mic 3) (out: 0 in: 2 Windows WDMKS)|37 Webcam 4 (Web Camera Wave Mic 4) (out: 0 in: 2 Windows WDMKS)|44 Line In (Realtek HD Audio Line input) (out: 0 in: 2 Windows WDMKS)|45 Stereo Mix (Realtek HD Audio Stereo input) (out: 0 in: 2 Windows WDMKS)|46 Microphone (Realtek HD Audio Mic input) (out: 0 in: 2 Windows WDMKS)|48 Microphone (Scarlett 2i2 4th Gen) (out: 0 in: 4 Windows WDMKS)
+[15:36:37.240] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioCapture/portaudio/menu/selection Primary Sound Capture Driver (out: 0 in: 2 Windows DirectSound)
+[15:36:43.592] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/updateMenu audioReceive portaudio
+[15:36:43.756] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/settings/localMenus/portaudioReceiveRange 6 Microsoft Sound Mapper Output (out: 2 in: 0 MME)|7 Speakers (Scarlett 2i2 4th Gen) (out: 2 in: 0 MME)|8 Realtek Digital Output (Realtek (out: 2 in: 0 MME)|9 DELL U2413 (NVIDIA High Definit (out: 2 in: 0 MME)|10 P552 (NVIDIA High Definition Au (out: 2 in: 0 MME)|11 DELL U2413 (NVIDIA High Definit (out: 2 in: 0 MME)|18 Primary Sound Driver (out: 2 in: 0 Windows DirectSound)|19 Speakers (Scarlett 2i2 4th Gen) (out: 2 in: 0 Windows DirectSound)|20 Realtek Digital Output (Realtek(R) Audio) (out: 2 in: 0 Windows DirectSound)|21 DELL U2413 (NVIDIA High Definition Audio) (out: 2 in: 0 Windows DirectSound)|22 P552 (NVIDIA High Definition Audio) (out: 2 in: 0 Windows DirectSound)|23 DELL U2413 (NVIDIA High Definition Audio) (out: 2 in: 0 Windows DirectSound)|24 Realtek Digital Output (Realtek(R) Audio) (out: 2 in: 0 Windows WASAPI)|25 DELL U2413 (NVIDIA High Definition Audio) (out: 2 in: 0 Windows WASAPI)|26 Speakers (Scarlett 2i2 4th Gen) (out: 2 in: 0 Windows WASAPI)|27 P552 (NVIDIA High Definition Audio) (out: 2 in: 0 Windows WASAPI)|28 DELL U2413 (NVIDIA High Definition Audio) (out: 2 in: 0 Windows WASAPI)|38 Output (NVIDIA High Definition Audio) (out: 2 in: 0 Windows WDMKS)|39 Output (NVIDIA High Definition Audio) (out: 2 in: 0 Windows WDMKS)|40 Output (NVIDIA High Definition Audio) (out: 2 in: 0 Windows WDMKS)|41 Speakers (Realtek HD Audio output) (out: 8 in: 0 Windows WDMKS)|42 SPDIF Out (Realtek HDA SPDIF Out) (out: 2 in: 0 Windows WDMKS)|43 Headphones (Realtek HD Audio 2nd output) (out: 2 in: 0 Windows WDMKS)|47 Speakers (Scarlett 2i2 4th Gen) (out: 2 in: 0 Windows WDMKS)
+[15:36:45.946] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/audioVideo/audioReceiver/portaudio/menu/selection DELL U2413 (NVIDIA High Definit (out: 2 in: 0 MME)
+[15:36:49.954] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/enable 1
+[15:36:55.572] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/indicators 1 0 0 -88.81 0 0
+[15:36:57.618] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/indicators 1 1 13.3055 -88.81 4.97843 -88.36
+[15:37:00.589] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/indicators 1 1 13.3055 -89 4.97843 -88.36
+[15:37:02.535] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/indicators 1 1 13.828 -89 13.8246 -88.46
+[15:37:05.535] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/indicators 1 1 13.828 -89.01 13.8246 -88.46
+[15:37:07.552] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/indicators 1 1 13.8314 -89.01 13.8318 -88.49
+[15:37:10.624] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/indicators 1 1 13.8314 -88.96 13.8318 -88.49
+[15:37:10.629] RECV  /peer/nA2kFJJFPcFjHRCawxGX8R/rack/page_0/channel.0/device/gui/enable 0

@@ -1,0 +1,1 @@
+--param log-color=no -t spout:name='Spout Sender' -c libavcodec:codec=H.264:bitrate=10M -s portaudio:44 --audio-codec OPUS:bitrate=64000 --audio-capture-format channels=1 -P11002:11002:11004:11004 telemersion.zhdk.ch

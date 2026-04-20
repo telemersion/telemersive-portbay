@@ -1,0 +1,1 @@
+--param log-color=no -t spout:name='room_channel_0' -c libavcodec:codec=H.264:bitrate=10M -s portaudio:12 --audio-codec OPUS:bitrate=64000 --audio-capture-format channels=1 -P11052:11052:11054:11054 telemersion.zhdk.ch
