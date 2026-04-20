@@ -428,10 +428,13 @@ class OscDevice {
     return this.deviceType === 4 ? STAGECONTROL_ROOM_PORT : this.roomPorts.inputPort;
   }
   publishDefaults() {
+    this.emitDefaults(false);
+  }
+  emitDefaults(force) {
     const pub = (field, value) => {
       const topic = this.isLocaludp(field) ? topics.localudp(this.peerId, this.channelIndex, field) : this.isMonitor(field) ? topics.monitor(this.peerId, this.channelIndex, field) : topics.deviceGui(this.peerId, this.channelIndex, field);
       this.publishedTopics.push(topic);
-      if (this.hasRetained(topic)) return;
+      if (!force && this.hasRetained(topic)) return;
       this.publish(1, topic, value);
     };
     pub("peerLocalIP", this.localIP);
@@ -488,9 +491,18 @@ class OscDevice {
         this.localPorts.inputPort = parseInt(value, 10) || this.localPorts.inputPort;
         break;
       case "gui/localudp/reset":
-        if (value === "1" && !this.enabled) ;
+        if (value === "1" && !this.enabled) {
+          this.resetToDefaults();
+        }
         break;
     }
+  }
+  resetToDefaults() {
+    this.localPorts = allocateLocalPorts(this.channelIndex);
+    this.outputIPOne = this.localIP;
+    this.outputIPTwo = this.localIP;
+    this.enableTwo = false;
+    this.emitDefaults(true);
   }
   handleEnable(enable) {
     if (enable && !this.enabled) {

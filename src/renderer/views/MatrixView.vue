@@ -109,7 +109,6 @@ const popupChannel = ref(0)
 const popupRect = ref<DOMRect | null>(null)
 
 function onOpenPopup(peerId: string, channelIndex: number, rect: DOMRect) {
-  if (peerId !== ownPeerId.value) return
   popupPeerId.value = peerId
   popupChannel.value = channelIndex
   popupRect.value = rect

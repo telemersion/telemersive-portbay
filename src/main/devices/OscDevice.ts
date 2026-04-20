@@ -73,6 +73,10 @@ export class OscDevice implements DeviceHandler {
   }
 
   publishDefaults(): void {
+    this.emitDefaults(false)
+  }
+
+  private emitDefaults(force: boolean): void {
     const pub = (field: string, value: string) => {
       const topic = this.isLocaludp(field)
         ? topics.localudp(this.peerId, this.channelIndex, field)
@@ -81,7 +85,7 @@ export class OscDevice implements DeviceHandler {
           : topics.deviceGui(this.peerId, this.channelIndex, field)
 
       this.publishedTopics.push(topic)
-      if (this.hasRetained(topic)) return
+      if (!force && this.hasRetained(topic)) return
       this.publish(1, topic, value)
     }
 
@@ -137,10 +141,18 @@ export class OscDevice implements DeviceHandler {
         break
       case 'gui/localudp/reset':
         if (value === '1' && !this.enabled) {
-          // Reset to defaults — deferred
+          this.resetToDefaults()
         }
         break
     }
+  }
+
+  private resetToDefaults(): void {
+    this.localPorts = allocateLocalPorts(this.channelIndex)
+    this.outputIPOne = this.localIP
+    this.outputIPTwo = this.localIP
+    this.enableTwo = false
+    this.emitDefaults(true)
   }
 
   private handleEnable(enable: boolean): void {

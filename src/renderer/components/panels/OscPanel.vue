@@ -43,6 +43,10 @@ async function removeDevice() {
   await window.api.invoke('mqtt:publish', true, topic, '0')
   emit('remove')
 }
+
+async function resetDevice() {
+  await window.api.invoke('mqtt:publish', true, `${prefix.value}/localudp/reset`, '1')
+}
 </script>
 
 <template>
@@ -84,52 +88,45 @@ async function removeDevice() {
       </div>
 
       <div class="field-row">
-        <label>output 2</label>
         <button
-          class="toggle-btn"
+          class="toggle-btn label-slot"
           :class="{ on: enableTwo.value.value === '1' }"
           :disabled="isLocked"
           @click="enableTwo.set(enableTwo.value.value === '1' ? '0' : '1')"
         >
-          {{ enableTwo.value.value === '1' ? 'enabled' : 'disabled' }}
+          {{ enableTwo.value.value === '1' ? 'output 2' : 'output 2 off' }}
         </button>
-      </div>
-
-      <div v-if="enableTwo.value.value === '1'" class="field-row">
-        <label></label>
-        <input
-          :value="outputIPTwo.value.value"
-          :disabled="isLocked"
-          placeholder="IP address"
-          @change="outputIPTwo.set(($event.target as HTMLInputElement).value)"
-        />
-        <input
-          class="port-input"
-          :value="outputPortTwo.value.value"
-          :disabled="isLocked"
-          placeholder="port"
-          @change="outputPortTwo.set(($event.target as HTMLInputElement).value)"
-        />
+        <template v-if="enableTwo.value.value === '1'">
+          <input
+            :value="outputIPTwo.value.value"
+            :disabled="isLocked"
+            placeholder="IP address"
+            @change="outputIPTwo.set(($event.target as HTMLInputElement).value)"
+          />
+          <input
+            class="port-input"
+            :value="outputPortTwo.value.value"
+            :disabled="isLocked"
+            placeholder="port"
+            @change="outputPortTwo.set(($event.target as HTMLInputElement).value)"
+          />
+        </template>
       </div>
     </section>
 
     <section>
       <h4>Receiving at</h4>
       <div class="field-row">
-        <label>local IP</label>
-        <input :value="udp.peerLocalIP" disabled />
-      </div>
-      <div class="field-row">
-        <label>input port</label>
-        <input
-          class="port-input"
-          :value="inputPort.value.value"
-          disabled
-        />
+        <label>input</label>
+        <input :value="udp.peerLocalIP" disabled placeholder="IP address" />
+        <input class="port-input" :value="inputPort.value.value" disabled placeholder="port" />
       </div>
     </section>
 
     <div class="panel-actions">
+      <button class="reset-btn" @click="resetDevice" :disabled="isEnabled || (!isLocal && targetLocked)">
+        Reset to Defaults
+      </button>
       <button class="remove-btn" @click="removeDevice" :disabled="isEnabled || (!isLocal && targetLocked)">
         Remove Device
       </button>
@@ -152,7 +149,11 @@ h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px
 .port-input { max-width: 72px !important; flex: none !important; }
 .toggle-btn { padding: 2px 8px; border-radius: 4px; border: 1px solid #555; background: none; color: #888; cursor: pointer; font-size: 11px; }
 .toggle-btn.on { background: #36ABFF; color: white; border-color: #36ABFF; }
-.panel-actions { margin-top: 16px; padding-top: 8px; border-top: 1px solid #333; }
+.toggle-btn.label-slot { min-width: 70px; text-align: center; }
+.toggle-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+.panel-actions { margin-top: 16px; padding-top: 8px; border-top: 1px solid #333; display: flex; gap: 8px; }
+.reset-btn { padding: 6px 12px; border-radius: 4px; border: 1px solid #888; background: none; color: #aaa; cursor: pointer; font-size: 11px; }
+.reset-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .remove-btn { padding: 6px 12px; border-radius: 4px; border: 1px solid #a33; background: none; color: #a33; cursor: pointer; font-size: 11px; }
 .remove-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
