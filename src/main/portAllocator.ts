@@ -4,6 +4,11 @@ export interface OscPorts {
   inputPort: number
 }
 
+export interface UgPorts {
+  videoPort: number
+  audioPort: number
+}
+
 const LOCAL_PREFIX = 10
 
 function portBase(prefix: number, channelIndex: number): number {
@@ -25,5 +30,13 @@ export function allocateRoomPorts(roomId: number, channelIndex: number): OscPort
     outputPortOne: base + 8,
     outputPortTwo: base + 7,
     inputPort: base + 9
+  }
+}
+
+export function allocateUgPorts(roomId: number, channelIndex: number): UgPorts {
+  const base = portBase(roomId, channelIndex)
+  return {
+    videoPort: base + 2,
+    audioPort: base + 4
   }
 }

@@ -498,30 +498,25 @@ docs/logs/
 
 ---
 
-### Task 29: UG port allocator + tests 🔧 short
+### Task 29: UG port allocator + tests ✅ done
 
-**Why:** §8.7 specifies `{roomID}{channelBase}{slot}` with UG using dual pairs `xxcc0↔xxcc1` (video) and `xxcc4↔xxcc8` (audio). Cross-referenced against Task 27 capture.
+**Why:** §8.7 and Task 27 capture together define `{roomId}{cc}{slot}` with UG using video=slot2, audio=slot4, rx=tx same port. (Spec §8.7 originally said slots `{0,1,4,8}` — real implementation uses `{2,4}`; see m2b-max-capture-notes.md deviations.)
 
 **Files:**
-- Create: [src/main/devices/ultragrid/portAllocator.ts](../../src/main/devices/ultragrid/)
-- Create: [tests/main/devices/ultragrid/portAllocator.test.ts](../../tests/main/devices/ultragrid/)
+- Edit: [src/main/portAllocator.ts](../../src/main/portAllocator.ts) — add `allocateUgPorts` alongside existing OSC allocators.
+- Edit: [tests/main/portAllocator.test.ts](../../tests/main/portAllocator.test.ts) — add UG test cases.
 
-- [ ] **Step 1: API.**
+- [x] **Step 1: API.**
   ```ts
-  interface UgPorts {
-    videoLocal: number; videoRemote: number
-    audioLocal: number; audioRemote: number
-  }
+  interface UgPorts { videoPort: number; audioPort: number }
   function allocateUgPorts(roomId: number, channelIndex: number): UgPorts
   ```
 
-- [ ] **Step 2: Formula.** `{roomId}{cc}{slot}` where `cc` is 2-digit zero-padded channel, `slot ∈ {0,1,4,8}`. Verify formula against Task 27 mode-1 + mode-4 captures.
+- [x] **Step 2: Formula.** Reuses existing `portBase(prefix, channelIndex) = prefix*1000 + channelIndex*10`; UG slots are `{video:2, audio:4}`. Verified against Task 27 mode-1 captures for channels 0 and 5.
 
-- [ ] **Step 3: Unit tests.** Round-trip for channels 0, 9, 10, 19; assert no collisions across (room, channel) space; assert fixture-matching output for captured (roomId, channelIndex) pairs from Task 27.
+- [x] **Step 3: Unit tests.** Channel 0, 5, 19 fixture-matching; collision check vs. OSC room ports across channels 0-19.
 
-- [ ] **Step 4: Commit.** `m2b(task29): add UG dual-pair port allocator`
-
-**Gate:** Allocator output matches Task 27 capture for at least 2 (roomId, channel) pairs.
+- [x] **Step 4: Commit.**
 
 ---
 
