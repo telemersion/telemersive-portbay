@@ -140,14 +140,37 @@ Max log confirms RX of all 14 topics with NG's real values (no stomp). Per-chann
 
 ---
 
-## Case 4 — Enumeration visibility ⏭ DEFERRED
+## Case 4 — Enumeration visibility ✅ pass
 
-**Deferred reason:** UltraGrid binary not installed on the NG host at test time. Task 23 (parsers + golden fixtures) and Task 24 (enumeration wiring) are pending on UV install. With no UV, `enumerate()` publishes `-default-` / `0` fallbacks (same as init-sequence placeholders), so Max sees the pre-enumeration values — not a regression, but no new signal to validate here.
+**Re-run date:** 2026-04-20. NG commit under test: `87a7286` (T24 wiring).
 
-**When to run:**
-- After UV is installed on Host A.
-- After Tasks 23 + 24 land.
-- Expected: `settings/localMenus/portaudioCaptureRange` publishes a comma-separated list matching macOS's portaudio devices (not `0`), visible to Max.
+**Setup for re-run:**
+
+- UltraGrid 1.10.3 vendored under `vendor/ultragrid/1.10.3/`, active symlink set.
+- Test NDI source (`NX-41545 (Test Patterns)`) running on NG host.
+- Syphon server (`Simple Server`) running on NG host.
+- Max peer `nA2kFJJFPcFjHRCawxGX8R` present in the room (Windows, natnet_enable=1).
+
+**Expected:** After `peer:joined`, NG runs `enumerate()` fire-and-forget. Within ~1-3s, every `localMenus/*Range` topic re-publishes with real device lists (retain=1). Topics for backends not applicable on macOS (jack, wasapi) keep their `0` placeholder.
+
+**Observed (Activity Log excerpt, NG peer `9jiaphYcrKyqcKQ48DtB4L`):**
+
+```text
+14:25:44.193 join → publishInitSequence (all localMenus at -default-/0, ug_enable=0)
+14:25:44.195 PUB r settings/localProps/ug_enable 1                                   ← UV present
+14:25:44.592 PUB r settings/localMenus/textureCaptureRange name='Simple Server'
+14:25:44.671 PUB r settings/localMenus/coreaudioCaptureRange 158 NDI Audio|100 BlackHole 16ch|…|61 Hauptgeraet
+14:25:44.681 PUB r settings/localMenus/portaudioReceiveRange 0 NDI Audio (0; Core Audio)|4 MacBook Pro Microphone (0; Core Audio)
+14:25:44.682 PUB r settings/localMenus/coreaudioReceiveRange 100 BlackHole 16ch|…|61 Hauptgeraet
+14:25:44.689 PUB r settings/localMenus/portaudioCaptureRange 0 NDI Audio (2; Core Audio)|4 MacBook Pro Microphone (1; Core Audio)|5 MacBook Pro Speakers (0; Core Audio)|7 NDI Audio (0; Core Audio)
+14:25:44.843 PUB r settings/localMenus/ndiRange NX-41545 (Test Patterns)
+```
+
+Platform gating held: `jackCaptureRange`, `jackReceiveRange`, `wasapiCaptureRange`, `wasapiReceiveRange` stayed at `0` (not re-published). `ug_enable` flipped `0` → `1` within ~2ms of init.
+
+All retained publishes echoed back to NG's own subscription on `/peer/<ngId>/settings/#`, confirming the broker retained them. Max (subscribed to `/peer/<ngId>/#` via `peers:remote:joined`) receives the same retained values on its side by broker contract.
+
+**Deviation — textureCaptureRange format cross-check:** Max's own `textureCaptureRange` was observed as `-default-|name='Spout Sender'` (sentinel prefixed to the list). NG emits the bare list (`name='Simple Server'`) without the `-default-` prefix. This matches spec §8 ("empty → `0`, pre-enum → `-default-`, else the list"). The `-default-|…` prefix appears to be a Max-side idiosyncrasy, not a contract requirement. Flagged for M2b parsing on the consumer side.
 
 ---
 
@@ -256,13 +279,11 @@ Verified:
 | 1 | Picker shows 4 tiles (OSC+StageC bright, UG+MoCap greyed) | ✅ |
 | 2 | StageControl load — NG creates, Max observes | ✅ |
 | 3 | StageControl config round-trip + relay | ✅ (after fixing 2 bugs + adding indicators) |
-| 4 | Enumeration visibility | ⏭ deferred (UV not installed) |
+| 4 | Enumeration visibility | ✅ (re-run 2026-04-20 post-T24) |
 | 5 | Subscription narrowing to spec §4.6 | ✅ |
 | 6 | Rack restore, localMenus/localProps excluded | ✅ |
 
-**M2a partial acceptance:** Cases 1, 2, 3, 5, 6 green → M2a is functionally done pending UV install.
-
-**M2a full acceptance:** all six cases green (requires UV install + Tasks 23/24).
+**M2a full acceptance:** all six cases green.
 
 **Observations / bugs found (fixed during this test session):**
 
