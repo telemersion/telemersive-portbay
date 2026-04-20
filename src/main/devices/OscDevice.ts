@@ -1,16 +1,23 @@
 import * as dgram from 'dgram'
+import * as dns from 'dns'
+import { promisify } from 'util'
 import { topics } from '../../shared/topics'
 import { allocateLocalPorts, allocateRoomPorts, type OscPorts } from '../portAllocator'
 import type { DeviceHandler } from './types'
 
+const dnsLookup = promisify(dns.lookup)
+
 type PublishFn = (retained: 0 | 1, topic: string, value: string) => void
 type HasRetainedFn = (topic: string) => boolean
+
+const STAGECONTROL_ROOM_PORT = 11902
 
 export class OscDevice implements DeviceHandler {
   readonly channelIndex: number
   readonly deviceType: number
   private peerId: string
   private localIP: string
+  private brokerHost: string
   private localPorts: OscPorts
   private roomPorts: OscPorts
   private publishedTopics: string[] = []
@@ -22,13 +29,21 @@ export class OscDevice implements DeviceHandler {
   private outputIPOne: string
   private outputIPTwo: string
 
-  // local→room: binds on local inputPort, forwards to room proxy inputPort
-  private sendSocket: dgram.Socket | null = null
-  // room→local: binds on room outputPortOne, forwards to local outputPortOne/Two
-  private recvSocket: dgram.Socket | null = null
+  // Single UDP socket per device, bound on local inputPort.
+  // - Receives from local OSC app → forwards to proxy (room port)
+  // - Receives from proxy (after it learns our src tuple on first send) → forwards to local outputPort(s)
+  private socket: dgram.Socket | null = null
+  private proxyIP: string | null = null
 
   private _isRunning = false
   get isRunning(): boolean { return this._isRunning }
+
+  // Indicator debouncing: publish '1' on first packet in a window, '0' after silence.
+  private inputIndicatorOn = false
+  private outputIndicatorOn = false
+  private inputIndicatorTimer: NodeJS.Timeout | null = null
+  private outputIndicatorTimer: NodeJS.Timeout | null = null
+  private static readonly INDICATOR_HOLD_MS = 150
 
   constructor(
     channelIndex: number,
@@ -37,18 +52,24 @@ export class OscDevice implements DeviceHandler {
     roomId: number,
     publish: PublishFn,
     deviceType: number = 1,
-    hasRetained: HasRetainedFn = () => false
+    hasRetained: HasRetainedFn = () => false,
+    brokerHost: string = 'telemersion.zhdk.ch'
   ) {
     this.channelIndex = channelIndex
     this.deviceType = deviceType
     this.peerId = peerId
     this.localIP = localIP
+    this.brokerHost = brokerHost
     this.localPorts = allocateLocalPorts(channelIndex)
     this.roomPorts = allocateRoomPorts(roomId, channelIndex)
     this.publish = publish
     this.hasRetained = hasRetained
     this.outputIPOne = localIP
     this.outputIPTwo = localIP
+  }
+
+  private roomDestPort(): number {
+    return this.deviceType === 4 ? STAGECONTROL_ROOM_PORT : this.roomPorts.inputPort
   }
 
   publishDefaults(): void {
@@ -125,47 +146,77 @@ export class OscDevice implements DeviceHandler {
   private handleEnable(enable: boolean): void {
     if (enable && !this.enabled) {
       this.enabled = true
-      this.startRelay()
+      void this.startRelay()
     } else if (!enable && this.enabled) {
       this.enabled = false
       this.stopRelay()
     }
   }
 
-  private startRelay(): void {
+  private async startRelay(): Promise<void> {
     try {
-      // Send socket: local app sends OSC to local inputPort → we forward to room proxy
-      this.sendSocket = dgram.createSocket({ type: 'udp4', reuseAddr: true })
-      this.sendSocket.on('message', (msg) => {
-        // Forward to room proxy input port
-        this.sendSocket!.send(msg, 0, msg.length, this.roomPorts.inputPort, this.localIP)
-      })
-      this.sendSocket.bind(this.localPorts.inputPort, this.localIP)
-      this.sendSocket.on('error', (err) => {
-        console.error(`[OSC ch.${this.channelIndex}] send socket error:`, err.message)
-        this.disableOnError()
-      })
+      const { address } = await dnsLookup(this.brokerHost, { family: 4 })
+      this.proxyIP = address
+    } catch (err: any) {
+      console.error(`[OSC ch.${this.channelIndex}] DNS lookup failed for ${this.brokerHost}:`, err.message)
+      this.disableOnError()
+      return
+    }
 
-      // Receive socket: room proxy sends to room outputPortOne → we forward to local app
-      this.recvSocket = dgram.createSocket({ type: 'udp4', reuseAddr: true })
-      this.recvSocket.on('message', (msg) => {
-        // Forward to local output port(s)
-        this.recvSocket!.send(msg, 0, msg.length, this.localPorts.outputPortOne, this.outputIPOne)
-        if (this.enableTwo) {
-          this.recvSocket!.send(msg, 0, msg.length, this.localPorts.outputPortTwo, this.outputIPTwo)
+    if (!this.enabled) return
+
+    try {
+      this.socket = dgram.createSocket({ type: 'udp4', reuseAddr: true })
+      this.socket.on('message', (msg, rinfo) => {
+        if (rinfo.address === this.proxyIP) {
+          this.pulseOutputIndicator()
+          this.socket!.send(msg, 0, msg.length, this.localPorts.outputPortOne, this.outputIPOne)
+          if (this.enableTwo) {
+            this.socket!.send(msg, 0, msg.length, this.localPorts.outputPortTwo, this.outputIPTwo)
+          }
+        } else {
+          this.pulseInputIndicator()
+          this.socket!.send(msg, 0, msg.length, this.roomDestPort(), this.proxyIP!)
         }
       })
-      this.recvSocket.bind(this.roomPorts.outputPortOne, this.localIP, () => {
-        this._isRunning = true
-      })
-      this.recvSocket.on('error', (err) => {
-        console.error(`[OSC ch.${this.channelIndex}] recv socket error:`, err.message)
+      this.socket.on('error', (err) => {
+        console.error(`[OSC ch.${this.channelIndex}] socket error:`, err.message)
         this.disableOnError()
+      })
+      this.socket.bind(this.localPorts.inputPort, this.localIP, () => {
+        this._isRunning = true
+        console.log(`[OSC ch.${this.channelIndex}] relay up — local in:${this.localPorts.inputPort} out:${this.localPorts.outputPortOne} → proxy ${this.proxyIP}:${this.roomDestPort()}`)
       })
     } catch (err: any) {
       console.error(`[OSC ch.${this.channelIndex}] failed to start relay:`, err.message)
       this.disableOnError()
     }
+  }
+
+  private pulseInputIndicator(): void {
+    if (!this.inputIndicatorOn) {
+      this.inputIndicatorOn = true
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'inputIndicator'), '1')
+    }
+    if (this.inputIndicatorTimer) clearTimeout(this.inputIndicatorTimer)
+    this.inputIndicatorTimer = setTimeout(() => {
+      this.inputIndicatorOn = false
+      this.inputIndicatorTimer = null
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'inputIndicator'), '0')
+    }, OscDevice.INDICATOR_HOLD_MS)
+  }
+
+  private pulseOutputIndicator(): void {
+    if (!this.outputIndicatorOn) {
+      this.outputIndicatorOn = true
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'outputIndicator'), '1')
+    }
+    if (this.outputIndicatorTimer) clearTimeout(this.outputIndicatorTimer)
+    this.outputIndicatorTimer = setTimeout(() => {
+      this.outputIndicatorOn = false
+      this.outputIndicatorTimer = null
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'outputIndicator'), '0')
+    }, OscDevice.INDICATOR_HOLD_MS)
   }
 
   private disableOnError(): void {
@@ -174,13 +225,26 @@ export class OscDevice implements DeviceHandler {
   }
 
   private stopRelay(): void {
-    if (this.sendSocket) {
-      try { this.sendSocket.close() } catch {}
-      this.sendSocket = null
+    if (this.socket) {
+      try { this.socket.close() } catch {}
+      this.socket = null
     }
-    if (this.recvSocket) {
-      try { this.recvSocket.close() } catch {}
-      this.recvSocket = null
+    this.proxyIP = null
+    if (this.inputIndicatorTimer) {
+      clearTimeout(this.inputIndicatorTimer)
+      this.inputIndicatorTimer = null
+    }
+    if (this.outputIndicatorTimer) {
+      clearTimeout(this.outputIndicatorTimer)
+      this.outputIndicatorTimer = null
+    }
+    if (this.inputIndicatorOn) {
+      this.inputIndicatorOn = false
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'inputIndicator'), '0')
+    }
+    if (this.outputIndicatorOn) {
+      this.outputIndicatorOn = false
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'outputIndicator'), '0')
     }
     this._isRunning = false
   }

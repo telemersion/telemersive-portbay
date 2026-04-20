@@ -4,6 +4,8 @@ const path = require("path");
 const events = require("events");
 const fs = require("fs");
 const dgram = require("dgram");
+const dns = require("dns");
+const util = require("util");
 function _interopNamespaceDefault(e) {
   const n = Object.create(null, { [Symbol.toStringTag]: { value: "Module" } });
   if (e) {
@@ -21,6 +23,7 @@ function _interopNamespaceDefault(e) {
   return Object.freeze(n);
 }
 const dgram__namespace = /* @__PURE__ */ _interopNamespaceDefault(dgram);
+const dns__namespace = /* @__PURE__ */ _interopNamespaceDefault(dns);
 const BUFFER_CAP = 500;
 const buffer = [];
 let seq = 0;
@@ -376,11 +379,14 @@ function allocateRoomPorts(roomId2, channelIndex) {
     inputPort: base + 9
   };
 }
+const dnsLookup = util.promisify(dns__namespace.lookup);
+const STAGECONTROL_ROOM_PORT = 11902;
 class OscDevice {
   channelIndex;
   deviceType;
   peerId;
   localIP;
+  brokerHost;
   localPorts;
   roomPorts;
   publishedTopics = [];
@@ -390,25 +396,36 @@ class OscDevice {
   enableTwo = false;
   outputIPOne;
   outputIPTwo;
-  // local→room: binds on local inputPort, forwards to room proxy inputPort
-  sendSocket = null;
-  // room→local: binds on room outputPortOne, forwards to local outputPortOne/Two
-  recvSocket = null;
+  // Single UDP socket per device, bound on local inputPort.
+  // - Receives from local OSC app → forwards to proxy (room port)
+  // - Receives from proxy (after it learns our src tuple on first send) → forwards to local outputPort(s)
+  socket = null;
+  proxyIP = null;
   _isRunning = false;
   get isRunning() {
     return this._isRunning;
   }
-  constructor(channelIndex, peerId, localIP2, roomId2, publish, deviceType = 1, hasRetained = () => false) {
+  // Indicator debouncing: publish '1' on first packet in a window, '0' after silence.
+  inputIndicatorOn = false;
+  outputIndicatorOn = false;
+  inputIndicatorTimer = null;
+  outputIndicatorTimer = null;
+  static INDICATOR_HOLD_MS = 150;
+  constructor(channelIndex, peerId, localIP2, roomId2, publish, deviceType = 1, hasRetained = () => false, brokerHost = "telemersion.zhdk.ch") {
     this.channelIndex = channelIndex;
     this.deviceType = deviceType;
     this.peerId = peerId;
     this.localIP = localIP2;
+    this.brokerHost = brokerHost;
     this.localPorts = allocateLocalPorts(channelIndex);
     this.roomPorts = allocateRoomPorts(roomId2, channelIndex);
     this.publish = publish;
     this.hasRetained = hasRetained;
     this.outputIPOne = localIP2;
     this.outputIPTwo = localIP2;
+  }
+  roomDestPort() {
+    return this.deviceType === 4 ? STAGECONTROL_ROOM_PORT : this.roomPorts.inputPort;
   }
   publishDefaults() {
     const pub = (field, value) => {
@@ -478,60 +495,101 @@ class OscDevice {
   handleEnable(enable) {
     if (enable && !this.enabled) {
       this.enabled = true;
-      this.startRelay();
+      void this.startRelay();
     } else if (!enable && this.enabled) {
       this.enabled = false;
       this.stopRelay();
     }
   }
-  startRelay() {
+  async startRelay() {
     try {
-      this.sendSocket = dgram__namespace.createSocket({ type: "udp4", reuseAddr: true });
-      this.sendSocket.on("message", (msg) => {
-        this.sendSocket.send(msg, 0, msg.length, this.roomPorts.inputPort, this.localIP);
-      });
-      this.sendSocket.bind(this.localPorts.inputPort, this.localIP);
-      this.sendSocket.on("error", (err) => {
-        console.error(`[OSC ch.${this.channelIndex}] send socket error:`, err.message);
-        this.disableOnError();
-      });
-      this.recvSocket = dgram__namespace.createSocket({ type: "udp4", reuseAddr: true });
-      this.recvSocket.on("message", (msg) => {
-        this.recvSocket.send(msg, 0, msg.length, this.localPorts.outputPortOne, this.outputIPOne);
-        if (this.enableTwo) {
-          this.recvSocket.send(msg, 0, msg.length, this.localPorts.outputPortTwo, this.outputIPTwo);
+      const { address } = await dnsLookup(this.brokerHost, { family: 4 });
+      this.proxyIP = address;
+    } catch (err) {
+      console.error(`[OSC ch.${this.channelIndex}] DNS lookup failed for ${this.brokerHost}:`, err.message);
+      this.disableOnError();
+      return;
+    }
+    if (!this.enabled) return;
+    try {
+      this.socket = dgram__namespace.createSocket({ type: "udp4", reuseAddr: true });
+      this.socket.on("message", (msg, rinfo) => {
+        if (rinfo.address === this.proxyIP) {
+          this.pulseOutputIndicator();
+          this.socket.send(msg, 0, msg.length, this.localPorts.outputPortOne, this.outputIPOne);
+          if (this.enableTwo) {
+            this.socket.send(msg, 0, msg.length, this.localPorts.outputPortTwo, this.outputIPTwo);
+          }
+        } else {
+          this.pulseInputIndicator();
+          this.socket.send(msg, 0, msg.length, this.roomDestPort(), this.proxyIP);
         }
       });
-      this.recvSocket.bind(this.roomPorts.outputPortOne, this.localIP, () => {
-        this._isRunning = true;
-      });
-      this.recvSocket.on("error", (err) => {
-        console.error(`[OSC ch.${this.channelIndex}] recv socket error:`, err.message);
+      this.socket.on("error", (err) => {
+        console.error(`[OSC ch.${this.channelIndex}] socket error:`, err.message);
         this.disableOnError();
+      });
+      this.socket.bind(this.localPorts.inputPort, this.localIP, () => {
+        this._isRunning = true;
+        console.log(`[OSC ch.${this.channelIndex}] relay up — local in:${this.localPorts.inputPort} out:${this.localPorts.outputPortOne} → proxy ${this.proxyIP}:${this.roomDestPort()}`);
       });
     } catch (err) {
       console.error(`[OSC ch.${this.channelIndex}] failed to start relay:`, err.message);
       this.disableOnError();
     }
   }
+  pulseInputIndicator() {
+    if (!this.inputIndicatorOn) {
+      this.inputIndicatorOn = true;
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "inputIndicator"), "1");
+    }
+    if (this.inputIndicatorTimer) clearTimeout(this.inputIndicatorTimer);
+    this.inputIndicatorTimer = setTimeout(() => {
+      this.inputIndicatorOn = false;
+      this.inputIndicatorTimer = null;
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "inputIndicator"), "0");
+    }, OscDevice.INDICATOR_HOLD_MS);
+  }
+  pulseOutputIndicator() {
+    if (!this.outputIndicatorOn) {
+      this.outputIndicatorOn = true;
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "outputIndicator"), "1");
+    }
+    if (this.outputIndicatorTimer) clearTimeout(this.outputIndicatorTimer);
+    this.outputIndicatorTimer = setTimeout(() => {
+      this.outputIndicatorOn = false;
+      this.outputIndicatorTimer = null;
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "outputIndicator"), "0");
+    }, OscDevice.INDICATOR_HOLD_MS);
+  }
   disableOnError() {
     this.stopRelay();
     this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
   }
   stopRelay() {
-    if (this.sendSocket) {
+    if (this.socket) {
       try {
-        this.sendSocket.close();
+        this.socket.close();
       } catch {
       }
-      this.sendSocket = null;
+      this.socket = null;
     }
-    if (this.recvSocket) {
-      try {
-        this.recvSocket.close();
-      } catch {
-      }
-      this.recvSocket = null;
+    this.proxyIP = null;
+    if (this.inputIndicatorTimer) {
+      clearTimeout(this.inputIndicatorTimer);
+      this.inputIndicatorTimer = null;
+    }
+    if (this.outputIndicatorTimer) {
+      clearTimeout(this.outputIndicatorTimer);
+      this.outputIndicatorTimer = null;
+    }
+    if (this.inputIndicatorOn) {
+      this.inputIndicatorOn = false;
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "inputIndicator"), "0");
+    }
+    if (this.outputIndicatorOn) {
+      this.outputIndicatorOn = false;
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "outputIndicator"), "0");
     }
     this._isRunning = false;
   }
@@ -695,6 +753,7 @@ function setupBus() {
   });
   bus.on("peer:room:id", (id) => {
     roomId = id;
+    console.log("[bus] peer:room:id =", id);
   });
   bus.on("peer:room:name", (name) => {
     roomName = name;
@@ -728,7 +787,8 @@ function setupBus() {
               roomId,
               (retained, topic, value) => trackedPublish(retained, topic, value),
               type,
-              (topic) => retainedTopics.has(topic)
+              (topic) => retainedTopics.has(topic),
+              loadSettings().brokerUrl
             );
           }
           return null;

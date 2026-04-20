@@ -12,7 +12,15 @@ vi.mock('dgram', () => ({
   }))
 }))
 
+vi.mock('dns', () => ({
+  lookup: (_host: string, _opts: any, cb: (err: any, addr: string, family: number) => void) => {
+    cb(null, '1.2.3.4', 4)
+  }
+}))
+
 import { OscDevice } from '../../../src/main/devices/OscDevice'
+
+async function flush() { await new Promise(r => setImmediate(r)) }
 
 describe('OscDevice', () => {
   const mockPublish = vi.fn()
@@ -55,15 +63,17 @@ describe('OscDevice', () => {
     expect(teardownTopics).toContain('/peer/testPeerId/rack/page_0/channel.0/device/gui/enable')
   })
 
-  it('starts relay on enable 0→1', () => {
+  it('starts relay on enable 0→1', async () => {
     device.publishDefaults()
     device.onTopicChanged('gui/enable', '1')
+    await flush()
     expect(device.isRunning).toBe(true)
   })
 
-  it('stops relay on enable 1→0', () => {
+  it('stops relay on enable 1→0', async () => {
     device.publishDefaults()
     device.onTopicChanged('gui/enable', '1')
+    await flush()
     device.onTopicChanged('gui/enable', '0')
     expect(device.isRunning).toBe(false)
   })

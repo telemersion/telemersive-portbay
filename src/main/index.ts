@@ -153,7 +153,7 @@ function setupBus(): void {
   bus = new TBusClient()
 
   bus.on('peer:id', (id: string) => { localPeerId = id })
-  bus.on('peer:room:id', (id: number) => { roomId = id })
+  bus.on('peer:room:id', (id: number) => { roomId = id; console.log('[bus] peer:room:id =', id) })
   bus.on('peer:room:name', (name: string) => { roomName = name })
   bus.on('peer:localIP', (ip: string) => { if (ip) localIP = ip })
 
@@ -181,7 +181,8 @@ function setupBus(): void {
             return new OscDevice(channel, localPeerId, localIP, roomId,
               (retained, topic, value) => trackedPublish(retained, topic, value),
               type,
-              (topic: string) => retainedTopics.has(topic)
+              (topic: string) => retainedTopics.has(topic),
+              loadSettings().brokerUrl
             )
           }
           return null
