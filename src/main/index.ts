@@ -6,6 +6,8 @@ import { loadRack, saveRack, buildRackSnapshot, isRackEligibleTail } from './per
 import { topics } from '../shared/topics'
 import { DeviceRouter } from './deviceRouter'
 import { OscDevice } from './devices/OscDevice'
+import { UltraGridDevice } from './devices/ultragrid/UltraGridDevice'
+import { resolveUgPath } from './enumeration/spawnCli'
 import { performShutdown } from './shutdown'
 import { logEvent, setLogSink, getLogBuffer, clearLogBuffer } from './logBus'
 import { enumerate } from './enumeration'
@@ -25,12 +27,14 @@ const retainedTopics = new Map<string, string>()
 
 const RACK_SAVE_DEBOUNCE_MS = 500
 let rackSaveTimer: NodeJS.Timeout | null = null
+let rackSaveSuppressed = false
 
 function currentRackSnapshot(): Record<string, string> {
   return buildRackSnapshot(retainedTopics, localPeerId)
 }
 
 function scheduleRackSave(): void {
+  if (rackSaveSuppressed) return
   if (rackSaveTimer) clearTimeout(rackSaveTimer)
   rackSaveTimer = setTimeout(() => {
     rackSaveTimer = null
@@ -187,6 +191,20 @@ function setupBus(): void {
               loadSettings().brokerUrl
             )
           }
+          if (type === 2) {
+            return new UltraGridDevice({
+              channelIndex: channel,
+              peerId: localPeerId,
+              localIP,
+              roomId,
+              publish: (retained, topic, value) => trackedPublish(retained, topic, value),
+              hasRetained: (topic: string) => retainedTopics.has(topic),
+              getSetting: (subpath: string) =>
+                retainedTopics.get(topics.settings(localPeerId, subpath)) ?? null,
+              host: loadSettings().brokerUrl,
+              resolveBinary: resolveUgPath
+            })
+          }
           return null
         },
         (retained, topic, value) => trackedPublish(retained, topic, value)
@@ -254,6 +272,10 @@ function setupIpcHandlers(): void {
   })
 
   ipcMain.handle('bus:leave', () => {
+    flushRackSave()
+    rackSaveSuppressed = true
+    try { deviceRouter?.destroyAll() }
+    finally { rackSaveSuppressed = false }
     bus!.leave()
   })
 
