@@ -279,7 +279,7 @@ docs/logs/
 - Create: [tests/renderer/components/AddDevicePopup.test.ts](../../tests/renderer/components/).
 
 - [ ] **Step 1: Popup layout — 4 tiles.**
-  Tiles in grid: OSC (loaded=1), StageControl (loaded=4), UltraGrid (loaded ∈ {2,3,5}; greyed in M2a — M2b will wire up a sub-picker for the three UG variants), MoCap (loaded=6; greyed throughout M2). Each tile uses the same color palette as [DeviceCell.vue:23-29](../../src/renderer/components/DeviceCell.vue#L23-L29).
+  Tiles in grid: OSC (loaded=1), StageControl (loaded=4), UltraGrid (loaded=2; greyed in M2a — enabled in M2b), MoCap (loaded=3; greyed throughout M2). Each tile uses the same color palette as [DeviceCell.vue:23-29](../../src/renderer/components/DeviceCell.vue#L23-L29).
 
 - [ ] **Step 2: Positioning.**
   Popup anchors to the clicked cell (absolute-position by `getBoundingClientRect` on click). Closes on: click outside, Esc, selection.
@@ -365,32 +365,384 @@ Total new/edited: ~1100 lines of code + ~130 lines of docs.
 
 ---
 
-## M2b — UltraGrid Device End-to-End (addendum — drafted before M2b starts)
+## M2b — UltraGrid Device End-to-End
 
-**Scope (summary — detailed breakdown to follow in addendum):**
-- **CLI builder:** transliterate the core `ugCommandLine` construction from [docs/javascript/tg.ultragrid.js](../javascript/tg.ultragrid.js) into TypeScript; clean-rewrite the panel-to-state bindings (not a literal port) (Q10=C).
-- **Panel:** full §9.6 rendering — all 5 `network/mode` values {1=UDP, 2=UDP_KA, 4=RTP, 5=RTP_KA, 7=RTP+SRT}; conditional connection × transmission × network sections; all enumeration-sourced dropdowns wired via `useMqttBinding` to `settings/localMenus/*` (Q14=A).
-- **Lifecycle:** full §8.8 — crash → `enable=0` + log event; stderr streamed to `monitor/log` topic; kill-on-quit added to `performShutdown`; SIGTERM → SIGKILL grace ~500ms (Q12=A).
-- **Rack persistence:** identical to OSC — every retained device-subtree topic mutation goes through `trackedPublish` and hits `rack.json` via the debounce already in place (Q15=A).
-- **Interop gate:** 4 cases against Max — {audio, video} × {mode=1 UDP, mode=4 RTP}. Modes 2/5/7 deferred to M2c or a later plan (Q13=B).
-- **Device types:** `loaded ∈ {2, 3, 5}` all route to the UltraGrid handler; the popup's UG tile opens a sub-picker for the three UG variants.
-- **Fixtures:** golden UV stdout captured before M2b starts and pinned in [docs/logs/m2-uv-fixture-notes.md](../logs/) (Q11=A).
+**Goal:** Implement the UltraGrid device handler (§5.5, §8, §9.6) end-to-end for modes 1 (send-to-router/UDP) and 4 (peer-to-peer-automatic/RTP): CLI spawn/kill lifecycle, full §9.6 panel with mode-gated rendering, enumeration-sourced dropdowns, rack persistence, interop gate against Max. Modes 2/5/7 deferred to M2c.
 
-**M2b will add roughly:**
-- `src/main/devices/UltraGridDevice.ts` (~250 lines)
-- `src/main/devices/ultragrid/cliBuilder.ts` (~150 lines)
-- `src/renderer/components/panels/UltraGridPanel.vue` (~400 lines for full §9.6)
-- `src/renderer/components/panels/UltraGridSubPicker.vue` (small — choose between the 3 UG variants from the popup)
-- Tests for cliBuilder (golden expected-command strings keyed to input state)
-- `docs/logs/m2b-interop-test.md` (4 cases)
-- Edit: `AddDevicePopup.vue` to un-grey UG tile and open the sub-picker.
-- Edit: `shutdown.ts` for child-process kill-on-quit.
+### Locked scope decisions (from inquisition 2026-04-20)
 
-**M2b prerequisites (must be true before starting):**
-1. M2a merged, interop passing, logged.
-2. UV fixtures captured and pinned.
-3. Max-source UG command lines documented for 4 interop cases (audio × video × mode {1,4}) — grab these from a running Max session.
-4. Addendum section of this plan fleshed out into a task-level breakdown (similar granularity to M2a Tasks 20-26).
+| # | Question | Answer |
+|---|---|---|
+| 1 | `loaded` → handler mapping | **A** — `loaded=2` is the only UltraGrid value (single `UltraGridDevice` handler). `=3` MoCap (separate handler, still greyed). No `loaded=5`. The popup's UG tile sets `loaded=2` directly; no sub-picker. |
+| 2 | CLI builder scope | **B** — scoped transliteration: only the `ugf_*` setters and `cliADD_*` assemblers that modes 1 + 4 actually touch. Other modes throw a typed error on enable. |
+| 3 | Panel rendering scope | **B** — modes 1 + 4 fully rendered per §9.6. Modes 2/5/7 show a "Not yet supported (M2c)" placeholder when selected. |
+| 4 | Device-subtree schema source | **C → A** — capture a full `monitor/log` trace from a working Max UG session **first** (as Task 27 prereq); then transliterate the full device-subtree schema to match Max byte-for-byte where mode 1/4 relevant. |
+| 5 | Config representation | **A** — typed `UltraGridConfig` value object (one field per `ugf_*` input); `buildUvArgs(config): string[]` is a pure function. Topic-change reducer maintains the config between publishes. |
+| 6 | Child-process lifecycle | **B** — extract a `ChildProcessLifecycle` helper class (generic over `{binary, args, onStdout, onStderr, onExit}`). UltraGridDevice composes it. NatNet will reuse it later. |
+| 7 | stderr/monitor log schema | **D → B** — capture Max's `monitor/log` trace first; then implement a bounded ring buffer (~50 lines) published as a joined blob to `monitor/log`. Retained so late subscribers catch up. |
+| 8 | Spawn-failure classification | **B** — 2-second post-spawn grace window. Exit inside the window → spawn-failure (log + leave `enable=1`, user retries). Exit after the window → mid-stream crash (log + publish `enable=0`). |
+| 9 | Windows binary strategy | **B** — Windows uses single `uv.exe` with a warning logged that per-channel concurrent instances are unverified. Per-channel binary copies deferred to a later plan if needed. |
+| 10 | Port allocation | **C → B** — capture a Max session with 2+ UG devices active first to confirm the dual-pair pattern; then implement a UG-specific allocator for the `xxcc0↔xxcc1` + `xxcc4↔xxcc8` pattern (§8.7). |
+| 11 | Rack persistence semantics | **A** — full persistence including `enable`. Identical to OSC: every retained device-subtree mutation hits `rack.json` via `trackedPublish`. UG auto-starts on rack restore. |
+| 12 | Shutdown triggers | **A (extended)** — SIGTERM → 500ms → SIGKILL on (a) app quit AND (b) `bus:leave`. Extends `performShutdown` and adds a symmetric teardown path to the leave handler. |
+| 13 | Leave-room teardown | **A** — full teardown: empty-publish every device-subtree topic for all active channels (handler `teardown()` → empty publishes → `destroy()`), matching the unload flow. Clean-slate rejoin. |
+| 14 | Rejoin reconciliation | **B** — rejoin runs the app-start flow: `publishInitSequence` + `enumerate` + rack.json replay. `enable` persists via rack, so UG auto-restarts on rejoin if it was running at leave. |
+| 15 | Interop test strategy | **B** — golden fixtures (UltraGridConfig → CLI-args snapshots + device-subtree schema snapshot) + one live interop run against Max covering modes 1 + 4. |
+| 16 | Task granularity | **A** — ~11 tasks at M2a granularity (Tasks 27-37). Each task has a clear file set and a testable gate. |
+
+### File structure (M2b additions/changes)
+
+```
+src/
+  main/
+    devices/
+      ultragrid/
+        UltraGridDevice.ts        — handler: composes ChildProcessLifecycle + topic↔config reducer + port allocator
+        cliBuilder.ts             — buildUvArgs(config, ports): string[] (pure; modes 1+4 only)
+        config.ts                 — UltraGridConfig type + defaults + topic↔field mappers
+        portAllocator.ts          — UG dual-pair slot allocator (§8.7)
+        monitorLog.ts             — bounded ring buffer publisher for monitor/log
+      ChildProcessLifecycle.ts    — generic spawn/kill helper (SIGTERM→500ms→SIGKILL, grace-window classifier)
+    deviceRouter.ts               — (edited) route loaded=2 → UltraGridDevice factory
+    index.ts                      — (edited) wire UG factory; extend bus:leave to trigger full teardown
+    shutdown.ts                   — (edited) performShutdown already calls deviceRouter.destroyAll → no-op change; verify
+  renderer/
+    components/
+      panels/
+        UltraGridPanel.vue        — full §9.6 for modes 1+4; placeholder for 2/5/7
+      AddDevicePopup.vue          — (edited) un-grey UG tile; clicking emits loaded=2
+tests/
+  main/
+    devices/
+      ChildProcessLifecycle.test.ts
+      ultragrid/
+        cliBuilder.test.ts         — golden CLI-args fixtures
+        config.test.ts             — topic↔field round-trip
+        portAllocator.test.ts
+  fixtures/
+    ultragrid/
+      max-monitor-log-trace.txt    — captured from running Max UG session
+      max-device-subtree-mode1.json — retained-topic snapshot from Max (mode 1)
+      max-device-subtree-mode4.json — retained-topic snapshot from Max (mode 4)
+      max-cli-mode1.txt            — captured Max-emitted UV command line (mode 1)
+      max-cli-mode4.txt            — captured Max-emitted UV command line (mode 4)
+docs/logs/
+  m2b-max-capture-notes.md         — documents what was captured, Max version, UV version, procedure
+  m2b-interop-test.md              — live interop case
+```
+
+---
+
+### Task 27: Capture Max UG reference traces (blocking prereq) 📸
+
+**Why first:** Tasks 29, 30, 31, 32, 34 all depend on knowing the exact device-subtree schema, CLI args, and port patterns Max emits. Capturing once up-front prevents guess-and-correct rework.
+
+**Files:**
+- Create: [tests/fixtures/ultragrid/max-monitor-log-trace.txt](../../tests/fixtures/ultragrid/)
+- Create: [tests/fixtures/ultragrid/max-device-subtree-mode1.json](../../tests/fixtures/ultragrid/)
+- Create: [tests/fixtures/ultragrid/max-device-subtree-mode4.json](../../tests/fixtures/ultragrid/)
+- Create: [tests/fixtures/ultragrid/max-cli-mode1.txt](../../tests/fixtures/ultragrid/)
+- Create: [tests/fixtures/ultragrid/max-cli-mode4.txt](../../tests/fixtures/ultragrid/)
+- Create: [docs/logs/m2b-max-capture-notes.md](../logs/)
+
+- [ ] **Step 1: Capture mode-1 session.** Run Max + an MQTT retained-topic dumper (e.g. `mosquitto_sub -t '/peer/+/rack/#' -v` piped to file). Load an UG device on channel 0 in mode 1 (send-to-router/UDP), configure video + audio with typical settings, enable. Wait 30s. Grab: (a) all retained topics under Max's `/peer/.../device/...`, (b) the `monitor/log` topic's accumulated value, (c) the actual UV command line Max spawned (via `ps aux | grep uv` or Max's own logs).
+
+- [ ] **Step 2: Capture mode-4 session.** Same as step 1 but `network/mode=4` (peer-to-peer-automatic/RTP).
+
+- [ ] **Step 3: Capture multi-device port pattern.** Load 2 UG devices simultaneously on different channels. Record the port numbers in all `device/gui/network/*Port` topics. Verify the dual-pair `xxcc0↔xxcc1` and `xxcc4↔xxcc8` pattern holds.
+
+- [ ] **Step 4: Document in capture notes.** Max version, UV version, room ID used, procedure, any surprises. File-link each fixture.
+
+- [ ] **Step 5: Commit.** `m2b(task27): capture Max UG reference traces (modes 1+4 + multi-device ports)`
+
+**Gate:** All fixtures exist; capture notes document how to re-capture on upgrades.
+
+---
+
+### Task 28: `ChildProcessLifecycle` helper + tests 🔧
+
+**Why early:** Task 32 composes this. Generic design means NatNet (M3) reuses it.
+
+**Files:**
+- Create: [src/main/devices/ChildProcessLifecycle.ts](../../src/main/devices/)
+- Create: [tests/main/devices/ChildProcessLifecycle.test.ts](../../tests/main/devices/)
+
+- [ ] **Step 1: API.**
+  ```ts
+  interface LifecycleOptions {
+    binary: string
+    args: string[]
+    spawnGraceMs?: number  // default 2000
+    terminationGraceMs?: number  // default 500
+    onStdout: (line: string) => void
+    onStderr: (line: string) => void
+    onExit: (reason: 'spawn-failure' | 'crash' | 'killed', code: number | null) => void
+  }
+  class ChildProcessLifecycle {
+    constructor(opts: LifecycleOptions)
+    start(): void
+    stop(): void  // SIGTERM, then SIGKILL after terminationGraceMs
+    isRunning(): boolean
+  }
+  ```
+
+- [ ] **Step 2: Grace-window classifier.** On exit, if `Date.now() - spawnedAt < spawnGraceMs` → `spawn-failure`, else `crash`. If exit was triggered by our `stop()` call → `killed`.
+
+- [ ] **Step 3: Line buffering.** Split stdout/stderr into lines (CRLF + LF tolerant). Emit each line via `onStdout`/`onStderr`.
+
+- [ ] **Step 4: Unit tests.** Mock `child_process.spawn` (vitest-friendly approach: inject a fake spawner via constructor overload for testing). Cover: clean exit classified as crash or spawn-failure by timing; explicit stop classified as killed; SIGKILL fires after termination grace if process doesn't exit; stdout/stderr line splitting.
+
+- [ ] **Step 5: Commit.** `m2b(task28): add ChildProcessLifecycle helper with spawn-failure vs crash classification`
+
+**Gate:** All lifecycle tests green. No UltraGrid-specific logic in this file.
+
+---
+
+### Task 29: UG port allocator + tests 🔧 short
+
+**Why:** §8.7 specifies `{roomID}{channelBase}{slot}` with UG using dual pairs `xxcc0↔xxcc1` (video) and `xxcc4↔xxcc8` (audio). Cross-referenced against Task 27 capture.
+
+**Files:**
+- Create: [src/main/devices/ultragrid/portAllocator.ts](../../src/main/devices/ultragrid/)
+- Create: [tests/main/devices/ultragrid/portAllocator.test.ts](../../tests/main/devices/ultragrid/)
+
+- [ ] **Step 1: API.**
+  ```ts
+  interface UgPorts {
+    videoLocal: number; videoRemote: number
+    audioLocal: number; audioRemote: number
+  }
+  function allocateUgPorts(roomId: number, channelIndex: number): UgPorts
+  ```
+
+- [ ] **Step 2: Formula.** `{roomId}{cc}{slot}` where `cc` is 2-digit zero-padded channel, `slot ∈ {0,1,4,8}`. Verify formula against Task 27 mode-1 + mode-4 captures.
+
+- [ ] **Step 3: Unit tests.** Round-trip for channels 0, 9, 10, 19; assert no collisions across (room, channel) space; assert fixture-matching output for captured (roomId, channelIndex) pairs from Task 27.
+
+- [ ] **Step 4: Commit.** `m2b(task29): add UG dual-pair port allocator`
+
+**Gate:** Allocator output matches Task 27 capture for at least 2 (roomId, channel) pairs.
+
+---
+
+### Task 30: `UltraGridConfig` type + topic↔field mapper + tests
+
+**Why:** Separates state (config object) from formatting (CLI args). Testable independently.
+
+**Files:**
+- Create: [src/main/devices/ultragrid/config.ts](../../src/main/devices/ultragrid/)
+- Create: [tests/main/devices/ultragrid/config.test.ts](../../tests/main/devices/ultragrid/)
+
+- [ ] **Step 1: `UltraGridConfig` type.** Transliterate only the `ugf_*` fields mode 1 + mode 4 actually touch (per [docs/javascript/tg.ultragrid.js](../javascript/tg.ultragrid.js)). Fields cover: video capture source + compression + resolution + fps, audio capture + codec, network/mode, connection settings, transmission settings. Mode-2/5/7-only fields omitted.
+
+- [ ] **Step 2: Defaults.** `defaultUltraGridConfig(): UltraGridConfig` — matches the default values published by Max (cross-reference Task 27 device-subtree capture).
+
+- [ ] **Step 3: Topic↔field mapper.**
+  ```ts
+  function applyTopicChange(config: UltraGridConfig, subpath: string, value: string): UltraGridConfig
+  function snapshotTopics(config: UltraGridConfig): Array<{ subpath: string; value: string }>
+  ```
+  `applyTopicChange` is a pure reducer (returns new config). `snapshotTopics` produces the full publish set for `publishDefaults`.
+
+- [ ] **Step 4: Unit tests.** Round-trip: `snapshotTopics(defaults)` → `applyTopicChange` fold → `deepEqual(defaults)`. Every topic under `tests/fixtures/ultragrid/max-device-subtree-mode1.json` and `...-mode4.json` is recognized by `applyTopicChange` (no silent drops). Unknown topics log a warning but don't throw.
+
+- [ ] **Step 5: Commit.** `m2b(task30): add UltraGridConfig type with topic↔field mapper`
+
+**Gate:** `config.test.ts` covers every topic Max emits in the Task 27 mode-1 + mode-4 captures.
+
+---
+
+### Task 31: `cliBuilder.ts` — modes 1+4 args + golden tests
+
+**Files:**
+- Create: [src/main/devices/ultragrid/cliBuilder.ts](../../src/main/devices/ultragrid/)
+- Create: [tests/main/devices/ultragrid/cliBuilder.test.ts](../../tests/main/devices/ultragrid/)
+
+- [ ] **Step 1: API.**
+  ```ts
+  function buildUvArgs(config: UltraGridConfig, ports: UgPorts, roomId: number): string[]
+  ```
+  Pure. No side effects. Throws `new Error('M2c: mode N not yet supported')` for modes 2/5/7.
+
+- [ ] **Step 2: Mode-1 assembler.** Transliterate `cliADD_sendToRouter` branch from tg.ultragrid.js. Use only the `ugf_*` setters mode 1 touches.
+
+- [ ] **Step 3: Mode-4 assembler.** Transliterate `cliADD_peerToPeerAutomatic` branch. RTP-specific flags.
+
+- [ ] **Step 4: Golden tests.** For each captured Max CLI in Task 27, run `buildUvArgs` on the matching config snapshot, assert the output array matches the captured Max command line (tokenize both, compare). Differences become commit-worthy follow-ups, not silent drift.
+
+- [ ] **Step 5: Commit.** `m2b(task31): add UV CLI builder for modes 1+4 with golden tests against Max`
+
+**Gate:** `buildUvArgs(mode1Config, ports, roomId)` matches the Task 27 `max-cli-mode1.txt`; same for mode 4. Modes 2/5/7 throw.
+
+---
+
+### Task 32: `UltraGridDevice.ts` handler
+
+**Files:**
+- Create: [src/main/devices/ultragrid/UltraGridDevice.ts](../../src/main/devices/ultragrid/)
+- Create: [src/main/devices/ultragrid/monitorLog.ts](../../src/main/devices/ultragrid/)
+
+- [ ] **Step 1: Implement `DeviceHandler` interface.** Maintain an `UltraGridConfig` instance. `onTopicChanged(subpath, value)` → `applyTopicChange` → if subpath is `gui/enable` and value flips, start/stop the lifecycle.
+
+- [ ] **Step 2: Compose `ChildProcessLifecycle`.** On enable-flip-to-1: resolve UG path (reuse `resolveUgPath` from M2a spawnCli), allocate ports, `buildUvArgs`, start. On enable-flip-to-0: `lifecycle.stop()`.
+
+- [ ] **Step 3: Lifecycle callbacks.**
+  - `onStdout` → passed to `monitorLog` for bounded ring-buffer publish to `monitor/log`.
+  - `onStderr` → same; stderr lines are the interesting ones.
+  - `onExit('spawn-failure', code)` → log warning; leave enable=1 (user decides whether to retry).
+  - `onExit('crash', code)` → log warning; publish empty to `gui/enable` (sets enable=0 via echo).
+  - `onExit('killed', code)` → silent (we caused it).
+
+- [ ] **Step 4: `publishDefaults()`** — `snapshotTopics(defaultUltraGridConfig())` → publish all retained. Matches Task 27 captured Max defaults.
+
+- [ ] **Step 5: `teardown()`** — return the list of every subpath this handler ever wrote (tracked in a local Set); caller empty-publishes them. Stop the lifecycle if running.
+
+- [ ] **Step 6: `destroy()`** — final cleanup; ensure lifecycle is stopped (SIGKILL path).
+
+- [ ] **Step 7: Unit test.** Mock the lifecycle (inject a fake constructor). Cover: enable-flip starts lifecycle with correct args; disable stops it; crash republishes enable=0; teardown returns all touched topics.
+
+- [ ] **Step 8: Commit.** `m2b(task32): add UltraGridDevice handler composing lifecycle + config + CLI builder`
+
+**Gate:** Unit tests green. No wiring yet.
+
+---
+
+### Task 33: DeviceRouter glue + bus:leave teardown
+
+**Files:**
+- Edit: [src/main/index.ts](../../src/main/index.ts) — extend the factory to handle `loaded=2`.
+- Edit: [src/main/index.ts](../../src/main/index.ts) — `bus:leave` IPC handler calls `deviceRouter.destroyAll()` before `bus.leave()`.
+- Edit: [src/main/shutdown.ts](../../src/main/shutdown.ts) — verify `performShutdown` already calls `destroyAll`; if so, leave as-is.
+
+- [ ] **Step 1: Factory extension.** In `peer:joined`, extend the factory passed to `DeviceRouter`:
+  ```ts
+  if (type === 2) return new UltraGridDevice(channel, localPeerId, localIP, roomId,
+    publish, retainedTopics.has.bind(retainedTopics), loadSettings().brokerUrl)
+  ```
+
+- [ ] **Step 2: Leave-room teardown.** Current `ipcMain.handle('bus:leave', ...)` at [index.ts:256-258](../../src/main/index.ts#L256-L258) just calls `bus!.leave()`. Prefix with: `deviceRouter?.destroyAll(); flushRackSave()`. This empty-publishes every device topic and stops any running UG processes before disconnecting.
+
+- [ ] **Step 3: Verify `performShutdown`.** Confirm it already invokes `destroyAll` on the router; if not, add. The quit path is symmetric with leave after this change.
+
+- [ ] **Step 4: Manual smoke.** Load an OSC device, hit Leave Room in the UI, observe: Activity Log shows empty-publishes for the device subtree, then disconnect. Rejoin the room, observe: `publishInitSequence` runs, rack.json restores the OSC device.
+
+- [ ] **Step 5: Commit.** `m2b(task33): route loaded=2 to UltraGridDevice; full device teardown on bus:leave`
+
+**Gate:** Leave → rejoin with an OSC device loaded cleanly tears down and restores. (UG end-to-end verified in Task 37.)
+
+---
+
+### Task 34: `UltraGridPanel.vue` — modes 1+4 full, others placeholder
+
+**Files:**
+- Create: [src/renderer/components/panels/UltraGridPanel.vue](../../src/renderer/components/panels/)
+
+Panel is large (~400 lines). Structure it the same way as [OscPanel.vue](../../src/renderer/components/panels/OscPanel.vue) — `useMqttBinding` per control, sections collapse/expand based on mode.
+
+- [ ] **Step 1: Skeleton + mode picker.** Dropdown bound to `gui/network/mode`. Values 1 + 4 render full content. Values 2/5/7 render: "Not yet supported (M2c). Switch back to mode 1 or 4 to continue."
+
+- [ ] **Step 2: Connection section (§9.6).** Capture source (texture/ndi), compression, resolution, fps — all dropdowns sourced from `settings/localMenus/*` via `useMqttBinding`.
+
+- [ ] **Step 3: Transmission section.** Audio codec, bitrate, FEC — wired to `gui/transmission/*` topics.
+
+- [ ] **Step 4: Network section (mode-dependent).** Mode 1: router-specific fields (host, ports read-only from allocator). Mode 4: RTP-specific fields.
+
+- [ ] **Step 5: Enable toggle.** Same pattern as OscPanel — toggle → publish `gui/enable`; panel disables controls while `enable=1` (live process).
+
+- [ ] **Step 6: Monitor log readout.** Subscribe to `monitor/log`, display last N lines in a scrollable pane. Read-only.
+
+- [ ] **Step 7: Commit.** `m2b(task34): add UltraGridPanel with modes 1+4 fully rendered`
+
+**Gate:** Panel renders without runtime errors; all controls reflect the retained topic values on load; mode-switch to 2/5/7 shows placeholder.
+
+---
+
+### Task 35: `AddDevicePopup.vue` — un-grey UG tile
+
+**Files:**
+- Edit: [src/renderer/components/AddDevicePopup.vue](../../src/renderer/components/)
+
+- [ ] **Step 1: Remove greyed class from UG tile.** Tile now emits `select(2)`.
+
+- [ ] **Step 2: Update Vitest component test.** UG tile is clickable, emits `select(2)`. MoCap still greyed.
+
+- [ ] **Step 3: Commit.** `m2b(task35): enable UltraGrid tile in AddDevicePopup`
+
+**Gate:** Click `+` → popup → click UG tile → channel fills with `loaded=2` → UltraGridPanel opens.
+
+---
+
+### Task 36: Panel route + MatrixView panel switching
+
+**Files:**
+- Edit: [src/renderer/views/MatrixView.vue](../../src/renderer/views/MatrixView.vue) — route `loaded=2` to UltraGridPanel.
+
+- [ ] **Step 1: Extend panel-choice logic.** Current logic picks OscPanel for `loaded ∈ {1,4}`. Add `loaded=2` → UltraGridPanel.
+
+- [ ] **Step 2: Manual smoke.** Load OSC on ch0, UG on ch1, click each cell, correct panel opens.
+
+- [ ] **Step 3: Commit.** `m2b(task36): route loaded=2 to UltraGridPanel in MatrixView`
+
+**Gate:** Both panels open for their respective devices; no console errors when switching.
+
+---
+
+### Task 37: M2b cross-client interop test
+
+**Files:**
+- Create: [docs/logs/m2b-interop-test.md](../logs/)
+
+**Preconditions:**
+- M2b merged and built.
+- `rack.json` deleted.
+- Broker retained state cleared for test peer.
+- Max gateway running (same broker, same room).
+- UV binary discoverable on both sides.
+
+**Cases:**
+
+- [ ] **Case 1: Mode 1 (UDP send-to-router) — NG creates, Max observes.** NG picks UG from popup → channel fills → panel opens → select mode 1 → configure video (texture capture) + audio (coreaudio) → enable. Expected: Max sees `loaded=2`, device subtree populated; NG spawns UV; Max's matrix shows the channel; live video/audio flows.
+
+- [ ] **Case 2: Mode 4 (RTP peer-to-peer) — same flow, mode 4.** Verify RTP-specific network fields populate; live flow works.
+
+- [ ] **Case 3: Crash recovery.** On NG: kill the UV child process manually (`kill -9 <pid>`). Expected: NG logs crash, publishes `gui/enable=0`, panel reflects disabled state. User can re-enable.
+
+- [ ] **Case 4: Leave-room teardown.** Load UG on NG, enable. Click Leave Room. Expected: UV child exits cleanly (SIGTERM within 500ms), device subtree empty-published, Max observes channel clearing. Rejoin → rack restore → UG auto-restarts with same config.
+
+- [ ] **Case 5: Rack persistence round-trip.** Load + configure + enable UG on NG. Close app. Reopen. Expected: UG auto-restarts on `peer:joined` with same config; Max observes the rejoin flow as a new device load.
+
+- [ ] **Log observed results, call out deviations, commit.**
+
+**Gate for M2b-complete:** Cases 1-5 pass (or deviations accepted). Update `gateway-ng-m2-progress.md` with M2b completion entry.
+
+---
+
+### M2b prerequisites (must be true before Task 27 starts)
+
+1. M2a merged, interop passing, logged (done — `m2a-interop-test.md` Cases 1-6 ✅ on 2026-04-20).
+2. Max session available to capture from (running UG on working broker + room).
+3. UV version on Max documented (for fixture re-capture on upgrade — per project memory: UG CLI format is version-dependent).
+
+### M2b file-by-file summary
+
+| File | Action | Size |
+|---|---|---|
+| [src/main/devices/ChildProcessLifecycle.ts](../../src/main/devices/) | new | ~120 lines |
+| [src/main/devices/ultragrid/UltraGridDevice.ts](../../src/main/devices/ultragrid/) | new | ~200 lines |
+| [src/main/devices/ultragrid/cliBuilder.ts](../../src/main/devices/ultragrid/) | new | ~150 lines |
+| [src/main/devices/ultragrid/config.ts](../../src/main/devices/ultragrid/) | new | ~180 lines |
+| [src/main/devices/ultragrid/portAllocator.ts](../../src/main/devices/ultragrid/) | new | ~30 lines |
+| [src/main/devices/ultragrid/monitorLog.ts](../../src/main/devices/ultragrid/) | new | ~40 lines |
+| [src/main/index.ts](../../src/main/index.ts) | edit (factory + bus:leave) | ~+15 lines |
+| [src/renderer/components/panels/UltraGridPanel.vue](../../src/renderer/components/panels/) | new | ~400 lines |
+| [src/renderer/components/AddDevicePopup.vue](../../src/renderer/components/) | edit (un-grey) | ~-3 lines |
+| [src/renderer/views/MatrixView.vue](../../src/renderer/views/MatrixView.vue) | edit (panel route) | ~+5 lines |
+| tests/main/devices/**/*.test.ts | new | ~500 lines |
+| tests/fixtures/ultragrid/max-*.{txt,json} | new (5 captured fixtures) | N/A |
+| [docs/logs/m2b-max-capture-notes.md](../logs/) | new | ~40 lines |
+| [docs/logs/m2b-interop-test.md](../logs/) | new | ~120 lines |
+
+Total new/edited: ~1650 lines of code + ~160 lines of docs.
 
 ---
 
