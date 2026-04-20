@@ -15,7 +15,8 @@ const INVOKE_CHANNELS = [
   "settings:load",
   "settings:save",
   "log:get",
-  "log:clear"
+  "log:clear",
+  "enumerate:refresh"
 ];
 const RECEIVE_CHANNELS = [
   "broker:connected",

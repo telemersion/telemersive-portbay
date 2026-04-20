@@ -6,6 +6,7 @@ const fs = require("fs");
 const dgram = require("dgram");
 const dns = require("dns");
 const util = require("util");
+const child_process = require("child_process");
 function _interopNamespaceDefault(e) {
   const n = Object.create(null, { [Symbol.toStringTag]: { value: "Module" } });
   if (e) {
@@ -632,6 +633,255 @@ function performShutdown(bus2, deviceRouter2, publishedTopics) {
   } catch {
   }
 }
+class SpawnCliError extends Error {
+  constructor(message, cause) {
+    super(message);
+    this.cause = cause;
+    this.name = "SpawnCliError";
+  }
+}
+const DEFAULT_TIMEOUT_MS = 5e3;
+function resolveUgPath() {
+  if (process.env.UG_PATH) {
+    return fs.existsSync(process.env.UG_PATH) ? process.env.UG_PATH : null;
+  }
+  if (process.platform === "darwin") {
+    const vendored = path.resolve(process.cwd(), "vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv");
+    if (fs.existsSync(vendored)) return vendored;
+    const system = "/Applications/uv-qt.app/Contents/MacOS/uv";
+    return fs.existsSync(system) ? system : null;
+  }
+  if (process.platform === "linux") {
+    const linux = "/usr/local/bin/uv";
+    return fs.existsSync(linux) ? linux : null;
+  }
+  if (process.platform === "win32") {
+    return null;
+  }
+  return null;
+}
+function spawnCli(binary, args, options = {}) {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  return new Promise((resolve2, reject) => {
+    if (!fs.existsSync(binary)) {
+      reject(new SpawnCliError(`binary not found: ${binary}`));
+      return;
+    }
+    const spawnOpts = { env: options.env ?? process.env };
+    let child;
+    try {
+      child = child_process.spawn(binary, args, spawnOpts);
+    } catch (err) {
+      reject(new SpawnCliError(`spawn failed: ${binary}`, err));
+      return;
+    }
+    let stdout = "";
+    let stderr = "";
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGTERM");
+    }, timeoutMs);
+    child.stdout?.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(new SpawnCliError(`process error: ${binary}`, err));
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      if (timedOut) {
+        reject(new SpawnCliError(`timeout after ${timeoutMs}ms: ${binary} ${args.join(" ")}`));
+        return;
+      }
+      resolve2({ stdout, stderr, exitCode: code });
+    });
+  });
+}
+const BACKEND_TOPIC_TAIL = {
+  textureCapture: "localMenus/textureCaptureRange",
+  ndi: "localMenus/ndiRange",
+  portaudioCapture: "localMenus/portaudioCaptureRange",
+  portaudioReceive: "localMenus/portaudioReceiveRange",
+  coreaudioCapture: "localMenus/coreaudioCaptureRange",
+  coreaudioReceive: "localMenus/coreaudioReceiveRange",
+  wasapiCapture: "localMenus/wasapiCaptureRange",
+  wasapiReceive: "localMenus/wasapiReceiveRange",
+  jackCapture: "localMenus/jackCaptureRange",
+  jackReceive: "localMenus/jackReceiveRange"
+};
+const BACKEND_FALLBACK = {
+  textureCapture: "-default-",
+  ndi: "-default-",
+  portaudioCapture: "0",
+  portaudioReceive: "0",
+  coreaudioCapture: "0",
+  coreaudioReceive: "0",
+  wasapiCapture: "0",
+  wasapiReceive: "0",
+  jackCapture: "0",
+  jackReceive: "0"
+};
+function backendTopic(peerId, backend) {
+  return topics.settings(peerId, BACKEND_TOPIC_TAIL[backend]);
+}
+function backendFallback(backend) {
+  return BACKEND_FALLBACK[backend];
+}
+function ugEnableTopic(peerId) {
+  return topics.settings(peerId, "localProps/ug_enable");
+}
+function applicableBackends() {
+  const all = [
+    "textureCapture",
+    "ndi",
+    "portaudioCapture",
+    "portaudioReceive"
+  ];
+  if (process.platform === "darwin") {
+    all.push("coreaudioCapture", "coreaudioReceive");
+  }
+  if (process.platform === "linux") {
+    all.push("jackCapture", "jackReceive");
+  }
+  if (process.platform === "win32") {
+    all.push("wasapiCapture", "wasapiReceive");
+  }
+  return all;
+}
+let registry = {};
+function registerBackend(backend, spec) {
+  registry[backend] = spec;
+}
+async function enumerate(peerId, publish) {
+  if (!peerId) return;
+  const uvPath = resolveUgPath();
+  if (!uvPath) {
+    publish(1, ugEnableTopic(peerId), "0");
+    for (const backend of applicableBackends()) {
+      publish(1, backendTopic(peerId, backend), backendFallback(backend));
+    }
+    console.warn("[enumerate] UltraGrid binary not found; publishing fallback enumeration");
+    return;
+  }
+  publish(1, ugEnableTopic(peerId), "1");
+  const backends = applicableBackends();
+  await Promise.allSettled(backends.map((b) => runBackend(b, uvPath, peerId, publish)));
+}
+async function runBackend(backend, uvPath, peerId, publish) {
+  const spec = registry[backend];
+  if (!spec) {
+    publish(1, backendTopic(peerId, backend), backendFallback(backend));
+    return;
+  }
+  try {
+    const result = await spawnCli(uvPath, spec.args);
+    const parsed = spec.parse(result.stdout);
+    publish(1, backendTopic(peerId, backend), parsed.range);
+  } catch (err) {
+    publish(1, backendTopic(peerId, backend), backendFallback(backend));
+    console.warn(`[enumerate] ${backend} failed: ${err?.message ?? err}`);
+  }
+}
+const EMPTY_RANGE = { range: "0", count: 0 };
+const DEFAULT_RANGE = { range: "-default-", count: 0 };
+function parsePortaudio(stdout) {
+  const entries = [];
+  for (const raw of stdout.split("\n")) {
+    const line = raw.replace(/^\(\*\)\s*/, "").trim();
+    const m = line.match(/^portaudio:(\d+)\s*-\s*(.+)$/);
+    if (!m) continue;
+    const id = m[1];
+    const rest = m[2].trim();
+    entries.push(`${id} ${rest}`);
+  }
+  if (entries.length === 0) return EMPTY_RANGE;
+  return { range: entries.join("|"), count: entries.length };
+}
+function parseCoreaudio(stdout) {
+  const entries = [];
+  for (const raw of stdout.split("\n")) {
+    const m = raw.match(/^\s*coreaudio:(\d+)\s*:\s*(.+)$/);
+    if (!m) continue;
+    const id = m[1];
+    const name = m[2].trim();
+    entries.push(`${id} ${name}`);
+  }
+  if (entries.length === 0) return EMPTY_RANGE;
+  return { range: entries.join("|"), count: entries.length };
+}
+function parseNdi(stdout) {
+  const lines = stdout.split("\n");
+  const headerIdx = lines.findIndex((l) => /available sources/i.test(l));
+  if (headerIdx < 0) return DEFAULT_RANGE;
+  const names = [];
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    if (/^(Exit|MasterPort|\[NDI)/i.test(line)) continue;
+    if (!/ - /.test(line)) continue;
+    const name = line.split(" - ")[0].trim();
+    if (name) names.push(name);
+  }
+  if (names.length === 0) return DEFAULT_RANGE;
+  return { range: names.join("|"), count: names.length };
+}
+function parseGenericAudio(prefix, stdout) {
+  const rx = new RegExp(`^\\s*(?:\\(\\*\\)\\s*)?${prefix}:(\\d+)\\s*[-:]\\s*(.+)$`);
+  const entries = [];
+  for (const raw of stdout.split("\n")) {
+    const m = raw.match(rx);
+    if (!m) continue;
+    const id = m[1];
+    const rest = m[2].trim();
+    entries.push(`${id} ${rest}`);
+  }
+  if (entries.length === 0) return EMPTY_RANGE;
+  return { range: entries.join("|"), count: entries.length };
+}
+function parseJack(stdout) {
+  return parseGenericAudio("jack", stdout);
+}
+function parseWasapi(stdout) {
+  return parseGenericAudio("wasapi", stdout);
+}
+function parseTextureSender(stdout) {
+  if (/Unable to open capture device/i.test(stdout)) return DEFAULT_RANGE;
+  const lines = stdout.split("\n");
+  const headerIdx = lines.findIndex((l) => /Available servers:/i.test(l));
+  if (headerIdx < 0) return DEFAULT_RANGE;
+  const entries = [];
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    if (/^(Exit|MasterPort|\[)/i.test(line)) break;
+    const m = line.match(/^\d+\)\s*app:\s*(.*?)\s*name:\s*(.*)$/);
+    if (!m) continue;
+    const app = m[1].trim();
+    const name = m[2].trim();
+    const id = name ? `${app}/${name}` : app;
+    entries.push(`name='${id}'`);
+  }
+  if (entries.length === 0) return DEFAULT_RANGE;
+  return { range: entries.join("|"), count: entries.length };
+}
+function registerDefaultBackends() {
+  const textureArg = process.platform === "win32" ? "spout:help" : "syphon:help";
+  registerBackend("textureCapture", { args: ["-t", textureArg], parse: parseTextureSender });
+  registerBackend("ndi", { args: ["-t", "ndi:help"], parse: parseNdi });
+  registerBackend("portaudioCapture", { args: ["-s", "portaudio:help"], parse: parsePortaudio });
+  registerBackend("portaudioReceive", { args: ["-r", "portaudio:help"], parse: parsePortaudio });
+  registerBackend("coreaudioCapture", { args: ["-s", "coreaudio:help"], parse: parseCoreaudio });
+  registerBackend("coreaudioReceive", { args: ["-r", "coreaudio:help"], parse: parseCoreaudio });
+  registerBackend("jackCapture", { args: ["-s", "jack:help"], parse: parseJack });
+  registerBackend("jackReceive", { args: ["-r", "jack:help"], parse: parseJack });
+  registerBackend("wasapiCapture", { args: ["-s", "wasapi:help"], parse: parseWasapi });
+  registerBackend("wasapiReceive", { args: ["-r", "wasapi:help"], parse: parseWasapi });
+}
 let mainWindow = null;
 let bus = null;
 let deviceRouter = null;
@@ -808,6 +1058,13 @@ function setupBus() {
         (retained, topic, value) => trackedPublish(retained, topic, value)
       );
       publishInitSequence();
+      enumerate(
+        localPeerId,
+        (retained, topic, value) => trackedPublish(retained, topic, value)
+      ).catch((err) => {
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn(`[enumerate] failed: ${message}`);
+      });
     }
   });
   bus.on("peers:remote:joined", (info) => {
@@ -900,8 +1157,16 @@ function setupIpcHandlers() {
   electron.ipcMain.handle("log:clear", () => {
     clearLogBuffer();
   });
+  electron.ipcMain.handle("enumerate:refresh", async () => {
+    if (!localPeerId) return;
+    await enumerate(
+      localPeerId,
+      (retained, topic, value) => trackedPublish(retained, topic, value)
+    );
+  });
 }
 electron.app.whenReady().then(async () => {
+  registerDefaultBackends();
   setupBus();
   setupIpcHandlers();
   const ips = await bus.init();

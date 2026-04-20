@@ -8,6 +8,8 @@ import { DeviceRouter } from './deviceRouter'
 import { OscDevice } from './devices/OscDevice'
 import { performShutdown } from './shutdown'
 import { logEvent, setLogSink, getLogBuffer, clearLogBuffer } from './logBus'
+import { enumerate } from './enumeration'
+import { registerDefaultBackends } from './enumeration/parsers'
 
 let mainWindow: BrowserWindow | null = null
 let bus: TBusClient | null = null
@@ -191,6 +193,13 @@ function setupBus(): void {
       )
 
       publishInitSequence()
+
+      enumerate(localPeerId, (retained, topic, value) =>
+        trackedPublish(retained, topic, value)
+      ).catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err)
+        console.warn(`[enumerate] failed: ${message}`)
+      })
     }
   })
 
@@ -289,9 +298,17 @@ function setupIpcHandlers(): void {
   ipcMain.handle('log:clear', () => {
     clearLogBuffer()
   })
+
+  ipcMain.handle('enumerate:refresh', async () => {
+    if (!localPeerId) return
+    await enumerate(localPeerId, (retained, topic, value) =>
+      trackedPublish(retained, topic, value)
+    )
+  })
 }
 
 app.whenReady().then(async () => {
+  registerDefaultBackends()
   setupBus()
   setupIpcHandlers()
 
