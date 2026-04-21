@@ -698,7 +698,7 @@ class OscDevice {
   }
 }
 const DEFAULT_SPAWN_GRACE_MS = 2e3;
-const DEFAULT_TERMINATION_GRACE_MS = 500;
+const DEFAULT_ZOMBIE_ESCAPE_MS = 2e3;
 class ChildProcessLifecycle {
   constructor(opts) {
     this.opts = opts;
@@ -706,7 +706,7 @@ class ChildProcessLifecycle {
   child = null;
   spawnedAt = 0;
   stopRequested = false;
-  killTimer = null;
+  escapeTimer = null;
   stdoutBuf = "";
   stderrBuf = "";
   start() {
@@ -718,7 +718,8 @@ class ChildProcessLifecycle {
     let child;
     try {
       child = child_process.spawn(this.opts.binary, this.opts.args, {
-        env: this.opts.env ?? process.env
+        env: this.opts.env ?? process.env,
+        detached: true
       });
     } catch {
       this.opts.onExit?.("spawn-failure", null);
@@ -756,19 +757,22 @@ class ChildProcessLifecycle {
     if (!this.child || this.stopRequested) return;
     this.stopRequested = true;
     const child = this.child;
+    this.signalGroup(child, "SIGKILL");
+    this.escapeTimer = setTimeout(() => {
+      this.escapeTimer = null;
+      if (this.child === child) this.finalize("killed", null);
+    }, this.opts.zombieEscapeMs ?? DEFAULT_ZOMBIE_ESCAPE_MS);
+  }
+  signalGroup(child, signal) {
+    if (typeof child.pid !== "number") return;
     try {
-      child.kill("SIGTERM");
+      process.kill(-child.pid, signal);
     } catch {
-    }
-    this.killTimer = setTimeout(() => {
-      this.killTimer = null;
-      if (this.child === child) {
-        try {
-          child.kill("SIGKILL");
-        } catch {
-        }
+      try {
+        child.kill(signal);
+      } catch {
       }
-    }, this.opts.terminationGraceMs ?? DEFAULT_TERMINATION_GRACE_MS);
+    }
   }
   isRunning() {
     return this.child !== null && !this.stopRequested;
@@ -781,9 +785,9 @@ class ChildProcessLifecycle {
     return remainder;
   }
   finalize(reason, code) {
-    if (this.killTimer) {
-      clearTimeout(this.killTimer);
-      this.killTimer = null;
+    if (this.escapeTimer) {
+      clearTimeout(this.escapeTimer);
+      this.escapeTimer = null;
     }
     this.child = null;
     this.opts.onExit?.(reason, code);
@@ -948,27 +952,50 @@ function buildUvArgs(input) {
   const mode = config.network.mode;
   const args = mode === "1" ? buildMode1Args(input) : mode === "4" ? buildMode4Args(input) : null;
   if (!args) throw new Error(`UltraGrid mode ${mode} not yet supported (M2c)`);
-  return args.map((a) => a.replace(/'/g, ""));
+  return args;
+}
+function shouldEmitVideo(transmission) {
+  return transmission !== "1";
+}
+function shouldEmitAudio(transmission) {
+  return transmission !== "0";
+}
+function shouldEmitSend(connection) {
+  return connection !== "1";
+}
+function shouldEmitReceive(connection) {
+  return connection !== "0";
 }
 function buildMode1Args(input) {
   const { config, ports, indexes, host, localOs } = input;
+  const transmission = config.audioVideo.transmission;
   const args = ["--param", "log-color=no"];
-  pushVideoCapture(args, config, indexes, localOs);
-  pushAudioCapture(args, config, indexes);
-  args.push(
-    `-P${ports.videoPort}:${ports.videoPort}:${ports.audioPort}:${ports.audioPort}`,
-    host
-  );
+  if (shouldEmitVideo(transmission)) pushVideoCapture(args, config, indexes, localOs);
+  if (shouldEmitAudio(transmission)) pushAudioCapture(args, config, indexes);
+  if (shouldEmitVideo(transmission) && shouldEmitAudio(transmission)) {
+    args.push(`-P${ports.videoPort}:${ports.videoPort}:${ports.audioPort}:${ports.audioPort}`);
+  } else {
+    args.push(`-P${ports.videoPort}`);
+  }
+  args.push(host);
   return args;
 }
 function buildMode4Args(input) {
   const { config, indexes, textureReceiverName, localOs } = input;
+  const transmission = config.audioVideo.transmission;
+  const connection = config.audioVideo.connection;
   const args = ["--param", "log-color=no"];
-  pushVideoCapture(args, config, indexes, localOs);
-  pushAudioCapture(args, config, indexes);
-  args.push("-d", `${textureDisplayPrefix(localOs)}'${textureReceiverName}'`);
-  if (indexes.audioReceive !== null) {
-    args.push("-r", `portaudio:${indexes.audioReceive}`);
+  if (shouldEmitSend(connection)) {
+    if (shouldEmitVideo(transmission)) pushVideoCapture(args, config, indexes, localOs);
+    if (shouldEmitAudio(transmission)) pushAudioCapture(args, config, indexes);
+  }
+  if (shouldEmitReceive(connection)) {
+    if (shouldEmitVideo(transmission)) {
+      args.push("-d", `${textureDisplayPrefix(localOs)}'${textureReceiverName}'`);
+    }
+    if (shouldEmitAudio(transmission) && indexes.audioReceive !== null) {
+      args.push("-r", `portaudio:${indexes.audioReceive}`);
+    }
   }
   return args;
 }
@@ -1182,7 +1209,7 @@ class UltraGridDevice {
     if (this.monitorGateOn) this.publishMonitorLine(cliLogLine);
     this.lifecycle = this.spawnFactory({
       binary,
-      args,
+      args: stripArgQuotes(args),
       env: sanitizedChildEnv$1(),
       onStdout: (line) => this.handleLogLine(line),
       onStderr: (line) => this.handleLogLine(line),
@@ -1274,6 +1301,9 @@ function sanitizedChildEnv$1() {
   delete env.__CFBundleIdentifier;
   delete env.MallocNanoZone;
   return env;
+}
+function stripArgQuotes(args) {
+  return args.map((a) => a.replace(/'([^']*)'/g, "$1"));
 }
 class SpawnCliError extends Error {
   constructor(message, cause) {
