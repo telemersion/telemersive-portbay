@@ -173,9 +173,12 @@ export class UltraGridDevice implements DeviceHandler {
     const cliLogLine = `[CLI] ${cliLine}`
     this.monitor.append(cliLogLine)
     if (this.monitorGateOn) this.publishMonitorLine(cliLogLine)
+    // Quotes in argv are shell syntax — spawn passes argv verbatim, so `'Simple Server'`
+    // would reach uv as a literal 13-char string and fail the Syphon name match. Strip
+    // wrapping single quotes here; the logged cliLine above keeps them for pastability.
     this.lifecycle = this.spawnFactory({
       binary,
-      args,
+      args: stripArgQuotes(args),
       env: sanitizedChildEnv(),
       onStdout: (line) => this.handleLogLine(line),
       onStderr: (line) => this.handleLogLine(line),
@@ -293,4 +296,8 @@ function sanitizedChildEnv(): NodeJS.ProcessEnv {
   delete env.__CFBundleIdentifier
   delete env.MallocNanoZone
   return env
+}
+
+function stripArgQuotes(args: string[]): string[] {
+  return args.map((a) => a.replace(/'([^']*)'/g, '$1'))
 }
