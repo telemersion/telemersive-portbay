@@ -5502,6 +5502,11 @@ function cloneVNode(vnode, extraProps, mergeRef = false, cloneTransition = false
 function createTextVNode(text = " ", flag = 0) {
   return createVNode(Text, null, text, flag);
 }
+function createStaticVNode(content, numberOfNodes) {
+  const vnode = createVNode(Static, null, content);
+  vnode.staticCount = numberOfNodes;
+  return vnode;
+}
 function createCommentVNode(text = "", asBlock = false) {
   return asBlock ? (openBlock(), createBlock(Comment, null, text)) : createVNode(Comment, null, text);
 }
@@ -7984,13 +7989,13 @@ const panelState = /* @__PURE__ */ reactive({
 function togglePanel(id) {
   panelState.openPanelId = panelState.openPanelId === id ? null : id;
 }
-const _hoisted_1$8 = {
+const _hoisted_1$9 = {
   class: "icon-bar",
   "aria-label": "Primary navigation"
 };
-const _hoisted_2$8 = { class: "group" };
-const _hoisted_3$8 = ["title", "aria-label", "onClick"];
-const _hoisted_4$6 = {
+const _hoisted_2$9 = { class: "group" };
+const _hoisted_3$9 = ["title", "aria-label", "onClick"];
+const _hoisted_4$7 = {
   viewBox: "0 0 24 24",
   width: "20",
   height: "20",
@@ -8000,10 +8005,10 @@ const _hoisted_4$6 = {
   "stroke-linecap": "round",
   "stroke-linejoin": "round"
 };
-const _hoisted_5$4 = ["d"];
-const _hoisted_6$4 = { class: "group bottom" };
-const _hoisted_7$4 = ["title", "aria-label", "onClick"];
-const _hoisted_8$4 = {
+const _hoisted_5$5 = ["d"];
+const _hoisted_6$5 = { class: "group bottom" };
+const _hoisted_7$5 = ["title", "aria-label", "onClick"];
+const _hoisted_8$5 = {
   viewBox: "0 0 24 24",
   width: "20",
   height: "20",
@@ -8013,8 +8018,8 @@ const _hoisted_8$4 = {
   "stroke-linecap": "round",
   "stroke-linejoin": "round"
 };
-const _hoisted_9$4 = ["d"];
-const _sfc_main$9 = /* @__PURE__ */ defineComponent({
+const _hoisted_9$5 = ["d"];
+const _sfc_main$a = /* @__PURE__ */ defineComponent({
   __name: "IconBar",
   setup(__props) {
     const route = useRoute();
@@ -8033,8 +8038,8 @@ const _sfc_main$9 = /* @__PURE__ */ defineComponent({
       return panelState.openPanelId === item.target;
     }
     return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("nav", _hoisted_1$8, [
-        createBaseVNode("div", _hoisted_2$8, [
+      return openBlock(), createElementBlock("nav", _hoisted_1$9, [
+        createBaseVNode("div", _hoisted_2$9, [
           (openBlock(true), createElementBlock(Fragment, null, renderList(topItems.value, (item) => {
             return openBlock(), createElementBlock("button", {
               key: item.id,
@@ -8043,15 +8048,15 @@ const _sfc_main$9 = /* @__PURE__ */ defineComponent({
               "aria-label": item.label,
               onClick: ($event) => activate(item)
             }, [
-              (openBlock(), createElementBlock("svg", _hoisted_4$6, [
+              (openBlock(), createElementBlock("svg", _hoisted_4$7, [
                 createBaseVNode("path", {
                   d: unref(ICONS)[item.icon]
-                }, null, 8, _hoisted_5$4)
+                }, null, 8, _hoisted_5$5)
               ]))
-            ], 10, _hoisted_3$8);
+            ], 10, _hoisted_3$9);
           }), 128))
         ]),
-        createBaseVNode("div", _hoisted_6$4, [
+        createBaseVNode("div", _hoisted_6$5, [
           (openBlock(true), createElementBlock(Fragment, null, renderList(bottomItems.value, (item) => {
             return openBlock(), createElementBlock("button", {
               key: item.id,
@@ -8060,12 +8065,12 @@ const _sfc_main$9 = /* @__PURE__ */ defineComponent({
               "aria-label": item.label,
               onClick: ($event) => activate(item)
             }, [
-              (openBlock(), createElementBlock("svg", _hoisted_8$4, [
+              (openBlock(), createElementBlock("svg", _hoisted_8$5, [
                 createBaseVNode("path", {
                   d: unref(ICONS)[item.icon]
-                }, null, 8, _hoisted_9$4)
+                }, null, 8, _hoisted_9$5)
               ]))
-            ], 10, _hoisted_7$4);
+            ], 10, _hoisted_7$5);
           }), 128))
         ])
       ]);
@@ -8079,24 +8084,24 @@ const _export_sfc = (sfc, props) => {
   }
   return target;
 };
-const IconBar = /* @__PURE__ */ _export_sfc(_sfc_main$9, [["__scopeId", "data-v-dff99c03"]]);
-const _hoisted_1$7 = { class: "log-panel" };
-const _hoisted_2$7 = { class: "head" };
-const _hoisted_3$7 = { class: "count" };
-const _hoisted_4$5 = { class: "filters" };
-const _hoisted_5$3 = { class: "ts" };
-const _hoisted_6$3 = { class: "kind" };
-const _hoisted_7$3 = { class: "topic" };
-const _hoisted_8$3 = {
+const IconBar = /* @__PURE__ */ _export_sfc(_sfc_main$a, [["__scopeId", "data-v-dff99c03"]]);
+const _hoisted_1$8 = { class: "log-panel" };
+const _hoisted_2$8 = { class: "head" };
+const _hoisted_3$8 = { class: "count" };
+const _hoisted_4$6 = { class: "filters" };
+const _hoisted_5$4 = { class: "ts" };
+const _hoisted_6$4 = { class: "kind" };
+const _hoisted_7$4 = { class: "topic" };
+const _hoisted_8$4 = {
   key: 0,
   class: "value"
 };
-const _hoisted_9$3 = {
+const _hoisted_9$4 = {
   key: 0,
   class: "empty"
 };
-const _hoisted_10$3 = { class: "actions" };
-const _sfc_main$8 = /* @__PURE__ */ defineComponent({
+const _hoisted_10$4 = { class: "actions" };
+const _sfc_main$9 = /* @__PURE__ */ defineComponent({
   __name: "LogPanel",
   setup(__props) {
     const entries = /* @__PURE__ */ ref([]);
@@ -8179,12 +8184,12 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
       window.api.removeAllListeners("log:entry");
     });
     return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("aside", _hoisted_1$7, [
-        createBaseVNode("header", _hoisted_2$7, [
+      return openBlock(), createElementBlock("aside", _hoisted_1$8, [
+        createBaseVNode("header", _hoisted_2$8, [
           _cache[3] || (_cache[3] = createBaseVNode("span", { class: "title" }, "Activity log", -1)),
-          createBaseVNode("span", _hoisted_3$7, toDisplayString(visible.value.length) + " / " + toDisplayString(entries.value.length), 1)
+          createBaseVNode("span", _hoisted_3$8, toDisplayString(visible.value.length) + " / " + toDisplayString(entries.value.length), 1)
         ]),
-        createBaseVNode("div", _hoisted_4$5, [
+        createBaseVNode("div", _hoisted_4$6, [
           createBaseVNode("label", null, [
             withDirectives(createBaseVNode("input", {
               type: "checkbox",
@@ -8224,15 +8229,15 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
               key: e.seq,
               class: normalizeClass(["row", "k-" + e.kind])
             }, [
-              createBaseVNode("span", _hoisted_5$3, toDisplayString(formatTs(e.ts)), 1),
-              createBaseVNode("span", _hoisted_6$3, toDisplayString(kindLabel(e)), 1),
-              createBaseVNode("span", _hoisted_7$3, toDisplayString(e.topic), 1),
-              e.value ? (openBlock(), createElementBlock("span", _hoisted_8$3, toDisplayString(e.value), 1)) : createCommentVNode("", true)
+              createBaseVNode("span", _hoisted_5$4, toDisplayString(formatTs(e.ts)), 1),
+              createBaseVNode("span", _hoisted_6$4, toDisplayString(kindLabel(e)), 1),
+              createBaseVNode("span", _hoisted_7$4, toDisplayString(e.topic), 1),
+              e.value ? (openBlock(), createElementBlock("span", _hoisted_8$4, toDisplayString(e.value), 1)) : createCommentVNode("", true)
             ], 2);
           }), 128)),
-          visible.value.length === 0 ? (openBlock(), createElementBlock("div", _hoisted_9$3, "No entries.")) : createCommentVNode("", true)
+          visible.value.length === 0 ? (openBlock(), createElementBlock("div", _hoisted_9$4, "No entries.")) : createCommentVNode("", true)
         ], 544),
-        createBaseVNode("footer", _hoisted_10$3, [
+        createBaseVNode("footer", _hoisted_10$4, [
           createBaseVNode("button", {
             class: "btn",
             onClick: clear
@@ -8246,10 +8251,10 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const LogPanel = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["__scopeId", "data-v-bbf8eb4a"]]);
+const LogPanel = /* @__PURE__ */ _export_sfc(_sfc_main$9, [["__scopeId", "data-v-bbf8eb4a"]]);
 const ICON_BAR_WIDTH = 48;
 const LOG_PANEL_WIDTH = 400;
-const _sfc_main$7 = /* @__PURE__ */ defineComponent({
+const _sfc_main$8 = /* @__PURE__ */ defineComponent({
   __name: "App",
   setup(__props) {
     const contentLeft = computed(() => {
@@ -8271,44 +8276,44 @@ const _sfc_main$7 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const _hoisted_1$6 = { class: "session-view" };
-const _hoisted_2$6 = { class: "card" };
-const _hoisted_3$6 = { class: "form-row" };
-const _hoisted_4$4 = ["disabled"];
-const _hoisted_5$2 = { class: "form-row" };
-const _hoisted_6$2 = ["disabled"];
-const _hoisted_7$2 = { class: "form-row" };
-const _hoisted_8$2 = ["disabled"];
-const _hoisted_9$2 = { class: "form-row" };
-const _hoisted_10$2 = ["disabled"];
-const _hoisted_11$2 = { class: "btn-row" };
-const _hoisted_12$2 = ["disabled"];
-const _hoisted_13$1 = ["disabled"];
-const _hoisted_14$1 = {
+const _hoisted_1$7 = { class: "session-view" };
+const _hoisted_2$7 = { class: "card" };
+const _hoisted_3$7 = { class: "form-row" };
+const _hoisted_4$5 = ["disabled"];
+const _hoisted_5$3 = { class: "form-row" };
+const _hoisted_6$3 = ["disabled"];
+const _hoisted_7$3 = { class: "form-row" };
+const _hoisted_8$3 = ["disabled"];
+const _hoisted_9$3 = { class: "form-row" };
+const _hoisted_10$3 = ["disabled"];
+const _hoisted_11$3 = { class: "btn-row" };
+const _hoisted_12$3 = ["disabled"];
+const _hoisted_13$2 = ["disabled"];
+const _hoisted_14$2 = {
   key: 0,
   class: "error"
 };
-const _hoisted_15$1 = {
+const _hoisted_15$2 = {
   key: 0,
   class: "card"
 };
-const _hoisted_16$1 = {
+const _hoisted_16$2 = {
   key: 0,
   class: "room-list"
 };
-const _hoisted_17$1 = { class: "form-row" };
+const _hoisted_17$2 = { class: "form-row" };
 const _hoisted_18$1 = ["value", "disabled"];
-const _hoisted_19 = ["value"];
-const _hoisted_20 = { class: "form-row" };
-const _hoisted_21 = ["disabled"];
-const _hoisted_22 = { class: "form-row" };
-const _hoisted_23 = ["disabled"];
-const _hoisted_24 = { class: "form-row" };
-const _hoisted_25 = ["disabled"];
-const _hoisted_26 = { class: "btn-row" };
-const _hoisted_27 = ["disabled"];
-const _hoisted_28 = ["disabled"];
-const _sfc_main$6 = /* @__PURE__ */ defineComponent({
+const _hoisted_19$1 = ["value"];
+const _hoisted_20$1 = { class: "form-row" };
+const _hoisted_21$1 = ["disabled"];
+const _hoisted_22$1 = { class: "form-row" };
+const _hoisted_23$1 = ["disabled"];
+const _hoisted_24$1 = { class: "form-row" };
+const _hoisted_25$1 = ["disabled"];
+const _hoisted_26$1 = { class: "btn-row" };
+const _hoisted_27$1 = ["disabled"];
+const _hoisted_28$1 = ["disabled"];
+const _sfc_main$7 = /* @__PURE__ */ defineComponent({
   __name: "SessionView",
   setup(__props) {
     const router2 = useRouter();
@@ -8429,25 +8434,25 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
       isJoined.value = false;
     }
     return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("div", _hoisted_1$6, [
-        createBaseVNode("section", _hoisted_2$6, [
+      return openBlock(), createElementBlock("div", _hoisted_1$7, [
+        createBaseVNode("section", _hoisted_2$7, [
           _cache[12] || (_cache[12] = createBaseVNode("h3", null, "connect to the telemersive-router", -1)),
-          createBaseVNode("div", _hoisted_3$6, [
+          createBaseVNode("div", _hoisted_3$7, [
             _cache[8] || (_cache[8] = createBaseVNode("label", null, "RouterURL", -1)),
             withDirectives(createBaseVNode("input", {
               "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => config.host = $event),
               disabled: isConnected.value
-            }, null, 8, _hoisted_4$4), [
+            }, null, 8, _hoisted_4$5), [
               [vModelText, config.host]
             ])
           ]),
-          createBaseVNode("div", _hoisted_5$2, [
+          createBaseVNode("div", _hoisted_5$3, [
             _cache[9] || (_cache[9] = createBaseVNode("label", null, "RouterPort", -1)),
             withDirectives(createBaseVNode("input", {
               "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => config.port = $event),
               type: "number",
               disabled: isConnected.value
-            }, null, 8, _hoisted_6$2), [
+            }, null, 8, _hoisted_6$3), [
               [
                 vModelText,
                 config.port,
@@ -8456,43 +8461,43 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
               ]
             ])
           ]),
-          createBaseVNode("div", _hoisted_7$2, [
+          createBaseVNode("div", _hoisted_7$3, [
             _cache[10] || (_cache[10] = createBaseVNode("label", null, "RouterUser", -1)),
             withDirectives(createBaseVNode("input", {
               "onUpdate:modelValue": _cache[2] || (_cache[2] = ($event) => config.username = $event),
               disabled: isConnected.value
-            }, null, 8, _hoisted_8$2), [
+            }, null, 8, _hoisted_8$3), [
               [vModelText, config.username]
             ])
           ]),
-          createBaseVNode("div", _hoisted_9$2, [
+          createBaseVNode("div", _hoisted_9$3, [
             _cache[11] || (_cache[11] = createBaseVNode("label", null, "RouterPwd", -1)),
             withDirectives(createBaseVNode("input", {
               "onUpdate:modelValue": _cache[3] || (_cache[3] = ($event) => config.password = $event),
               type: "password",
               disabled: isConnected.value
-            }, null, 8, _hoisted_10$2), [
+            }, null, 8, _hoisted_10$3), [
               [vModelText, config.password]
             ])
           ]),
-          createBaseVNode("div", _hoisted_11$2, [
+          createBaseVNode("div", _hoisted_11$3, [
             createBaseVNode("button", {
               class: normalizeClass(["btn-connect", { active: isConnected.value, pending: connecting.value }]),
               disabled: isConnected.value || connecting.value,
               onClick: connect
-            }, toDisplayString(isConnected.value ? "connected" : connecting.value ? "connecting…" : "connect"), 11, _hoisted_12$2),
+            }, toDisplayString(isConnected.value ? "connected" : connecting.value ? "connecting…" : "connect"), 11, _hoisted_12$3),
             createBaseVNode("button", {
               class: "btn-disconnect",
               disabled: !isConnected.value,
               onClick: disconnect
-            }, " disconnect ", 8, _hoisted_13$1)
+            }, " disconnect ", 8, _hoisted_13$2)
           ]),
-          error.value ? (openBlock(), createElementBlock("p", _hoisted_14$1, toDisplayString(error.value), 1)) : createCommentVNode("", true)
+          error.value ? (openBlock(), createElementBlock("p", _hoisted_14$2, toDisplayString(error.value), 1)) : createCommentVNode("", true)
         ]),
-        isConnected.value ? (openBlock(), createElementBlock("section", _hoisted_15$1, [
+        isConnected.value ? (openBlock(), createElementBlock("section", _hoisted_15$2, [
           _cache[18] || (_cache[18] = createBaseVNode("h3", null, "create / join a room", -1)),
-          rooms.value.length > 0 ? (openBlock(), createElementBlock("div", _hoisted_16$1, [
-            createBaseVNode("div", _hoisted_17$1, [
+          rooms.value.length > 0 ? (openBlock(), createElementBlock("div", _hoisted_16$2, [
+            createBaseVNode("div", _hoisted_17$2, [
               _cache[14] || (_cache[14] = createBaseVNode("label", null, "All Rooms:", -1)),
               createBaseVNode("select", {
                 value: form.roomName,
@@ -8504,57 +8509,57 @@ const _sfc_main$6 = /* @__PURE__ */ defineComponent({
                   return openBlock(), createElementBlock("option", {
                     key: name,
                     value: name
-                  }, toDisplayString(name), 9, _hoisted_19);
+                  }, toDisplayString(name), 9, _hoisted_19$1);
                 }), 128))
               ], 40, _hoisted_18$1)
             ])
           ])) : createCommentVNode("", true),
-          createBaseVNode("div", _hoisted_20, [
+          createBaseVNode("div", _hoisted_20$1, [
             _cache[15] || (_cache[15] = createBaseVNode("label", null, "PeerName", -1)),
             withDirectives(createBaseVNode("input", {
               "onUpdate:modelValue": _cache[5] || (_cache[5] = ($event) => form.peerName = $event),
               disabled: isJoined.value
-            }, null, 8, _hoisted_21), [
+            }, null, 8, _hoisted_21$1), [
               [vModelText, form.peerName]
             ])
           ]),
-          createBaseVNode("div", _hoisted_22, [
+          createBaseVNode("div", _hoisted_22$1, [
             _cache[16] || (_cache[16] = createBaseVNode("label", null, "RoomName", -1)),
             withDirectives(createBaseVNode("input", {
               "onUpdate:modelValue": _cache[6] || (_cache[6] = ($event) => form.roomName = $event),
               disabled: isJoined.value
-            }, null, 8, _hoisted_23), [
+            }, null, 8, _hoisted_23$1), [
               [vModelText, form.roomName]
             ])
           ]),
-          createBaseVNode("div", _hoisted_24, [
+          createBaseVNode("div", _hoisted_24$1, [
             _cache[17] || (_cache[17] = createBaseVNode("label", null, "RoomPwd", -1)),
             withDirectives(createBaseVNode("input", {
               "onUpdate:modelValue": _cache[7] || (_cache[7] = ($event) => form.roomPwd = $event),
               type: "password",
               disabled: isJoined.value
-            }, null, 8, _hoisted_25), [
+            }, null, 8, _hoisted_25$1), [
               [vModelText, form.roomPwd]
             ])
           ]),
-          createBaseVNode("div", _hoisted_26, [
+          createBaseVNode("div", _hoisted_26$1, [
             createBaseVNode("button", {
               class: normalizeClass(["btn-connect", { active: isJoined.value, pending: joining.value }]),
               disabled: isJoined.value || joining.value || !form.peerName || !form.roomName,
               onClick: join
-            }, toDisplayString(isJoined.value ? "joined" : joining.value ? "joining…" : "join"), 11, _hoisted_27),
+            }, toDisplayString(isJoined.value ? "joined" : joining.value ? "joining…" : "join"), 11, _hoisted_27$1),
             createBaseVNode("button", {
               class: "btn-disconnect",
               disabled: !isJoined.value,
               onClick: leave
-            }, " leave ", 8, _hoisted_28)
+            }, " leave ", 8, _hoisted_28$1)
           ])
         ])) : createCommentVNode("", true)
       ]);
     };
   }
 });
-const SessionView = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-5c9a52f0"]]);
+const SessionView = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["__scopeId", "data-v-5c9a52f0"]]);
 function ensurePath(obj, keys) {
   let current = obj;
   for (const key of keys) {
@@ -8607,9 +8612,9 @@ function createRoster() {
   }
   return { entries, addPeer, removePeer, setLocalPeer };
 }
-const _hoisted_1$5 = { class: "cell-inner" };
-const _hoisted_2$5 = { class: "dev-icon" };
-const _hoisted_3$5 = {
+const _hoisted_1$6 = { class: "cell-inner" };
+const _hoisted_2$6 = { class: "dev-icon" };
+const _hoisted_3$6 = {
   key: 0,
   width: "28",
   height: "28",
@@ -8618,10 +8623,10 @@ const _hoisted_3$5 = {
   "stroke-linejoin": "round",
   "stroke-linecap": "round"
 };
-const _hoisted_4$3 = ["stroke"];
-const _hoisted_5$1 = ["fill", "stroke"];
-const _hoisted_6$1 = ["fill", "stroke"];
-const _hoisted_7$1 = {
+const _hoisted_4$4 = ["stroke"];
+const _hoisted_5$2 = ["fill", "stroke"];
+const _hoisted_6$2 = ["fill", "stroke"];
+const _hoisted_7$2 = {
   key: 1,
   width: "28",
   height: "28",
@@ -8630,9 +8635,9 @@ const _hoisted_7$1 = {
   "stroke-linejoin": "round",
   "stroke-linecap": "round"
 };
-const _hoisted_8$1 = ["stroke"];
-const _hoisted_9$1 = ["fill", "stroke"];
-const _hoisted_10$1 = {
+const _hoisted_8$2 = ["stroke"];
+const _hoisted_9$2 = ["fill", "stroke"];
+const _hoisted_10$2 = {
   key: 2,
   width: "28",
   height: "28",
@@ -8641,9 +8646,9 @@ const _hoisted_10$1 = {
   "stroke-linejoin": "round",
   "stroke-linecap": "round"
 };
-const _hoisted_11$1 = ["stroke"];
-const _hoisted_12$1 = ["fill", "stroke"];
-const _sfc_main$5 = /* @__PURE__ */ defineComponent({
+const _hoisted_11$2 = ["stroke"];
+const _hoisted_12$2 = ["fill", "stroke"];
+const _sfc_main$6 = /* @__PURE__ */ defineComponent({
   __name: "DeviceCell",
   props: {
     loaded: {},
@@ -8724,46 +8729,46 @@ const _sfc_main$5 = /* @__PURE__ */ defineComponent({
             ], -1)
           ])])) : createCommentVNode("", true)
         ], 64)) : (openBlock(), createElementBlock(Fragment, { key: 1 }, [
-          createBaseVNode("div", _hoisted_1$5, [
-            createBaseVNode("div", _hoisted_2$5, [
-              direction.value === "bidi" ? (openBlock(), createElementBlock("svg", _hoisted_3$5, [
+          createBaseVNode("div", _hoisted_1$6, [
+            createBaseVNode("div", _hoisted_2$6, [
+              direction.value === "bidi" ? (openBlock(), createElementBlock("svg", _hoisted_3$6, [
                 createBaseVNode("path", {
                   d: "m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z",
                   fill: "none",
                   stroke: sinkStroke.value
-                }, null, 8, _hoisted_4$3),
+                }, null, 8, _hoisted_4$4),
                 createBaseVNode("path", {
                   d: "M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z",
                   fill: txFill.value,
                   stroke: txStroke.value
-                }, null, 8, _hoisted_5$1),
+                }, null, 8, _hoisted_5$2),
                 createBaseVNode("path", {
                   d: "m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z",
                   fill: rxFill.value,
                   stroke: rxStroke.value
-                }, null, 8, _hoisted_6$1)
-              ])) : direction.value === "tx" ? (openBlock(), createElementBlock("svg", _hoisted_7$1, [
+                }, null, 8, _hoisted_6$2)
+              ])) : direction.value === "tx" ? (openBlock(), createElementBlock("svg", _hoisted_7$2, [
                 createBaseVNode("path", {
                   d: "m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z",
                   fill: "none",
                   stroke: sinkStroke.value
-                }, null, 8, _hoisted_8$1),
+                }, null, 8, _hoisted_8$2),
                 createBaseVNode("path", {
                   d: "M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z",
                   fill: txFill.value,
                   stroke: txStroke.value
-                }, null, 8, _hoisted_9$1)
-              ])) : (openBlock(), createElementBlock("svg", _hoisted_10$1, [
+                }, null, 8, _hoisted_9$2)
+              ])) : (openBlock(), createElementBlock("svg", _hoisted_10$2, [
                 createBaseVNode("path", {
                   d: "m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z",
                   fill: "none",
                   stroke: sinkStroke.value
-                }, null, 8, _hoisted_11$1),
+                }, null, 8, _hoisted_11$2),
                 createBaseVNode("path", {
                   d: "M 109.42897,19.940146 110.57103,110 H 130 L 99.999999,149.94015 70,110 h 20.571029 l -1.14206,-90.059854 z",
                   fill: rxFill.value,
                   stroke: rxStroke.value
-                }, null, 8, _hoisted_12$1)
+                }, null, 8, _hoisted_12$2)
               ]))
             ]),
             createBaseVNode("div", {
@@ -8781,15 +8786,15 @@ const _sfc_main$5 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const DeviceCell = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["__scopeId", "data-v-d94eee9d"]]);
-const _hoisted_1$4 = { class: "peer-row" };
-const _hoisted_2$4 = { class: "peer-text" };
-const _hoisted_3$4 = {
+const DeviceCell = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["__scopeId", "data-v-d94eee9d"]]);
+const _hoisted_1$5 = { class: "peer-row" };
+const _hoisted_2$5 = { class: "peer-text" };
+const _hoisted_3$5 = {
   key: 0,
   class: "peer-tag"
 };
-const _hoisted_4$2 = { class: "peer-cells" };
-const _sfc_main$4 = /* @__PURE__ */ defineComponent({
+const _hoisted_4$3 = { class: "peer-cells" };
+const _sfc_main$5 = /* @__PURE__ */ defineComponent({
   __name: "PeerRow",
   props: {
     peerId: {},
@@ -8839,7 +8844,7 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
       return { dot, bg, border: dot, name, ip };
     });
     return (_ctx, _cache) => {
-      return openBlock(), createElementBlock("div", _hoisted_1$4, [
+      return openBlock(), createElementBlock("div", _hoisted_1$5, [
         createBaseVNode("div", {
           class: "peer-info",
           style: normalizeStyle({ background: peerColors.value.bg, borderLeftColor: peerColors.value.border })
@@ -8848,13 +8853,13 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
             class: "peer-dot",
             style: normalizeStyle({ background: peerColors.value.dot })
           }, null, 4),
-          createBaseVNode("div", _hoisted_2$4, [
+          createBaseVNode("div", _hoisted_2$5, [
             createBaseVNode("div", {
               class: "peer-name",
               style: normalizeStyle({ color: peerColors.value.name })
             }, [
               createTextVNode(toDisplayString(__props.peerName) + " ", 1),
-              __props.isLocal ? (openBlock(), createElementBlock("span", _hoisted_3$4, "(you)")) : createCommentVNode("", true)
+              __props.isLocal ? (openBlock(), createElementBlock("span", _hoisted_3$5, "(you)")) : createCommentVNode("", true)
             ], 4),
             __props.peerIp ? (openBlock(), createElementBlock("div", {
               key: 0,
@@ -8863,7 +8868,7 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
             }, toDisplayString(__props.peerIp), 5)) : createCommentVNode("", true)
           ])
         ], 4),
-        createBaseVNode("div", _hoisted_4$2, [
+        createBaseVNode("div", _hoisted_4$3, [
           (openBlock(true), createElementBlock(Fragment, null, renderList(__props.channelCount, (i) => {
             return openBlock(), createBlock(DeviceCell, {
               key: i - 1,
@@ -8884,7 +8889,7 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const PeerRow = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-6833961a"]]);
+const PeerRow = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["__scopeId", "data-v-6833961a"]]);
 function useMqttBinding(getValue2, topic) {
   const value = computed(() => getValue2() ?? "");
   function set(newValue) {
@@ -8892,28 +8897,24 @@ function useMqttBinding(getValue2, topic) {
   }
   return { value, set };
 }
-const _hoisted_1$3 = { class: "osc-panel" };
-const _hoisted_2$3 = { class: "panel-header" };
-const _hoisted_3$3 = ["disabled"];
-const _hoisted_4$1 = ["value", "disabled"];
-const _hoisted_5 = { class: "field-row" };
-const _hoisted_6 = ["value", "disabled"];
-const _hoisted_7 = ["value", "disabled"];
-const _hoisted_8 = { class: "field-row" };
-const _hoisted_9 = ["disabled"];
-const _hoisted_10 = {
-  key: 0,
-  class: "field-row"
-};
-const _hoisted_11 = ["value", "disabled"];
-const _hoisted_12 = ["value", "disabled"];
-const _hoisted_13 = { class: "field-row" };
-const _hoisted_14 = ["value"];
-const _hoisted_15 = { class: "field-row" };
-const _hoisted_16 = ["value"];
-const _hoisted_17 = { class: "panel-actions" };
-const _hoisted_18 = ["disabled"];
-const _sfc_main$3 = /* @__PURE__ */ defineComponent({
+const _hoisted_1$4 = { class: "osc-panel" };
+const _hoisted_2$4 = { class: "panel-header" };
+const _hoisted_3$4 = ["disabled"];
+const _hoisted_4$2 = ["value", "disabled"];
+const _hoisted_5$1 = { class: "field-row" };
+const _hoisted_6$1 = ["value", "disabled"];
+const _hoisted_7$1 = ["value", "disabled"];
+const _hoisted_8$1 = { class: "field-row" };
+const _hoisted_9$1 = ["disabled"];
+const _hoisted_10$1 = ["value", "disabled"];
+const _hoisted_11$1 = ["value", "disabled"];
+const _hoisted_12$1 = { class: "field-row" };
+const _hoisted_13$1 = ["value"];
+const _hoisted_14$1 = ["value"];
+const _hoisted_15$1 = { class: "panel-actions" };
+const _hoisted_16$1 = ["disabled"];
+const _hoisted_17$1 = ["disabled"];
+const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   __name: "OscPanel",
   props: {
     peerId: {},
@@ -8952,6 +8953,395 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
       await window.api.invoke("mqtt:publish", true, topic, "0");
       emit2("remove");
     }
+    async function resetDevice() {
+      await window.api.invoke("mqtt:publish", true, `${prefix.value}/localudp/reset`, "1");
+    }
+    return (_ctx, _cache) => {
+      return openBlock(), createElementBlock("div", _hoisted_1$4, [
+        createBaseVNode("div", _hoisted_2$4, [
+          createBaseVNode("button", {
+            class: normalizeClass(["enable-btn", { active: isEnabled.value }]),
+            disabled: !__props.isLocal && __props.targetLocked,
+            onClick: toggleEnable
+          }, toDisplayString(isEnabled.value ? "ON" : "OFF"), 11, _hoisted_3$4),
+          createBaseVNode("input", {
+            class: "description-input",
+            value: unref(descBinding).value.value,
+            disabled: isLocked.value,
+            onChange: _cache[0] || (_cache[0] = ($event) => unref(descBinding).set($event.target.value))
+          }, null, 40, _hoisted_4$2)
+        ]),
+        createBaseVNode("section", null, [
+          _cache[7] || (_cache[7] = createBaseVNode("h4", null, "Forward to", -1)),
+          createBaseVNode("div", _hoisted_5$1, [
+            _cache[6] || (_cache[6] = createBaseVNode("label", null, "output 1", -1)),
+            createBaseVNode("input", {
+              value: unref(outputIPOne).value.value,
+              disabled: isLocked.value,
+              placeholder: "IP address",
+              onChange: _cache[1] || (_cache[1] = ($event) => unref(outputIPOne).set($event.target.value))
+            }, null, 40, _hoisted_6$1),
+            createBaseVNode("input", {
+              class: "port-input",
+              value: unref(outputPortOne).value.value,
+              disabled: isLocked.value,
+              placeholder: "port",
+              onChange: _cache[2] || (_cache[2] = ($event) => unref(outputPortOne).set($event.target.value))
+            }, null, 40, _hoisted_7$1)
+          ]),
+          createBaseVNode("div", _hoisted_8$1, [
+            createBaseVNode("button", {
+              class: normalizeClass(["toggle-btn label-slot", { on: unref(enableTwo).value.value === "1" }]),
+              disabled: isLocked.value,
+              onClick: _cache[3] || (_cache[3] = ($event) => unref(enableTwo).set(unref(enableTwo).value.value === "1" ? "0" : "1"))
+            }, toDisplayString(unref(enableTwo).value.value === "1" ? "output 2" : "output 2 off"), 11, _hoisted_9$1),
+            unref(enableTwo).value.value === "1" ? (openBlock(), createElementBlock(Fragment, { key: 0 }, [
+              createBaseVNode("input", {
+                value: unref(outputIPTwo).value.value,
+                disabled: isLocked.value,
+                placeholder: "IP address",
+                onChange: _cache[4] || (_cache[4] = ($event) => unref(outputIPTwo).set($event.target.value))
+              }, null, 40, _hoisted_10$1),
+              createBaseVNode("input", {
+                class: "port-input",
+                value: unref(outputPortTwo).value.value,
+                disabled: isLocked.value,
+                placeholder: "port",
+                onChange: _cache[5] || (_cache[5] = ($event) => unref(outputPortTwo).set($event.target.value))
+              }, null, 40, _hoisted_11$1)
+            ], 64)) : createCommentVNode("", true)
+          ])
+        ]),
+        createBaseVNode("section", null, [
+          _cache[9] || (_cache[9] = createBaseVNode("h4", null, "Receiving at", -1)),
+          createBaseVNode("div", _hoisted_12$1, [
+            _cache[8] || (_cache[8] = createBaseVNode("label", null, "input", -1)),
+            createBaseVNode("input", {
+              value: udp.value.peerLocalIP,
+              disabled: "",
+              placeholder: "IP address"
+            }, null, 8, _hoisted_13$1),
+            createBaseVNode("input", {
+              class: "port-input",
+              value: unref(inputPort).value.value,
+              disabled: "",
+              placeholder: "port"
+            }, null, 8, _hoisted_14$1)
+          ])
+        ]),
+        createBaseVNode("div", _hoisted_15$1, [
+          createBaseVNode("button", {
+            class: "reset-btn",
+            onClick: resetDevice,
+            disabled: isEnabled.value || !__props.isLocal && __props.targetLocked
+          }, " Reset to Defaults ", 8, _hoisted_16$1),
+          createBaseVNode("button", {
+            class: "remove-btn",
+            onClick: removeDevice,
+            disabled: isEnabled.value || !__props.isLocal && __props.targetLocked
+          }, " Remove Device ", 8, _hoisted_17$1)
+        ])
+      ]);
+    };
+  }
+});
+const OscPanel = /* @__PURE__ */ _export_sfc(_sfc_main$4, [["__scopeId", "data-v-480ac5b6"]]);
+const _hoisted_1$3 = { class: "ug-panel" };
+const _hoisted_2$3 = { class: "panel-header" };
+const _hoisted_3$3 = ["disabled"];
+const _hoisted_4$1 = ["value", "disabled"];
+const _hoisted_5 = { class: "field-row" };
+const _hoisted_6 = ["value", "disabled"];
+const _hoisted_7 = {
+  key: 0,
+  class: "unsupported-mode"
+};
+const _hoisted_8 = { class: "field-row" };
+const _hoisted_9 = ["value", "disabled"];
+const _hoisted_10 = { class: "field-row" };
+const _hoisted_11 = ["value", "disabled"];
+const _hoisted_12 = { class: "field-row" };
+const _hoisted_13 = ["value", "disabled"];
+const _hoisted_14 = {
+  key: 0,
+  class: "field-row"
+};
+const _hoisted_15 = ["value", "disabled"];
+const _hoisted_16 = ["value"];
+const _hoisted_17 = {
+  key: 1,
+  class: "field-row"
+};
+const _hoisted_18 = ["value", "disabled"];
+const _hoisted_19 = ["value"];
+const _hoisted_20 = { class: "field-row" };
+const _hoisted_21 = ["value", "disabled"];
+const _hoisted_22 = { class: "field-row" };
+const _hoisted_23 = ["value", "disabled"];
+const _hoisted_24 = ["value", "disabled"];
+const _hoisted_25 = { key: 0 };
+const _hoisted_26 = { class: "field-row" };
+const _hoisted_27 = ["value", "disabled"];
+const _hoisted_28 = { class: "field-row" };
+const _hoisted_29 = ["value", "disabled"];
+const _hoisted_30 = {
+  key: 0,
+  class: "field-row"
+};
+const _hoisted_31 = ["value", "disabled"];
+const _hoisted_32 = ["value"];
+const _hoisted_33 = {
+  key: 1,
+  class: "field-row"
+};
+const _hoisted_34 = ["value", "disabled"];
+const _hoisted_35 = ["value"];
+const _hoisted_36 = {
+  key: 2,
+  class: "field-row"
+};
+const _hoisted_37 = ["value", "disabled"];
+const _hoisted_38 = ["value"];
+const _hoisted_39 = {
+  key: 3,
+  class: "field-row"
+};
+const _hoisted_40 = ["value", "disabled"];
+const _hoisted_41 = ["value"];
+const _hoisted_42 = { class: "field-row" };
+const _hoisted_43 = ["value", "disabled"];
+const _hoisted_44 = { class: "field-row" };
+const _hoisted_45 = ["value", "disabled"];
+const _hoisted_46 = ["value", "disabled"];
+const _hoisted_47 = { key: 1 };
+const _hoisted_48 = { class: "field-row" };
+const _hoisted_49 = ["value", "disabled"];
+const _hoisted_50 = {
+  key: 0,
+  class: "field-row"
+};
+const _hoisted_51 = ["value", "disabled"];
+const _hoisted_52 = ["value"];
+const _hoisted_53 = {
+  key: 1,
+  class: "field-row"
+};
+const _hoisted_54 = ["value", "disabled"];
+const _hoisted_55 = ["value"];
+const _hoisted_56 = {
+  key: 2,
+  class: "field-row"
+};
+const _hoisted_57 = ["value", "disabled"];
+const _hoisted_58 = ["value"];
+const _hoisted_59 = {
+  key: 3,
+  class: "field-row"
+};
+const _hoisted_60 = ["value", "disabled"];
+const _hoisted_61 = ["value"];
+const _hoisted_62 = { class: "monitor-controls" };
+const _hoisted_63 = ["disabled"];
+const _hoisted_64 = {
+  key: 0,
+  class: "monitor-log"
+};
+const _hoisted_65 = { class: "panel-actions" };
+const _hoisted_66 = ["disabled"];
+const _hoisted_67 = ["disabled"];
+const MONITOR_LOG_CAPACITY = 200;
+const _sfc_main$3 = /* @__PURE__ */ defineComponent({
+  __name: "UltraGridPanel",
+  props: {
+    peerId: {},
+    channelIndex: {},
+    deviceState: {},
+    isLocal: { type: Boolean },
+    targetLocked: { type: Boolean },
+    peerSettings: {}
+  },
+  emits: ["remove"],
+  setup(__props, { emit: __emit }) {
+    const props = __props;
+    const emit2 = __emit;
+    const gui = computed(() => props.deviceState?.device?.gui ?? {});
+    const network = computed(() => gui.value?.network ?? {});
+    const av = computed(() => gui.value?.audioVideo ?? {});
+    const videoCapture = computed(() => av.value?.videoCapture ?? {});
+    const videoReciever = computed(() => av.value?.videoReciever ?? {});
+    const audioCapture = computed(() => av.value?.audioCapture ?? {});
+    const audioReceiver = computed(() => av.value?.audioReceiver ?? {});
+    const monitor = computed(() => gui.value?.monitor ?? {});
+    const isEnabled = computed(() => gui.value?.enable === "1");
+    const isLocked = computed(() => isEnabled.value || !props.isLocal && props.targetLocked);
+    const mode = computed(() => network.value?.mode ?? "1");
+    const videoType = computed(() => videoCapture.value?.type ?? "0");
+    const audioType = computed(() => audioCapture.value?.type ?? "0");
+    const audioRxType = computed(() => audioReceiver.value?.type ?? "0");
+    const monitorGateOn = computed(() => monitor.value?.monitorGate === "1");
+    const monitorLog = computed(() => monitor.value?.log ?? "");
+    const monitorLogBuffer = /* @__PURE__ */ ref([]);
+    const monitorLogText = computed(() => monitorLogBuffer.value.join("\n"));
+    watch(monitorLog, (line) => {
+      if (!line) return;
+      monitorLogBuffer.value.push(line);
+      while (monitorLogBuffer.value.length > MONITOR_LOG_CAPACITY) {
+        monitorLogBuffer.value.shift();
+      }
+    });
+    function clearMonitorLog() {
+      monitorLogBuffer.value = [];
+    }
+    const localMenus = computed(() => props.peerSettings?.localMenus ?? {});
+    const prefix = computed(
+      () => `/peer/${props.peerId}/rack/page_0/channel.${props.channelIndex}/device/gui`
+    );
+    function bind(subpath, getter) {
+      return useMqttBinding(getter, `${prefix.value}/${subpath}`);
+    }
+    const enableBinding = bind("enable", () => gui.value?.enable);
+    const descBinding = bind("description", () => gui.value?.description);
+    const modeBinding = bind("network/mode", () => network.value?.mode);
+    const connectionBinding = bind("audioVideo/connection", () => av.value?.connection);
+    const transmissionBinding = bind("audioVideo/transmission", () => av.value?.transmission);
+    const videoTypeBinding = bind("audioVideo/videoCapture/type", () => videoCapture.value?.type);
+    const textureSel = bind(
+      "audioVideo/videoCapture/texture/menu/selection",
+      () => videoCapture.value?.texture?.menu?.selection
+    );
+    const ndiSel = bind(
+      "audioVideo/videoCapture/ndi/menu/selection",
+      () => videoCapture.value?.ndi?.menu?.selection
+    );
+    const videoCodec = bind(
+      "audioVideo/videoCapture/advanced/compress/codec",
+      () => videoCapture.value?.advanced?.compress?.codec
+    );
+    const videoBitrate = bind(
+      "audioVideo/videoCapture/advanced/compress/bitrate",
+      () => videoCapture.value?.advanced?.compress?.bitrate
+    );
+    const videoFps = bind(
+      "audioVideo/videoCapture/advanced/texture/fps",
+      () => videoCapture.value?.advanced?.texture?.fps
+    );
+    const videoRxName = bind(
+      "audioVideo/videoReciever/texture/name",
+      () => videoReciever.value?.texture?.name
+    );
+    const audioTypeBinding = bind("audioVideo/audioCapture/type", () => audioCapture.value?.type);
+    const portaudioSel = bind(
+      "audioVideo/audioCapture/portaudio/menu/selection",
+      () => audioCapture.value?.portaudio?.menu?.selection
+    );
+    const coreaudioSel = bind(
+      "audioVideo/audioCapture/coreaudio/menu/selection",
+      () => audioCapture.value?.coreaudio?.menu?.selection
+    );
+    const wasapiSel = bind(
+      "audioVideo/audioCapture/wasapi/menu/selection",
+      () => audioCapture.value?.wasapi?.menu?.selection
+    );
+    const jackSel = bind(
+      "audioVideo/audioCapture/jack/menu/selection",
+      () => audioCapture.value?.jack?.menu?.selection
+    );
+    const audioCodec = bind(
+      "audioVideo/audioCapture/advanced/compress/codec",
+      () => audioCapture.value?.advanced?.compress?.codec
+    );
+    const audioBitrate = bind(
+      "audioVideo/audioCapture/advanced/compress/bitrate",
+      () => audioCapture.value?.advanced?.compress?.bitrate
+    );
+    const audioChannels = bind(
+      "audioVideo/audioCapture/advanced/channels/channels",
+      () => audioCapture.value?.advanced?.channels?.channels
+    );
+    const audioRxTypeBinding = bind("audioVideo/audioReceiver/type", () => audioReceiver.value?.type);
+    const portaudioRxSel = bind(
+      "audioVideo/audioReceiver/portaudio/menu/selection",
+      () => audioReceiver.value?.portaudio?.menu?.selection
+    );
+    const coreaudioRxSel = bind(
+      "audioVideo/audioReceiver/coreaudio/menu/selection",
+      () => audioReceiver.value?.coreaudio?.menu?.selection
+    );
+    const wasapiRxSel = bind(
+      "audioVideo/audioReceiver/wasapi/menu/selection",
+      () => audioReceiver.value?.wasapi?.menu?.selection
+    );
+    const jackRxSel = bind(
+      "audioVideo/audioReceiver/jack/menu/selection",
+      () => audioReceiver.value?.jack?.menu?.selection
+    );
+    const monitorGateBinding = bind("monitor/monitorGate", () => monitor.value?.monitorGate);
+    function toggleEnable() {
+      enableBinding.set(isEnabled.value ? "0" : "1");
+    }
+    function toggleMonitorGate() {
+      monitorGateBinding.set(monitorGateOn.value ? "0" : "1");
+    }
+    async function removeDevice() {
+      const topic = `/peer/${props.peerId}/rack/page_0/channel.${props.channelIndex}/loaded`;
+      await window.api.invoke("mqtt:publish", true, topic, "0");
+      emit2("remove");
+    }
+    function parseRange(raw) {
+      if (!raw || raw === "-default-" || raw === "0") return [];
+      const entries = [];
+      for (const entry of raw.split("|")) {
+        const m = entry.match(/^(\d+)\s+(.+)$/);
+        if (m) entries.push({ index: m[1], label: m[2] });
+        else if (entry) entries.push({ index: entry, label: entry });
+      }
+      return entries;
+    }
+    function parseTextureRange(raw) {
+      if (!raw || raw === "-default-") return [];
+      return raw.split("|").filter(Boolean);
+    }
+    const textureOptions = computed(
+      () => parseTextureRange(localMenus.value?.textureCaptureRange ?? "")
+    );
+    const ndiOptions = computed(
+      () => parseTextureRange(localMenus.value?.ndiRange ?? "")
+    );
+    const portaudioCaptureOptions = computed(
+      () => parseRange(localMenus.value?.portaudioCaptureRange ?? "")
+    );
+    const coreaudioCaptureOptions = computed(
+      () => parseRange(localMenus.value?.coreaudioCaptureRange ?? "")
+    );
+    const wasapiCaptureOptions = computed(
+      () => parseRange(localMenus.value?.wasapiCaptureRange ?? "")
+    );
+    const jackCaptureOptions = computed(
+      () => parseRange(localMenus.value?.jackCaptureRange ?? "")
+    );
+    const portaudioReceiveOptions = computed(
+      () => parseRange(localMenus.value?.portaudioReceiveRange ?? "")
+    );
+    const coreaudioReceiveOptions = computed(
+      () => parseRange(localMenus.value?.coreaudioReceiveRange ?? "")
+    );
+    const wasapiReceiveOptions = computed(
+      () => parseRange(localMenus.value?.wasapiReceiveRange ?? "")
+    );
+    const jackReceiveOptions = computed(
+      () => parseRange(localMenus.value?.jackReceiveRange ?? "")
+    );
+    const modeSupported = computed(() => mode.value === "1" || mode.value === "4");
+    const modeLabels = {
+      "1": "send to router",
+      "2": "receive from router",
+      "4": "peer to peer (automatic)",
+      "5": "peer to peer (manual)",
+      "7": "capture to local"
+    };
+    async function refreshEnumeration() {
+      await window.api.invoke("enumerate:refresh");
+    }
     return (_ctx, _cache) => {
       return openBlock(), createElementBlock("div", _hoisted_1$3, [
         createBaseVNode("div", _hoisted_2$3, [
@@ -8968,85 +9358,358 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
           }, null, 40, _hoisted_4$1)
         ]),
         createBaseVNode("section", null, [
-          _cache[9] || (_cache[9] = createBaseVNode("h4", null, "Forward to", -1)),
+          _cache[26] || (_cache[26] = createBaseVNode("h4", null, "Network", -1)),
           createBaseVNode("div", _hoisted_5, [
-            _cache[6] || (_cache[6] = createBaseVNode("label", null, "output 1", -1)),
-            createBaseVNode("input", {
-              value: unref(outputIPOne).value.value,
+            _cache[25] || (_cache[25] = createBaseVNode("label", null, "mode", -1)),
+            createBaseVNode("select", {
+              value: mode.value,
               disabled: isLocked.value,
-              placeholder: "IP address",
-              onChange: _cache[1] || (_cache[1] = ($event) => unref(outputIPOne).set($event.target.value))
-            }, null, 40, _hoisted_6),
-            createBaseVNode("input", {
-              class: "port-input",
-              value: unref(outputPortOne).value.value,
-              disabled: isLocked.value,
-              placeholder: "port",
-              onChange: _cache[2] || (_cache[2] = ($event) => unref(outputPortOne).set($event.target.value))
-            }, null, 40, _hoisted_7)
-          ]),
-          createBaseVNode("div", _hoisted_8, [
-            _cache[7] || (_cache[7] = createBaseVNode("label", null, "output 2", -1)),
-            createBaseVNode("button", {
-              class: normalizeClass(["toggle-btn", { on: unref(enableTwo).value.value === "1" }]),
-              disabled: isLocked.value,
-              onClick: _cache[3] || (_cache[3] = ($event) => unref(enableTwo).set(unref(enableTwo).value.value === "1" ? "0" : "1"))
-            }, toDisplayString(unref(enableTwo).value.value === "1" ? "enabled" : "disabled"), 11, _hoisted_9)
-          ]),
-          unref(enableTwo).value.value === "1" ? (openBlock(), createElementBlock("div", _hoisted_10, [
-            _cache[8] || (_cache[8] = createBaseVNode("label", null, null, -1)),
-            createBaseVNode("input", {
-              value: unref(outputIPTwo).value.value,
-              disabled: isLocked.value,
-              placeholder: "IP address",
-              onChange: _cache[4] || (_cache[4] = ($event) => unref(outputIPTwo).set($event.target.value))
-            }, null, 40, _hoisted_11),
-            createBaseVNode("input", {
-              class: "port-input",
-              value: unref(outputPortTwo).value.value,
-              disabled: isLocked.value,
-              placeholder: "port",
-              onChange: _cache[5] || (_cache[5] = ($event) => unref(outputPortTwo).set($event.target.value))
-            }, null, 40, _hoisted_12)
-          ])) : createCommentVNode("", true)
-        ]),
-        createBaseVNode("section", null, [
-          _cache[12] || (_cache[12] = createBaseVNode("h4", null, "Receiving at", -1)),
-          createBaseVNode("div", _hoisted_13, [
-            _cache[10] || (_cache[10] = createBaseVNode("label", null, "local IP", -1)),
-            createBaseVNode("input", {
-              value: udp.value.peerLocalIP,
-              disabled: ""
-            }, null, 8, _hoisted_14)
-          ]),
-          createBaseVNode("div", _hoisted_15, [
-            _cache[11] || (_cache[11] = createBaseVNode("label", null, "input port", -1)),
-            createBaseVNode("input", {
-              class: "port-input",
-              value: unref(inputPort).value.value,
-              disabled: ""
-            }, null, 8, _hoisted_16)
+              onChange: _cache[1] || (_cache[1] = ($event) => unref(modeBinding).set($event.target.value))
+            }, [..._cache[24] || (_cache[24] = [
+              createStaticVNode('<option value="1" data-v-a0200ce5>send to router (UDP)</option><option value="2" data-v-a0200ce5>receive from router</option><option value="4" data-v-a0200ce5>peer to peer (automatic)</option><option value="5" data-v-a0200ce5>peer to peer (manual)</option><option value="7" data-v-a0200ce5>capture to local</option>', 5)
+            ])], 40, _hoisted_6)
           ])
         ]),
-        createBaseVNode("div", _hoisted_17, [
+        !modeSupported.value ? (openBlock(), createElementBlock("div", _hoisted_7, " Mode " + toDisplayString(mode.value) + " (" + toDisplayString(modeLabels[mode.value] ?? "unknown") + ") not yet supported (M2c). Switch to mode 1 or 4 to continue. ", 1)) : (openBlock(), createElementBlock(Fragment, { key: 1 }, [
+          createBaseVNode("section", null, [
+            _cache[31] || (_cache[31] = createBaseVNode("h4", null, "Connection", -1)),
+            createBaseVNode("div", _hoisted_8, [
+              _cache[28] || (_cache[28] = createBaseVNode("label", null, "direction", -1)),
+              createBaseVNode("select", {
+                value: av.value.connection,
+                disabled: isLocked.value,
+                onChange: _cache[2] || (_cache[2] = ($event) => unref(connectionBinding).set($event.target.value))
+              }, [..._cache[27] || (_cache[27] = [
+                createBaseVNode("option", { value: "0" }, "send", -1),
+                createBaseVNode("option", { value: "1" }, "receive", -1),
+                createBaseVNode("option", { value: "2" }, "both", -1)
+              ])], 40, _hoisted_9)
+            ]),
+            createBaseVNode("div", _hoisted_10, [
+              _cache[30] || (_cache[30] = createBaseVNode("label", null, "transmission", -1)),
+              createBaseVNode("select", {
+                value: av.value.transmission,
+                disabled: isLocked.value,
+                onChange: _cache[3] || (_cache[3] = ($event) => unref(transmissionBinding).set($event.target.value))
+              }, [..._cache[29] || (_cache[29] = [
+                createBaseVNode("option", { value: "0" }, "video", -1),
+                createBaseVNode("option", { value: "1" }, "audio", -1),
+                createBaseVNode("option", { value: "2" }, "video+audio", -1)
+              ])], 40, _hoisted_11)
+            ])
+          ]),
+          createBaseVNode("section", null, [
+            _cache[42] || (_cache[42] = createBaseVNode("h4", null, "Video Capture", -1)),
+            createBaseVNode("div", _hoisted_12, [
+              _cache[33] || (_cache[33] = createBaseVNode("label", null, "source", -1)),
+              createBaseVNode("select", {
+                value: videoType.value,
+                disabled: isLocked.value,
+                onChange: _cache[4] || (_cache[4] = ($event) => unref(videoTypeBinding).set($event.target.value))
+              }, [..._cache[32] || (_cache[32] = [
+                createBaseVNode("option", { value: "0" }, "texture", -1),
+                createBaseVNode("option", { value: "1" }, "ndi", -1)
+              ])], 40, _hoisted_13)
+            ]),
+            videoType.value === "0" ? (openBlock(), createElementBlock("div", _hoisted_14, [
+              _cache[35] || (_cache[35] = createBaseVNode("label", null, "texture", -1)),
+              createBaseVNode("select", {
+                value: unref(textureSel).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[5] || (_cache[5] = ($event) => unref(textureSel).set($event.target.value))
+              }, [
+                _cache[34] || (_cache[34] = createBaseVNode("option", { value: "-default-" }, "— select —", -1)),
+                (openBlock(true), createElementBlock(Fragment, null, renderList(textureOptions.value, (name) => {
+                  return openBlock(), createElementBlock("option", {
+                    key: name,
+                    value: name
+                  }, toDisplayString(name), 9, _hoisted_16);
+                }), 128))
+              ], 40, _hoisted_15)
+            ])) : createCommentVNode("", true),
+            videoType.value === "1" ? (openBlock(), createElementBlock("div", _hoisted_17, [
+              _cache[37] || (_cache[37] = createBaseVNode("label", null, "ndi source", -1)),
+              createBaseVNode("select", {
+                value: unref(ndiSel).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[6] || (_cache[6] = ($event) => unref(ndiSel).set($event.target.value))
+              }, [
+                _cache[36] || (_cache[36] = createBaseVNode("option", { value: "-default-" }, "— select —", -1)),
+                (openBlock(true), createElementBlock(Fragment, null, renderList(ndiOptions.value, (name) => {
+                  return openBlock(), createElementBlock("option", {
+                    key: name,
+                    value: name
+                  }, toDisplayString(name), 9, _hoisted_19);
+                }), 128))
+              ], 40, _hoisted_18)
+            ])) : createCommentVNode("", true),
+            createBaseVNode("div", _hoisted_20, [
+              _cache[39] || (_cache[39] = createBaseVNode("label", null, "codec", -1)),
+              createBaseVNode("select", {
+                value: unref(videoCodec).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[7] || (_cache[7] = ($event) => unref(videoCodec).set($event.target.value))
+              }, [..._cache[38] || (_cache[38] = [
+                createBaseVNode("option", { value: "2" }, "H.264", -1),
+                createBaseVNode("option", { value: "1" }, "JPEG", -1)
+              ])], 40, _hoisted_21)
+            ]),
+            createBaseVNode("div", _hoisted_22, [
+              _cache[40] || (_cache[40] = createBaseVNode("label", null, "bitrate (M)", -1)),
+              createBaseVNode("input", {
+                class: "port-input",
+                value: unref(videoBitrate).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[8] || (_cache[8] = ($event) => unref(videoBitrate).set($event.target.value))
+              }, null, 40, _hoisted_23),
+              _cache[41] || (_cache[41] = createBaseVNode("label", null, "fps", -1)),
+              createBaseVNode("input", {
+                class: "port-input",
+                value: unref(videoFps).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[9] || (_cache[9] = ($event) => unref(videoFps).set($event.target.value))
+              }, null, 40, _hoisted_24)
+            ])
+          ]),
+          mode.value === "4" ? (openBlock(), createElementBlock("section", _hoisted_25, [
+            _cache[44] || (_cache[44] = createBaseVNode("h4", null, "Video Receiver (Mode 4)", -1)),
+            createBaseVNode("div", _hoisted_26, [
+              _cache[43] || (_cache[43] = createBaseVNode("label", null, "spout name", -1)),
+              createBaseVNode("input", {
+                value: unref(videoRxName).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[10] || (_cache[10] = ($event) => unref(videoRxName).set($event.target.value))
+              }, null, 40, _hoisted_27)
+            ])
+          ])) : createCommentVNode("", true),
+          createBaseVNode("section", null, [
+            _cache[59] || (_cache[59] = createBaseVNode("h4", null, "Audio Capture", -1)),
+            createBaseVNode("div", _hoisted_28, [
+              _cache[46] || (_cache[46] = createBaseVNode("label", null, "backend", -1)),
+              createBaseVNode("select", {
+                value: audioType.value,
+                disabled: isLocked.value,
+                onChange: _cache[11] || (_cache[11] = ($event) => unref(audioTypeBinding).set($event.target.value))
+              }, [..._cache[45] || (_cache[45] = [
+                createBaseVNode("option", { value: "0" }, "portaudio", -1),
+                createBaseVNode("option", { value: "1" }, "coreaudio", -1),
+                createBaseVNode("option", { value: "2" }, "wasapi", -1),
+                createBaseVNode("option", { value: "3" }, "jack", -1)
+              ])], 40, _hoisted_29)
+            ]),
+            audioType.value === "0" ? (openBlock(), createElementBlock("div", _hoisted_30, [
+              _cache[48] || (_cache[48] = createBaseVNode("label", null, "device", -1)),
+              createBaseVNode("select", {
+                value: unref(portaudioSel).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[12] || (_cache[12] = ($event) => unref(portaudioSel).set($event.target.value))
+              }, [
+                _cache[47] || (_cache[47] = createBaseVNode("option", { value: "-default-" }, "— select —", -1)),
+                (openBlock(true), createElementBlock(Fragment, null, renderList(portaudioCaptureOptions.value, (d) => {
+                  return openBlock(), createElementBlock("option", {
+                    key: d.index,
+                    value: d.label
+                  }, toDisplayString(d.label), 9, _hoisted_32);
+                }), 128))
+              ], 40, _hoisted_31)
+            ])) : createCommentVNode("", true),
+            audioType.value === "1" ? (openBlock(), createElementBlock("div", _hoisted_33, [
+              _cache[50] || (_cache[50] = createBaseVNode("label", null, "device", -1)),
+              createBaseVNode("select", {
+                value: unref(coreaudioSel).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[13] || (_cache[13] = ($event) => unref(coreaudioSel).set($event.target.value))
+              }, [
+                _cache[49] || (_cache[49] = createBaseVNode("option", { value: "-default-" }, "— select —", -1)),
+                (openBlock(true), createElementBlock(Fragment, null, renderList(coreaudioCaptureOptions.value, (d) => {
+                  return openBlock(), createElementBlock("option", {
+                    key: d.index,
+                    value: d.label
+                  }, toDisplayString(d.label), 9, _hoisted_35);
+                }), 128))
+              ], 40, _hoisted_34)
+            ])) : createCommentVNode("", true),
+            audioType.value === "2" ? (openBlock(), createElementBlock("div", _hoisted_36, [
+              _cache[52] || (_cache[52] = createBaseVNode("label", null, "device", -1)),
+              createBaseVNode("select", {
+                value: unref(wasapiSel).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[14] || (_cache[14] = ($event) => unref(wasapiSel).set($event.target.value))
+              }, [
+                _cache[51] || (_cache[51] = createBaseVNode("option", { value: "-default-" }, "— select —", -1)),
+                (openBlock(true), createElementBlock(Fragment, null, renderList(wasapiCaptureOptions.value, (d) => {
+                  return openBlock(), createElementBlock("option", {
+                    key: d.index,
+                    value: d.label
+                  }, toDisplayString(d.label), 9, _hoisted_38);
+                }), 128))
+              ], 40, _hoisted_37)
+            ])) : createCommentVNode("", true),
+            audioType.value === "3" ? (openBlock(), createElementBlock("div", _hoisted_39, [
+              _cache[54] || (_cache[54] = createBaseVNode("label", null, "device", -1)),
+              createBaseVNode("select", {
+                value: unref(jackSel).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[15] || (_cache[15] = ($event) => unref(jackSel).set($event.target.value))
+              }, [
+                _cache[53] || (_cache[53] = createBaseVNode("option", { value: "-default-" }, "— select —", -1)),
+                (openBlock(true), createElementBlock(Fragment, null, renderList(jackCaptureOptions.value, (d) => {
+                  return openBlock(), createElementBlock("option", {
+                    key: d.index,
+                    value: d.label
+                  }, toDisplayString(d.label), 9, _hoisted_41);
+                }), 128))
+              ], 40, _hoisted_40)
+            ])) : createCommentVNode("", true),
+            createBaseVNode("div", _hoisted_42, [
+              _cache[56] || (_cache[56] = createBaseVNode("label", null, "codec", -1)),
+              createBaseVNode("select", {
+                value: unref(audioCodec).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[16] || (_cache[16] = ($event) => unref(audioCodec).set($event.target.value))
+              }, [..._cache[55] || (_cache[55] = [
+                createBaseVNode("option", { value: "1" }, "OPUS", -1)
+              ])], 40, _hoisted_43)
+            ]),
+            createBaseVNode("div", _hoisted_44, [
+              _cache[57] || (_cache[57] = createBaseVNode("label", null, "bitrate", -1)),
+              createBaseVNode("input", {
+                class: "port-input",
+                value: unref(audioBitrate).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[17] || (_cache[17] = ($event) => unref(audioBitrate).set($event.target.value))
+              }, null, 40, _hoisted_45),
+              _cache[58] || (_cache[58] = createBaseVNode("label", null, "channels", -1)),
+              createBaseVNode("input", {
+                class: "port-input",
+                value: unref(audioChannels).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[18] || (_cache[18] = ($event) => unref(audioChannels).set($event.target.value))
+              }, null, 40, _hoisted_46)
+            ])
+          ]),
+          mode.value === "4" ? (openBlock(), createElementBlock("section", _hoisted_47, [
+            _cache[70] || (_cache[70] = createBaseVNode("h4", null, "Audio Receiver (Mode 4)", -1)),
+            createBaseVNode("div", _hoisted_48, [
+              _cache[61] || (_cache[61] = createBaseVNode("label", null, "backend", -1)),
+              createBaseVNode("select", {
+                value: audioRxType.value,
+                disabled: isLocked.value,
+                onChange: _cache[19] || (_cache[19] = ($event) => unref(audioRxTypeBinding).set($event.target.value))
+              }, [..._cache[60] || (_cache[60] = [
+                createBaseVNode("option", { value: "0" }, "portaudio", -1),
+                createBaseVNode("option", { value: "1" }, "coreaudio", -1),
+                createBaseVNode("option", { value: "2" }, "wasapi", -1),
+                createBaseVNode("option", { value: "3" }, "jack", -1)
+              ])], 40, _hoisted_49)
+            ]),
+            audioRxType.value === "0" ? (openBlock(), createElementBlock("div", _hoisted_50, [
+              _cache[63] || (_cache[63] = createBaseVNode("label", null, "device", -1)),
+              createBaseVNode("select", {
+                value: unref(portaudioRxSel).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[20] || (_cache[20] = ($event) => unref(portaudioRxSel).set($event.target.value))
+              }, [
+                _cache[62] || (_cache[62] = createBaseVNode("option", { value: "-default-" }, "— select —", -1)),
+                (openBlock(true), createElementBlock(Fragment, null, renderList(portaudioReceiveOptions.value, (d) => {
+                  return openBlock(), createElementBlock("option", {
+                    key: d.index,
+                    value: d.label
+                  }, toDisplayString(d.label), 9, _hoisted_52);
+                }), 128))
+              ], 40, _hoisted_51)
+            ])) : createCommentVNode("", true),
+            audioRxType.value === "1" ? (openBlock(), createElementBlock("div", _hoisted_53, [
+              _cache[65] || (_cache[65] = createBaseVNode("label", null, "device", -1)),
+              createBaseVNode("select", {
+                value: unref(coreaudioRxSel).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[21] || (_cache[21] = ($event) => unref(coreaudioRxSel).set($event.target.value))
+              }, [
+                _cache[64] || (_cache[64] = createBaseVNode("option", { value: "-default-" }, "— select —", -1)),
+                (openBlock(true), createElementBlock(Fragment, null, renderList(coreaudioReceiveOptions.value, (d) => {
+                  return openBlock(), createElementBlock("option", {
+                    key: d.index,
+                    value: d.label
+                  }, toDisplayString(d.label), 9, _hoisted_55);
+                }), 128))
+              ], 40, _hoisted_54)
+            ])) : createCommentVNode("", true),
+            audioRxType.value === "2" ? (openBlock(), createElementBlock("div", _hoisted_56, [
+              _cache[67] || (_cache[67] = createBaseVNode("label", null, "device", -1)),
+              createBaseVNode("select", {
+                value: unref(wasapiRxSel).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[22] || (_cache[22] = ($event) => unref(wasapiRxSel).set($event.target.value))
+              }, [
+                _cache[66] || (_cache[66] = createBaseVNode("option", { value: "-default-" }, "— select —", -1)),
+                (openBlock(true), createElementBlock(Fragment, null, renderList(wasapiReceiveOptions.value, (d) => {
+                  return openBlock(), createElementBlock("option", {
+                    key: d.index,
+                    value: d.label
+                  }, toDisplayString(d.label), 9, _hoisted_58);
+                }), 128))
+              ], 40, _hoisted_57)
+            ])) : createCommentVNode("", true),
+            audioRxType.value === "3" ? (openBlock(), createElementBlock("div", _hoisted_59, [
+              _cache[69] || (_cache[69] = createBaseVNode("label", null, "device", -1)),
+              createBaseVNode("select", {
+                value: unref(jackRxSel).value.value,
+                disabled: isLocked.value,
+                onChange: _cache[23] || (_cache[23] = ($event) => unref(jackRxSel).set($event.target.value))
+              }, [
+                _cache[68] || (_cache[68] = createBaseVNode("option", { value: "-default-" }, "— select —", -1)),
+                (openBlock(true), createElementBlock(Fragment, null, renderList(jackReceiveOptions.value, (d) => {
+                  return openBlock(), createElementBlock("option", {
+                    key: d.index,
+                    value: d.label
+                  }, toDisplayString(d.label), 9, _hoisted_61);
+                }), 128))
+              ], 40, _hoisted_60)
+            ])) : createCommentVNode("", true)
+          ])) : createCommentVNode("", true)
+        ], 64)),
+        createBaseVNode("section", null, [
+          createBaseVNode("h4", null, [
+            _cache[71] || (_cache[71] = createTextVNode(" Monitor ", -1)),
+            createBaseVNode("span", _hoisted_62, [
+              createBaseVNode("button", {
+                class: "toggle-btn",
+                onClick: clearMonitorLog,
+                disabled: monitorLogBuffer.value.length === 0
+              }, " Clear ", 8, _hoisted_63),
+              createBaseVNode("button", {
+                class: normalizeClass(["toggle-btn", { on: monitorGateOn.value }]),
+                onClick: toggleMonitorGate
+              }, toDisplayString(monitorGateOn.value ? "ON" : "OFF"), 3)
+            ])
+          ]),
+          monitorGateOn.value ? (openBlock(), createElementBlock("pre", _hoisted_64, toDisplayString(monitorLogText.value || "(no output)"), 1)) : createCommentVNode("", true)
+        ]),
+        createBaseVNode("div", _hoisted_65, [
+          createBaseVNode("button", {
+            class: "refresh-btn",
+            onClick: refreshEnumeration,
+            disabled: isEnabled.value
+          }, " Refresh Devices ", 8, _hoisted_66),
           createBaseVNode("button", {
             class: "remove-btn",
             onClick: removeDevice,
             disabled: isEnabled.value || !__props.isLocal && __props.targetLocked
-          }, " Remove Device ", 8, _hoisted_18)
+          }, " Remove Device ", 8, _hoisted_67)
         ])
       ]);
     };
   }
 });
-const OscPanel = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-v-eac365bd"]]);
+const UltraGridPanel = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-v-a0200ce5"]]);
 const _hoisted_1$2 = { class: "panel-breadcrumb" };
 const _hoisted_2$2 = {
   key: 0,
   class: "panel-type-label"
 };
 const _hoisted_3$2 = {
-  key: 2,
+  key: 3,
   class: "unsupported"
 };
 const _sfc_main$2 = /* @__PURE__ */ defineComponent({
@@ -9057,6 +9720,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
     peerName: {},
     roomName: {},
     deviceState: {},
+    peerSettings: {},
     isLocal: { type: Boolean },
     targetLocked: { type: Boolean }
   },
@@ -9105,12 +9769,21 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
           "is-local": __props.isLocal,
           "target-locked": __props.targetLocked,
           onRemove: _cache[1] || (_cache[1] = ($event) => emit2("close"))
-        }, null, 8, ["peer-id", "channel-index", "device-state", "is-local", "target-locked"])) : (openBlock(), createElementBlock("div", _hoisted_3$2, " Device type " + toDisplayString(loaded.value) + " is not yet supported in this milestone. ", 1))
+        }, null, 8, ["peer-id", "channel-index", "device-state", "is-local", "target-locked"])) : loaded.value === "2" ? (openBlock(), createBlock(UltraGridPanel, {
+          key: 2,
+          "peer-id": __props.peerId,
+          "channel-index": __props.channelIndex,
+          "device-state": __props.deviceState,
+          "peer-settings": __props.peerSettings,
+          "is-local": __props.isLocal,
+          "target-locked": __props.targetLocked,
+          onRemove: _cache[2] || (_cache[2] = ($event) => emit2("close"))
+        }, null, 8, ["peer-id", "channel-index", "device-state", "peer-settings", "is-local", "target-locked"])) : (openBlock(), createElementBlock("div", _hoisted_3$2, " Device type " + toDisplayString(loaded.value) + " is not yet supported in this milestone. ", 1))
       ], 32);
     };
   }
 });
-const DevicePanel = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["__scopeId", "data-v-b4380dbe"]]);
+const DevicePanel = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["__scopeId", "data-v-778108c0"]]);
 const _hoisted_1$1 = { class: "tile-grid" };
 const _hoisted_2$1 = ["disabled", "title", "onClick"];
 const _hoisted_3$1 = { class: "tile-label" };
@@ -9128,7 +9801,7 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent({
     const tiles = [
       { type: 1, label: "OSC", color: "#36ABFF", enabled: true },
       { type: 4, label: "StageControl", color: "#1BFEE9", enabled: true },
-      { type: 2, label: "UltraGrid", color: "#F0DE01", enabled: false },
+      { type: 2, label: "UltraGrid", color: "#F0DE01", enabled: true },
       { type: 6, label: "MoCap", color: "#FFA126", enabled: false }
     ];
     const style = computePosition();
@@ -9188,7 +9861,7 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const AddDevicePopup = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-162a6586"]]);
+const AddDevicePopup = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["__scopeId", "data-v-6d60ece8"]]);
 const _hoisted_1 = { class: "matrix-scroll" };
 const _hoisted_2 = { class: "matrix-grid" };
 const _hoisted_3 = { class: "header-cells" };
@@ -9249,6 +9922,9 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
     function peerChannels(peerId) {
       return peerState.peers[peerId]?.rack?.page_0 ?? {};
     }
+    function peerSettings(peerId) {
+      return peerState.peers[peerId]?.settings ?? {};
+    }
     function peerColor(peerId) {
       return peerState.peers[peerId]?.settings?.background?.color ?? "";
     }
@@ -9281,7 +9957,6 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
     const popupChannel = /* @__PURE__ */ ref(0);
     const popupRect = /* @__PURE__ */ ref(null);
     function onOpenPopup(peerId, channelIndex, rect) {
-      if (peerId !== ownPeerId.value) return;
       popupPeerId.value = peerId;
       popupChannel.value = channelIndex;
       popupRect.value = rect;
@@ -9344,15 +10019,16 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
           "peer-name": unref(roster).entries[panelPeerId.value]?.peerName ?? "",
           "room-name": "",
           "device-state": peerChannels(panelPeerId.value)[`channel.${panelChannel.value}`],
+          "peer-settings": peerSettings(panelPeerId.value),
           "is-local": panelPeerId.value === ownPeerId.value,
           "target-locked": isLocked(panelPeerId.value),
           onClose: closePanel
-        }, null, 8, ["peer-id", "channel-index", "peer-name", "device-state", "is-local", "target-locked"])) : createCommentVNode("", true)
+        }, null, 8, ["peer-id", "channel-index", "peer-name", "device-state", "peer-settings", "is-local", "target-locked"])) : createCommentVNode("", true)
       ], 4);
     };
   }
 });
-const MatrixView = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-b487a436"]]);
+const MatrixView = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-2d3ea316"]]);
 const router = createRouter({
   history: createMemoryHistory(),
   routes: [
@@ -9360,4 +10036,4 @@ const router = createRouter({
     { path: "/matrix", name: "matrix", component: MatrixView }
   ]
 });
-createApp(_sfc_main$7).use(router).mount("#app");
+createApp(_sfc_main$8).use(router).mount("#app");

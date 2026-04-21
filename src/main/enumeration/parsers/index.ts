@@ -10,8 +10,11 @@ import { parseTextureSender } from './textureSender'
 // probes syphon; on Windows it probes spout. Both feed the same
 // `textureCaptureRange` topic.
 export function registerDefaultBackends(): void {
-  const textureArg = process.platform === 'win32' ? 'spout:help' : 'syphon:help'
-  registerBackend('textureCapture', { args: ['-t', textureArg], parse: parseTextureSender })
+  const textureBackend = process.platform === 'win32' ? 'spout' : 'syphon'
+  registerBackend('textureCapture', {
+    args: ['-t', `${textureBackend}:help`],
+    parse: (stdout) => parseTextureSender(stdout, textureBackend)
+  })
 
   registerBackend('ndi', { args: ['-t', 'ndi:help'], parse: parseNdi })
 

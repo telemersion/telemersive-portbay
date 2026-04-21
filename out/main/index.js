@@ -380,8 +380,17 @@ function allocateRoomPorts(roomId2, channelIndex) {
     inputPort: base + 9
   };
 }
+function allocateUgPorts(roomId2, channelIndex) {
+  const base = portBase(roomId2, channelIndex);
+  return {
+    videoPort: base + 2,
+    audioPort: base + 4
+  };
+}
+function allocateStageControlPort(roomId2) {
+  return roomId2 * 1e3 + 902;
+}
 const dnsLookup = util.promisify(dns__namespace.lookup);
-const STAGECONTROL_ROOM_PORT = 11902;
 class OscDevice {
   channelIndex;
   deviceType;
@@ -390,6 +399,7 @@ class OscDevice {
   brokerHost;
   localPorts;
   roomPorts;
+  stageControlPort;
   publishedTopics = [];
   publish;
   hasRetained;
@@ -420,13 +430,14 @@ class OscDevice {
     this.brokerHost = brokerHost;
     this.localPorts = allocateLocalPorts(channelIndex);
     this.roomPorts = allocateRoomPorts(roomId2, channelIndex);
+    this.stageControlPort = allocateStageControlPort(roomId2);
     this.publish = publish;
     this.hasRetained = hasRetained;
     this.outputIPOne = localIP2;
     this.outputIPTwo = localIP2;
   }
   roomDestPort() {
-    return this.deviceType === 4 ? STAGECONTROL_ROOM_PORT : this.roomPorts.inputPort;
+    return this.deviceType === 4 ? this.stageControlPort : this.roomPorts.inputPort;
   }
   publishDefaults() {
     this.emitDefaults(false);
@@ -614,24 +625,583 @@ class OscDevice {
     this.stopRelay();
   }
 }
-function performShutdown(bus2, deviceRouter2, publishedTopics) {
-  if (deviceRouter2) {
-    deviceRouter2.destroyAll();
+const DEFAULT_SPAWN_GRACE_MS = 2e3;
+const DEFAULT_TERMINATION_GRACE_MS = 500;
+class ChildProcessLifecycle {
+  constructor(opts) {
+    this.opts = opts;
   }
-  for (const topic of publishedTopics) {
+  child = null;
+  spawnedAt = 0;
+  stopRequested = false;
+  killTimer = null;
+  stdoutBuf = "";
+  stderrBuf = "";
+  start() {
+    if (this.child) return;
+    this.stopRequested = false;
+    this.stdoutBuf = "";
+    this.stderrBuf = "";
+    this.spawnedAt = Date.now();
+    let child;
     try {
-      bus2.publish(1, topic, "");
+      child = child_process.spawn(this.opts.binary, this.opts.args, {
+        env: this.opts.env ?? process.env
+      });
+    } catch {
+      this.opts.onExit?.("spawn-failure", null);
+      return;
+    }
+    this.child = child;
+    child.stdout?.on("data", (chunk) => {
+      this.stdoutBuf = this.emitLines(this.stdoutBuf + chunk.toString(), this.opts.onStdout);
+    });
+    child.stderr?.on("data", (chunk) => {
+      this.stderrBuf = this.emitLines(this.stderrBuf + chunk.toString(), this.opts.onStderr);
+    });
+    child.on("error", () => {
+      this.finalize("spawn-failure", null);
+    });
+    child.on("exit", (code) => {
+      if (this.stdoutBuf) {
+        this.opts.onStdout?.(this.stdoutBuf);
+        this.stdoutBuf = "";
+      }
+      if (this.stderrBuf) {
+        this.opts.onStderr?.(this.stderrBuf);
+        this.stderrBuf = "";
+      }
+      if (this.stopRequested) {
+        this.finalize("killed", code);
+      } else if (Date.now() - this.spawnedAt < (this.opts.spawnGraceMs ?? DEFAULT_SPAWN_GRACE_MS)) {
+        this.finalize("spawn-failure", code);
+      } else {
+        this.finalize("crash", code);
+      }
+    });
+  }
+  stop() {
+    if (!this.child || this.stopRequested) return;
+    this.stopRequested = true;
+    const child = this.child;
+    try {
+      child.kill("SIGTERM");
     } catch {
     }
+    this.killTimer = setTimeout(() => {
+      this.killTimer = null;
+      if (this.child === child) {
+        try {
+          child.kill("SIGKILL");
+        } catch {
+        }
+      }
+    }, this.opts.terminationGraceMs ?? DEFAULT_TERMINATION_GRACE_MS);
   }
-  try {
-    bus2.leave();
-  } catch {
+  isRunning() {
+    return this.child !== null && !this.stopRequested;
   }
-  try {
-    bus2.disconnect();
-  } catch {
+  emitLines(buffer2, emit) {
+    if (!emit) return "";
+    const parts = buffer2.split(/\r?\n/);
+    const remainder = parts.pop() ?? "";
+    for (const line of parts) emit(line);
+    return remainder;
   }
+  finalize(reason, code) {
+    if (this.killTimer) {
+      clearTimeout(this.killTimer);
+      this.killTimer = null;
+    }
+    this.child = null;
+    this.opts.onExit?.(reason, code);
+  }
+}
+function defaultUltraGridConfig() {
+  return {
+    audioVideo: {
+      videoCapture: {
+        type: "0",
+        texture: { menu: { selection: "-default-" } },
+        ndi: { menu: { selection: "-default-" } },
+        custom: { customFlags: { flags: "-none-" } },
+        advanced: {
+          compress: { codec: "2", bitrate: "10" },
+          texture: { fps: "0" },
+          filter: { params: "-none-" }
+        }
+      },
+      videoReciever: {
+        type: "0",
+        texture: { name: "s_channel_0", closedWindow: "0" },
+        ndi: { name: "s_channel_0" },
+        custom: { customFlags: { flags: "-none-" } },
+        advanced: { postprocessor: { params: "-none-" } }
+      },
+      audioCapture: {
+        type: "0",
+        portaudio: { menu: { selection: "-default-" } },
+        coreaudio: { menu: { selection: "-default-" } },
+        wasapi: { menu: { selection: "-default-" } },
+        jack: { menu: { selection: "-default-" } },
+        testcard: { frequency: "440", volume: "-18" },
+        custom: { customFlags: { flags: "-none-" } },
+        advanced: {
+          compress: { codec: "1", bitrate: "64000", samplerate: "32000" },
+          channels: { channels: "1" }
+        }
+      },
+      audioReceiver: {
+        type: "0",
+        portaudio: { menu: { selection: "-default-" } },
+        coreaudio: { menu: { selection: "-default-" } },
+        wasapi: { menu: { selection: "-default-" } },
+        jack: { menu: { selection: "-default-" } },
+        custom: { customFlags: { flags: "-none-" } },
+        advanced: { channels: { params: "-none-" } }
+      },
+      advanced: {
+        custom: { customFlags: { flags: "-none-" } },
+        advanced: {
+          params: { params: "-none-" },
+          encryption: { key: "-none-" }
+        }
+      },
+      connection: "2",
+      transmission: "2"
+    },
+    network: {
+      mode: "1",
+      holepuncher: { stunServer: "stun4.l.google.com:19302" },
+      local: { customSending: "0.0.0.0:0" },
+      ports: { alternativeChannel: "0", receiveChannel: "0" }
+    },
+    monitor: {
+      log: "0",
+      monitorGate: "0"
+    },
+    remoteValues: {
+      local_os: "osx"
+    },
+    enable: "0",
+    print_cli: "0"
+  };
+}
+const CONFIG_SUBPATHS = /* @__PURE__ */ new Set([
+  "audioVideo/videoCapture/type",
+  "audioVideo/videoCapture/texture/menu/selection",
+  "audioVideo/videoCapture/ndi/menu/selection",
+  "audioVideo/videoCapture/custom/customFlags/flags",
+  "audioVideo/videoCapture/advanced/compress/codec",
+  "audioVideo/videoCapture/advanced/compress/bitrate",
+  "audioVideo/videoCapture/advanced/texture/fps",
+  "audioVideo/videoCapture/advanced/filter/params",
+  "audioVideo/videoReciever/type",
+  "audioVideo/videoReciever/texture/name",
+  "audioVideo/videoReciever/texture/closedWindow",
+  "audioVideo/videoReciever/ndi/name",
+  "audioVideo/videoReciever/custom/customFlags/flags",
+  "audioVideo/videoReciever/advanced/postprocessor/params",
+  "audioVideo/audioCapture/type",
+  "audioVideo/audioCapture/portaudio/menu/selection",
+  "audioVideo/audioCapture/coreaudio/menu/selection",
+  "audioVideo/audioCapture/wasapi/menu/selection",
+  "audioVideo/audioCapture/jack/menu/selection",
+  "audioVideo/audioCapture/testcard/frequency",
+  "audioVideo/audioCapture/testcard/volume",
+  "audioVideo/audioCapture/custom/customFlags/flags",
+  "audioVideo/audioCapture/advanced/compress/codec",
+  "audioVideo/audioCapture/advanced/compress/bitrate",
+  "audioVideo/audioCapture/advanced/compress/samplerate",
+  "audioVideo/audioCapture/advanced/channels/channels",
+  "audioVideo/audioReceiver/type",
+  "audioVideo/audioReceiver/portaudio/menu/selection",
+  "audioVideo/audioReceiver/coreaudio/menu/selection",
+  "audioVideo/audioReceiver/wasapi/menu/selection",
+  "audioVideo/audioReceiver/jack/menu/selection",
+  "audioVideo/audioReceiver/custom/customFlags/flags",
+  "audioVideo/audioReceiver/advanced/channels/params",
+  "audioVideo/advanced/custom/customFlags/flags",
+  "audioVideo/advanced/advanced/params/params",
+  "audioVideo/advanced/advanced/encryption/key",
+  "audioVideo/connection",
+  "audioVideo/transmission",
+  "network/mode",
+  "network/holepuncher/stunServer",
+  "network/local/customSending",
+  "network/ports/alternativeChannel",
+  "network/ports/receiveChannel",
+  "monitor/log",
+  "monitor/monitorGate",
+  "remoteValues/local_os",
+  "enable",
+  "print_cli"
+]);
+const TRANSIENT_SUBPATHS = /* @__PURE__ */ new Set([
+  "description",
+  "indicators",
+  "updateMenu"
+]);
+function isConfigSubpath(subpath) {
+  return CONFIG_SUBPATHS.has(subpath);
+}
+function isTransientSubpath(subpath) {
+  return TRANSIENT_SUBPATHS.has(subpath);
+}
+function applyTopicChange(config, subpath, value) {
+  if (!CONFIG_SUBPATHS.has(subpath)) return config;
+  const next = structuredClone(config);
+  const parts = subpath.split("/");
+  let cursor = next;
+  for (let i = 0; i < parts.length - 1; i++) {
+    cursor = cursor[parts[i]];
+  }
+  cursor[parts[parts.length - 1]] = value;
+  return next;
+}
+function snapshotTopics(config) {
+  const out = [];
+  for (const subpath of CONFIG_SUBPATHS) {
+    const parts = subpath.split("/");
+    let cursor = config;
+    for (const part of parts) {
+      cursor = cursor[part];
+    }
+    out.push({ subpath, value: cursor });
+  }
+  return out;
+}
+function buildUvArgs(input) {
+  const { config } = input;
+  const mode = config.network.mode;
+  const args = mode === "1" ? buildMode1Args(input) : mode === "4" ? buildMode4Args(input) : null;
+  if (!args) throw new Error(`UltraGrid mode ${mode} not yet supported (M2c)`);
+  return args.map((a) => a.replace(/'/g, ""));
+}
+function buildMode1Args(input) {
+  const { config, ports, indexes, host, localOs } = input;
+  const args = ["--param", "log-color=no"];
+  pushVideoCapture(args, config, indexes, localOs);
+  pushAudioCapture(args, config, indexes);
+  args.push(
+    `-P${ports.videoPort}:${ports.videoPort}:${ports.audioPort}:${ports.audioPort}`,
+    host
+  );
+  return args;
+}
+function buildMode4Args(input) {
+  const { config, indexes, textureReceiverName, localOs } = input;
+  const args = ["--param", "log-color=no"];
+  pushVideoCapture(args, config, indexes, localOs);
+  pushAudioCapture(args, config, indexes);
+  args.push("-d", `${textureDisplayPrefix(localOs)}'${textureReceiverName}'`);
+  if (indexes.audioReceive !== null) {
+    args.push("-r", `portaudio:${indexes.audioReceive}`);
+  }
+  return args;
+}
+function textureCapturePrefix(localOs) {
+  return localOs === "win" ? "spout" : "syphon";
+}
+function textureDisplayPrefix(localOs) {
+  return localOs === "win" ? "gl:spout=" : "gl:syphon=";
+}
+function textureFpsFlag(localOs) {
+  return localOs === "win" ? "fps" : "override_fps";
+}
+function pushVideoCapture(args, config, indexes, localOs) {
+  const type = config.audioVideo.videoCapture.type;
+  if (type === "0") {
+    let flag = textureCapturePrefix(localOs);
+    if (indexes.textureCapture && indexes.textureCapture !== "-default-") {
+      flag += `:${indexes.textureCapture}`;
+    }
+    const fps = config.audioVideo.videoCapture.advanced.texture.fps;
+    if (fps && fps !== "0") flag += `:${textureFpsFlag(localOs)}=${fps}`;
+    args.push("-t", flag);
+  } else if (type === "1") {
+    let flag = "ndi";
+    if (indexes.ndiCapture && indexes.ndiCapture !== "-default-") {
+      flag += `:${indexes.ndiCapture}`;
+    }
+    args.push("-t", flag);
+  }
+  const { codec, bitrate } = config.audioVideo.videoCapture.advanced.compress;
+  args.push("-c", `libavcodec:codec=${videoCodecName(codec)}:bitrate=${bitrate}M`);
+}
+function pushAudioCapture(args, config, indexes) {
+  if (indexes.audioCapture !== null) {
+    args.push("-s", `portaudio:${indexes.audioCapture}`);
+  }
+  const audio = config.audioVideo.audioCapture.advanced;
+  args.push("--audio-codec", `${audioCodecName(audio.compress.codec)}:bitrate=${audio.compress.bitrate}`);
+  args.push("--audio-capture-format", `channels=${audio.channels.channels}`);
+}
+function videoCodecName(codec) {
+  if (codec === "2") return "H.264";
+  if (codec === "1") return "JPEG";
+  throw new Error(`unsupported video codec id: ${codec}`);
+}
+function audioCodecName(codec) {
+  if (codec === "1") return "OPUS";
+  throw new Error(`unsupported audio codec id: ${codec}`);
+}
+function extractMenuIndex(rangeString, selection) {
+  if (!rangeString || !selection) return null;
+  for (const entry of rangeString.split("|")) {
+    const match = entry.match(/^(\d+)\s+(.+)$/);
+    if (!match) continue;
+    if (entryMatchesSelection(match[2], selection)) return parseInt(match[1], 10);
+  }
+  return null;
+}
+function entryMatchesSelection(entry, selection) {
+  if (entry === selection) return true;
+  const selectionWithoutPrefix = selection.replace(/^\d+\s+/, "");
+  if (entry === selectionWithoutPrefix) return true;
+  const entryHead = stripDeviceTail(entry);
+  const selectionHead = stripDeviceTail(selectionWithoutPrefix);
+  if (!selectionHead) return false;
+  return entryHead.startsWith(selectionHead);
+}
+function stripDeviceTail(s) {
+  const idx = s.indexOf(" (out:");
+  return idx === -1 ? s : s.slice(0, idx);
+}
+class MonitorLogBuffer {
+  constructor(capacity = 50) {
+    this.capacity = capacity;
+  }
+  lines = [];
+  append(line) {
+    this.lines.push(line);
+    while (this.lines.length > this.capacity) this.lines.shift();
+  }
+  snapshot() {
+    return this.lines.join("\n");
+  }
+  replay() {
+    return this.lines;
+  }
+  clear() {
+    this.lines.length = 0;
+  }
+}
+const UG_DEVICE_TYPE = 2;
+const MONITOR_LOG_CAPACITY = 50;
+function detectLocalOs() {
+  if (process.platform === "darwin") return "osx";
+  if (process.platform === "win32") return "win";
+  return "linux";
+}
+class UltraGridDevice {
+  channelIndex;
+  deviceType = UG_DEVICE_TYPE;
+  peerId;
+  roomId;
+  host;
+  publish;
+  hasRetained;
+  getSetting;
+  resolveBinary;
+  spawnFactory;
+  localOs;
+  config = defaultUltraGridConfig();
+  publishedTopics = /* @__PURE__ */ new Set();
+  monitor = new MonitorLogBuffer(MONITOR_LOG_CAPACITY);
+  monitorGateOn = false;
+  lifecycle = null;
+  enabled = false;
+  constructor(opts) {
+    this.channelIndex = opts.channelIndex;
+    this.peerId = opts.peerId;
+    this.roomId = opts.roomId;
+    this.host = opts.host ?? "telemersion.zhdk.ch";
+    this.publish = opts.publish;
+    this.hasRetained = opts.hasRetained ?? (() => false);
+    this.getSetting = opts.getSetting ?? (() => null);
+    this.resolveBinary = opts.resolveBinary ?? (() => null);
+    this.spawnFactory = opts.spawnFactory ?? ((o) => new ChildProcessLifecycle(o));
+    this.localOs = opts.osOverride ?? detectLocalOs();
+    this.config = applyTopicChange(this.config, "remoteValues/local_os", this.localOs);
+  }
+  publishDefaults() {
+    const defaults = applyTopicChange(
+      defaultUltraGridConfig(),
+      "remoteValues/local_os",
+      this.localOs
+    );
+    for (const { subpath, value } of snapshotTopics(defaults)) {
+      this.pubDeviceGui(subpath, value, false);
+    }
+    this.pubDeviceGui("description", "UG", false);
+    this.pubDeviceGui("indicators/inputIndicator", "0", false);
+    this.pubDeviceGui("indicators/outputIndicator", "0", false);
+    this.pubDeviceGui("monitor/log", "", false);
+    this.pubDeviceGui("monitor/monitorGate", "0", false);
+  }
+  pubDeviceGui(subpath, value, force) {
+    const topic = topics.deviceGui(this.peerId, this.channelIndex, subpath);
+    this.publishedTopics.add(topic);
+    if (!force && this.hasRetained(topic)) return;
+    this.publish(1, topic, value);
+  }
+  onTopicChanged(subpath, value) {
+    if (!subpath.startsWith("gui/")) return;
+    const tail = subpath.slice("gui/".length);
+    if (tail === "enable") {
+      this.handleEnable(value === "1");
+      return;
+    }
+    if (tail === "monitor/monitorGate") {
+      this.handleMonitorGate(value === "1");
+      return;
+    }
+    if (tail === "monitor/log") return;
+    if (isTransientSubpath(tail)) return;
+    if (!isConfigSubpath(tail)) return;
+    this.config = applyTopicChange(this.config, tail, value);
+  }
+  handleEnable(enable) {
+    if (enable && !this.enabled) {
+      this.enabled = true;
+      this.startProcess();
+    } else if (!enable && this.enabled) {
+      this.enabled = false;
+      this.stopProcess();
+    }
+  }
+  handleMonitorGate(on) {
+    if (on === this.monitorGateOn) return;
+    this.monitorGateOn = on;
+    if (on) this.replayMonitorLog();
+  }
+  startProcess() {
+    const binary = this.resolveBinary();
+    if (!binary) {
+      this.logWarn("UltraGrid binary not found; cannot start");
+      this.publishEnableOff();
+      this.enabled = false;
+      return;
+    }
+    const indexes = this.resolveMenuIndexes();
+    const ports = allocateUgPorts(this.roomId, this.channelIndex);
+    let args;
+    try {
+      args = buildUvArgs({
+        config: this.config,
+        ports,
+        indexes,
+        host: this.host,
+        textureReceiverName: this.config.audioVideo.videoReciever.texture.name,
+        localOs: this.localOs
+      });
+    } catch (err) {
+      this.logWarn(`cannot build UV args: ${err.message}`);
+      this.publishEnableOff();
+      this.enabled = false;
+      return;
+    }
+    this.monitor.clear();
+    const cliLine = `${binary} ${args.join(" ")}`;
+    console.log(`[UG ch.${this.channelIndex}] spawn: ${cliLine}`);
+    const cliLogLine = `[CLI] ${cliLine}`;
+    this.monitor.append(cliLogLine);
+    if (this.monitorGateOn) this.publishMonitorLine(cliLogLine);
+    this.lifecycle = this.spawnFactory({
+      binary,
+      args,
+      env: sanitizedChildEnv$1(),
+      onStdout: (line) => this.handleLogLine(line),
+      onStderr: (line) => this.handleLogLine(line),
+      onExit: (reason, code) => this.handleExit(reason, code, ports)
+    });
+    this.lifecycle.start();
+  }
+  stopProcess() {
+    this.lifecycle?.stop();
+  }
+  handleLogLine(line) {
+    this.monitor.append(line);
+    if (this.monitorGateOn) this.publishMonitorLine(line);
+  }
+  publishMonitorLine(line) {
+    this.publish(
+      1,
+      topics.deviceGui(this.peerId, this.channelIndex, "monitor/log"),
+      line
+    );
+  }
+  replayMonitorLog() {
+    for (const line of this.monitor.replay()) {
+      this.publishMonitorLine(line);
+    }
+  }
+  handleExit(reason, code, _ports) {
+    this.lifecycle = null;
+    if (reason === "killed") return;
+    const label = reason === "spawn-failure" ? "UV spawn-failure" : "UV crashed";
+    this.logWarn(`${label} (code ${code}); disabling`);
+    this.enabled = false;
+    this.publishEnableOff();
+  }
+  publishEnableOff() {
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
+  }
+  logWarn(message) {
+    const line = `[NG] ${message}`;
+    this.monitor.append(line);
+    if (this.monitorGateOn) this.publishMonitorLine(line);
+    console.warn(`[UG ch.${this.channelIndex}] ${message}`);
+  }
+  resolveMenuIndexes() {
+    const videoType = this.config.audioVideo.videoCapture.type;
+    const audioType = this.config.audioVideo.audioCapture.type;
+    const audioRxType = this.config.audioVideo.audioReceiver.type;
+    const textureSel = this.config.audioVideo.videoCapture.texture.menu.selection;
+    const ndiSel = this.config.audioVideo.videoCapture.ndi.menu.selection;
+    const textureCapture = videoType === "0" ? textureSel : null;
+    const ndiCapture = videoType === "1" ? ndiSel : null;
+    return {
+      textureCapture,
+      ndiCapture,
+      audioCapture: this.resolveAudioIndex(audioType, "Capture", true),
+      audioReceive: this.resolveAudioIndex(audioRxType, "Receive", false)
+    };
+  }
+  resolveAudioIndex(type, side, capture) {
+    const backend = audioBackendFromType(type);
+    if (!backend) return null;
+    const section = capture ? this.config.audioVideo.audioCapture : this.config.audioVideo.audioReceiver;
+    const selection = section[backend]?.menu?.selection;
+    if (!selection || selection === "-default-") return null;
+    const rangeTopic = `localMenus/${backend}${side}Range`;
+    const range = this.getSetting(rangeTopic) ?? "";
+    return extractMenuIndex(range, selection);
+  }
+  teardown() {
+    this.lifecycle?.stop();
+    this.lifecycle = null;
+    return [...this.publishedTopics];
+  }
+  destroy() {
+    this.lifecycle?.stop();
+    this.lifecycle = null;
+  }
+}
+function audioBackendFromType(type) {
+  if (type === "0") return "portaudio";
+  if (type === "1") return "coreaudio";
+  if (type === "2") return "wasapi";
+  if (type === "3") return "jack";
+  return null;
+}
+function sanitizedChildEnv$1() {
+  const env = { ...process.env };
+  delete env.ELECTRON_RUN_AS_NODE;
+  delete env.__CFBundleIdentifier;
+  delete env.MallocNanoZone;
+  return env;
 }
 class SpawnCliError extends Error {
   constructor(message, cause) {
@@ -701,6 +1271,25 @@ function spawnCli(binary, args, options = {}) {
       resolve2({ stdout, stderr, exitCode: code });
     });
   });
+}
+function performShutdown(bus2, deviceRouter2, publishedTopics) {
+  if (deviceRouter2) {
+    deviceRouter2.destroyAll();
+  }
+  for (const topic of publishedTopics) {
+    try {
+      bus2.publish(1, topic, "");
+    } catch {
+    }
+  }
+  try {
+    bus2.leave();
+  } catch {
+  }
+  try {
+    bus2.disconnect();
+  } catch {
+  }
 }
 const BACKEND_TOPIC_TAIL = {
   textureCapture: "localMenus/textureCaptureRange",
@@ -779,13 +1368,20 @@ async function runBackend(backend, uvPath, peerId, publish) {
     return;
   }
   try {
-    const result = await spawnCli(uvPath, spec.args);
+    const result = await spawnCli(uvPath, spec.args, { env: sanitizedChildEnv() });
     const parsed = spec.parse(result.stdout);
     publish(1, backendTopic(peerId, backend), parsed.range);
   } catch (err) {
     publish(1, backendTopic(peerId, backend), backendFallback(backend));
     console.warn(`[enumerate] ${backend} failed: ${err?.message ?? err}`);
   }
+}
+function sanitizedChildEnv() {
+  const env = { ...process.env };
+  delete env.ELECTRON_RUN_AS_NODE;
+  delete env.__CFBundleIdentifier;
+  delete env.MallocNanoZone;
+  return env;
 }
 const EMPTY_RANGE = { range: "0", count: 0 };
 const DEFAULT_RANGE = { range: "-default-", count: 0 };
@@ -849,7 +1445,7 @@ function parseJack(stdout) {
 function parseWasapi(stdout) {
   return parseGenericAudio("wasapi", stdout);
 }
-function parseTextureSender(stdout) {
+function parseTextureSender(stdout, backend = "syphon") {
   if (/Unable to open capture device/i.test(stdout)) return DEFAULT_RANGE;
   const lines = stdout.split("\n");
   const headerIdx = lines.findIndex((l) => /Available servers:/i.test(l));
@@ -863,15 +1459,25 @@ function parseTextureSender(stdout) {
     if (!m) continue;
     const app = m[1].trim();
     const name = m[2].trim();
-    const id = name ? `${app}/${name}` : app;
-    entries.push(`name='${id}'`);
+    entries.push(formatSelection(backend, app, name));
   }
   if (entries.length === 0) return DEFAULT_RANGE;
   return { range: entries.join("|"), count: entries.length };
 }
+function formatSelection(backend, app, name) {
+  if (backend === "syphon") {
+    if (name) return `app='${app}':name='${name}'`;
+    return `app='${app}'`;
+  }
+  const id = name ? `${app}/${name}` : app;
+  return `name='${id}'`;
+}
 function registerDefaultBackends() {
-  const textureArg = process.platform === "win32" ? "spout:help" : "syphon:help";
-  registerBackend("textureCapture", { args: ["-t", textureArg], parse: parseTextureSender });
+  const textureBackend = process.platform === "win32" ? "spout" : "syphon";
+  registerBackend("textureCapture", {
+    args: ["-t", `${textureBackend}:help`],
+    parse: (stdout) => parseTextureSender(stdout, textureBackend)
+  });
   registerBackend("ndi", { args: ["-t", "ndi:help"], parse: parseNdi });
   registerBackend("portaudioCapture", { args: ["-s", "portaudio:help"], parse: parsePortaudio });
   registerBackend("portaudioReceive", { args: ["-r", "portaudio:help"], parse: parsePortaudio });
@@ -895,10 +1501,12 @@ let peerJoined = false;
 const retainedTopics = /* @__PURE__ */ new Map();
 const RACK_SAVE_DEBOUNCE_MS = 500;
 let rackSaveTimer = null;
+let rackSaveSuppressed = false;
 function currentRackSnapshot() {
   return buildRackSnapshot(retainedTopics, localPeerId);
 }
 function scheduleRackSave() {
+  if (rackSaveSuppressed) return;
   if (rackSaveTimer) clearTimeout(rackSaveTimer);
   rackSaveTimer = setTimeout(() => {
     rackSaveTimer = null;
@@ -981,7 +1589,7 @@ function publishInitSequence() {
   trackedPublish(1, topics.settings(peerId, "localMenus/coreaudioReceiveRange"), "0");
   trackedPublish(1, topics.settings(peerId, "localMenus/wasapiReceiveRange"), "0");
   trackedPublish(1, topics.settings(peerId, "localMenus/jackReceiveRange"), "0");
-  trackedPublish(1, topics.settings(peerId, "localProps/ug_enable"), "0");
+  trackedPublish(1, topics.settings(peerId, "localProps/ug_enable"), resolveUgPath() ? "1" : "0");
   trackedPublish(1, topics.settings(peerId, "localProps/natnet_enable"), "0");
   const savedRack = loadRack();
   if (Object.keys(savedRack).length > 0) {
@@ -1053,6 +1661,19 @@ function setupBus() {
               loadSettings().brokerUrl
             );
           }
+          if (type === 2) {
+            return new UltraGridDevice({
+              channelIndex: channel,
+              peerId: localPeerId,
+              localIP,
+              roomId,
+              publish: (retained, topic, value) => trackedPublish(retained, topic, value),
+              hasRetained: (topic) => retainedTopics.has(topic),
+              getSetting: (subpath) => retainedTopics.get(topics.settings(localPeerId, subpath)) ?? null,
+              host: loadSettings().brokerUrl,
+              resolveBinary: resolveUgPath
+            });
+          }
           return null;
         },
         (retained, topic, value) => trackedPublish(retained, topic, value)
@@ -1122,6 +1743,13 @@ function setupIpcHandlers() {
     bus.join(peerName, roomName2, roomPwd);
   });
   electron.ipcMain.handle("bus:leave", () => {
+    flushRackSave();
+    rackSaveSuppressed = true;
+    try {
+      deviceRouter?.destroyAll();
+    } finally {
+      rackSaveSuppressed = false;
+    }
     bus.leave();
   });
   electron.ipcMain.handle("mqtt:publish", async (_event, retained, topic, ...values) => {
@@ -1203,6 +1831,7 @@ electron.app.on("before-quit", (e) => {
   isShuttingDown = true;
   e.preventDefault();
   flushRackSave();
+  rackSaveSuppressed = true;
   if (bus) {
     performShutdown(bus, deviceRouter, [...retainedTopics.keys()]);
   }

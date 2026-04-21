@@ -2,15 +2,13 @@ import * as dgram from 'dgram'
 import * as dns from 'dns'
 import { promisify } from 'util'
 import { topics } from '../../shared/topics'
-import { allocateLocalPorts, allocateRoomPorts, type OscPorts } from '../portAllocator'
+import { allocateLocalPorts, allocateRoomPorts, allocateStageControlPort, type OscPorts } from '../portAllocator'
 import type { DeviceHandler } from './types'
 
 const dnsLookup = promisify(dns.lookup)
 
 type PublishFn = (retained: 0 | 1, topic: string, value: string) => void
 type HasRetainedFn = (topic: string) => boolean
-
-const STAGECONTROL_ROOM_PORT = 11902
 
 export class OscDevice implements DeviceHandler {
   readonly channelIndex: number
@@ -20,6 +18,7 @@ export class OscDevice implements DeviceHandler {
   private brokerHost: string
   private localPorts: OscPorts
   private roomPorts: OscPorts
+  private stageControlPort: number
   private publishedTopics: string[] = []
   private publish: PublishFn
   private hasRetained: HasRetainedFn
@@ -62,6 +61,7 @@ export class OscDevice implements DeviceHandler {
     this.brokerHost = brokerHost
     this.localPorts = allocateLocalPorts(channelIndex)
     this.roomPorts = allocateRoomPorts(roomId, channelIndex)
+    this.stageControlPort = allocateStageControlPort(roomId)
     this.publish = publish
     this.hasRetained = hasRetained
     this.outputIPOne = localIP
@@ -69,7 +69,7 @@ export class OscDevice implements DeviceHandler {
   }
 
   private roomDestPort(): number {
-    return this.deviceType === 4 ? STAGECONTROL_ROOM_PORT : this.roomPorts.inputPort
+    return this.deviceType === 4 ? this.stageControlPort : this.roomPorts.inputPort
   }
 
   publishDefaults(): void {

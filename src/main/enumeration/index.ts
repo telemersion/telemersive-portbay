@@ -58,11 +58,19 @@ async function runBackend(
   }
 
   try {
-    const result = await spawnCli(uvPath, spec.args)
+    const result = await spawnCli(uvPath, spec.args, { env: sanitizedChildEnv() })
     const parsed = spec.parse(result.stdout)
     publish(1, backendTopic(peerId, backend), parsed.range)
   } catch (err: any) {
     publish(1, backendTopic(peerId, backend), backendFallback(backend))
     console.warn(`[enumerate] ${backend} failed: ${err?.message ?? err}`)
   }
+}
+
+function sanitizedChildEnv(): NodeJS.ProcessEnv {
+  const env = { ...process.env }
+  delete env.ELECTRON_RUN_AS_NODE
+  delete env.__CFBundleIdentifier
+  delete env.MallocNanoZone
+  return env
 }

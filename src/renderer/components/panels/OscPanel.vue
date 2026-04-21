@@ -40,12 +40,16 @@ function toggleEnable() {
 
 async function removeDevice() {
   const topic = `/peer/${props.peerId}/rack/page_0/channel.${props.channelIndex}/loaded`
-  await window.api.invoke('mqtt:publish', true, topic, '0')
+  await window.api.invoke('mqtt:publish', { topic, value: '0', retain: true })
   emit('remove')
 }
 
 async function resetDevice() {
-  await window.api.invoke('mqtt:publish', true, `${prefix.value}/localudp/reset`, '1')
+  await window.api.invoke('mqtt:publish', {
+    topic: `${prefix.value}/localudp/reset`,
+    value: '1',
+    retain: true
+  })
 }
 </script>
 

@@ -40,7 +40,8 @@ function makeDevice(overrides: {
     getSetting: overrides.getSetting ?? (() => null),
     resolveBinary: overrides.resolveBinary ?? (() => '/fake/uv'),
     host: 'telemersion.zhdk.ch',
-    spawnFactory
+    spawnFactory,
+    osOverride: 'win'
   })
   return { device, publish, spawned }
 }
@@ -80,7 +81,7 @@ describe('UltraGridDevice', () => {
     expect(spawned).toHaveLength(1)
     expect(spawned[0].start).toHaveBeenCalled()
     expect(spawned[0].opts.binary).toBe('/fake/uv')
-    expect(spawned[0].opts.args).toContain("gl:spout='room_channel_0'")
+    expect(spawned[0].opts.args).toContain("gl:spout=room_channel_0")
     expect(spawned[0].opts.args).toContain('-t')
   })
 
@@ -112,7 +113,7 @@ describe('UltraGridDevice', () => {
     expect(enableCalls.some((c) => c[2] === '0')).toBe(true)
   })
 
-  it('leaves enable alone on spawn-failure exit (user retries)', () => {
+  it('publishes enable=0 on spawn-failure exit', () => {
     const { device, publish, spawned } = makeDevice()
     device.onTopicChanged('gui/network/mode', '4')
     device.onTopicChanged('gui/enable', '1')
@@ -121,7 +122,7 @@ describe('UltraGridDevice', () => {
     const enableOff = publish.mock.calls.filter(
       (c) => c[1] === '/peer/p1/rack/page_0/channel.0/device/gui/enable' && c[2] === '0'
     )
-    expect(enableOff).toHaveLength(0)
+    expect(enableOff.length).toBeGreaterThan(0)
   })
 
   it('does not publish enable=0 on killed exit', () => {
@@ -195,7 +196,7 @@ describe('UltraGridDevice', () => {
     expect(logCalls).toHaveLength(0)
   })
 
-  it('publishes monitor/log when monitorGate flips 0→1 and on subsequent log lines', () => {
+  it('publishes monitor/log per-line when monitorGate flips 0→1 and on subsequent log lines', () => {
     const { device, publish, spawned } = makeDevice()
     device.onTopicChanged('gui/network/mode', '4')
     device.onTopicChanged('gui/enable', '1')
@@ -207,16 +208,18 @@ describe('UltraGridDevice', () => {
     let logCalls = publish.mock.calls.filter(
       (c) => c[1] === '/peer/p1/rack/page_0/channel.0/device/gui/monitor/log'
     )
-    expect(logCalls.length).toBeGreaterThan(0)
-    expect(logCalls[logCalls.length - 1][2]).toContain('line A')
-    expect(logCalls[logCalls.length - 1][2]).toContain('line B')
+    const replayValues = logCalls.map((c) => c[2])
+    expect(replayValues).toContain('line A')
+    expect(replayValues).toContain('line B')
+    expect(replayValues.every((v) => !v.includes('\n'))).toBe(true)
 
     publish.mockClear()
     spawned[0].opts.onStdout?.('line C')
     logCalls = publish.mock.calls.filter(
       (c) => c[1] === '/peer/p1/rack/page_0/channel.0/device/gui/monitor/log'
     )
-    expect(logCalls[logCalls.length - 1][2]).toContain('line C')
+    expect(logCalls).toHaveLength(1)
+    expect(logCalls[0][2]).toBe('line C')
 
     publish.mockClear()
     device.onTopicChanged('gui/monitor/monitorGate', '0')

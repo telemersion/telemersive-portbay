@@ -5,12 +5,17 @@ import { createRoster } from '../state/roster'
 import PeerRow from '../components/PeerRow.vue'
 import DevicePanel from '../components/DevicePanel.vue'
 import AddDevicePopup from '../components/AddDevicePopup.vue'
+import RoomHeader from '../components/RoomHeader.vue'
 
 const peerState = createPeerState()
 const roster = createRoster()
 
 const ownPeerId = ref('')
 const ownPeerName = ref('')
+const ownLocalIP = ref('')
+const ownPublicIP = ref('')
+const roomName = ref('')
+const roomId = ref<number | string>('')
 
 const CHANNEL_COUNT = 20
 const PANEL_WIDTH = 380
@@ -19,8 +24,15 @@ window.api.invoke('bus:localPeer').then((info: any) => {
   if (info?.peerId) {
     ownPeerId.value = info.peerId
     ownPeerName.value = info.peerName || ''
+    ownLocalIP.value = info.localIP || ''
+    if (typeof info.roomId === 'number') roomId.value = info.roomId
     roster.setLocalPeer(info.peerId, info.peerName || '', info.localIP || '', '')
   }
+})
+
+window.api.invoke('bus:state').then((s: any) => {
+  if (s?.roomName) roomName.value = s.roomName
+  if (typeof s?.roomId === 'number') roomId.value = s.roomId
 })
 
 window.api.on('peer:id', (id: string) => {
@@ -28,9 +40,22 @@ window.api.on('peer:id', (id: string) => {
 })
 
 window.api.on('peer:localIP', (ip: string) => {
+  ownLocalIP.value = ip
   if (ownPeerId.value) {
     roster.setLocalPeer(ownPeerId.value, ownPeerName.value, ip, '')
   }
+})
+
+window.api.on('peer:publicIP', (ip: string) => {
+  ownPublicIP.value = ip
+})
+
+window.api.on('peer:room:name', (name: string) => {
+  roomName.value = name
+})
+
+window.api.on('peer:room:id', (id: number) => {
+  roomId.value = id
 })
 
 window.api.on('peers:remote:joined', (info: any) => {
@@ -104,7 +129,7 @@ function closePanel() {
 
 async function onAddDevice(peerId: string, channelIndex: number, deviceType: number) {
   const topic = `/peer/${peerId}/rack/page_0/channel.${channelIndex}/loaded`
-  await window.api.invoke('mqtt:publish', true, topic, String(deviceType))
+  await window.api.invoke('mqtt:publish', { topic, value: String(deviceType), retain: true })
 }
 
 const popupOpen = ref(false)
@@ -136,6 +161,13 @@ function closePopup() {
     class="matrix-view"
     :style="{ marginRight: panelOpen ? PANEL_WIDTH + 'px' : '0' }"
   >
+    <RoomHeader
+      :room-name="roomName"
+      :room-id="roomId"
+      :peer-id="ownPeerId"
+      :local-ip="ownLocalIP"
+      :public-ip="ownPublicIP"
+    />
     <div class="matrix-scroll">
       <div class="matrix-grid">
         <!-- Header row -->
@@ -153,7 +185,7 @@ function closePopup() {
           :peer-color="peerColor(peerId)"
           :peer-ip="peerIP(peerId)"
           :is-local="peerId === ownPeerId"
-          :is-locked="peerId !== ownPeerId && isLocked(peerId)"
+          :is-locked="isLocked(peerId)"
           :channels="peerChannels(peerId)"
           :channel-count="CHANNEL_COUNT"
           :selected-channel="panelOpen && panelPeerId === peerId ? panelChannel : null"
@@ -168,6 +200,7 @@ function closePopup() {
     <AddDevicePopup
       v-if="popupOpen && popupRect"
       :anchor-rect="popupRect"
+      :target-local-props="peerSettings(popupPeerId)?.localProps"
       @select="onPopupSelect"
       @close="closePopup"
     />

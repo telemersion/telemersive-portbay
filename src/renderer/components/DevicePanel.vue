@@ -22,9 +22,9 @@ const description = computed(() => props.deviceState?.device?.gui?.description ?
 const deviceTypeLabel = computed(() => {
   switch (loaded.value) {
     case '1': return 'OSC'
+    case '2': return 'UltraGrid'
+    case '3': return 'MoCap'
     case '4': return 'StageControl'
-    case '2': case '3': case '5': return 'UltraGrid'
-    case '6': return 'MoCap'
     default: return ''
   }
 })

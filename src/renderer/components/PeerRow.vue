@@ -19,6 +19,17 @@ const emit = defineEmits<{
   openPopup: [channelIndex: number, rect: DOMRect]
 }>()
 
+const cellsLocked = computed(() => props.isLocked && !props.isLocal)
+
+function toggleLock() {
+  const next = props.isLocked ? '0' : '1'
+  window.api.invoke('mqtt:publish', {
+    topic: `/peer/${props.peerId}/settings/lock/enable`,
+    value: next,
+    retain: true
+  })
+}
+
 function channelData(index: number) {
   const key = `channel.${index}`
   const ch = props.channels?.[key]
@@ -76,6 +87,20 @@ const peerColors = computed(() => {
         </div>
         <div v-if="peerIp" class="peer-ip" :style="{ color: peerColors.ip }">{{ peerIp }}</div>
       </div>
+      <button
+        v-if="isLocal"
+        class="lock-toggle"
+        :class="{ locked: isLocked }"
+        :title="isLocked ? 'Unlock your row' : 'Lock your row'"
+        @click="toggleLock"
+      >
+        <svg v-if="isLocked" width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M4 7V5a4 4 0 0 1 8 0v2h1v7H3V7h1zm2 0h4V5a2 2 0 1 0-4 0v2z" fill="currentColor"/>
+        </svg>
+        <svg v-else width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M4 7V5a4 4 0 0 1 7.465-2.04l-1.73 1A2 2 0 0 0 6 5v2h7v7H3V7h1z" fill="currentColor"/>
+        </svg>
+      </button>
     </div>
     <div class="peer-cells">
       <DeviceCell
@@ -87,7 +112,7 @@ const peerColors = computed(() => {
         :input-indicator="channelData(i - 1).inputIndicator"
         :output-indicator="channelData(i - 1).outputIndicator"
         :is-local="isLocal"
-        :is-locked="isLocked"
+        :is-locked="cellsLocked"
         :selected="selectedChannel === i - 1"
         @click="emit('cellClick', i - 1)"
         @open-popup="(rect) => emit('openPopup', i - 1, rect)"
@@ -160,4 +185,30 @@ const peerColors = computed(() => {
   gap: 2px;
   align-items: center;
 }
+
+.lock-toggle {
+  background: transparent;
+  border: 1px solid #444;
+  color: #888;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.lock-toggle:hover {
+  color: #ccc;
+  border-color: #666;
+}
+
+.lock-toggle.locked {
+  color: #e6b800;
+  border-color: #8a6d00;
+}
+
 </style>

@@ -1,6 +1,8 @@
 import type { UltraGridConfig } from './config'
 import type { UgPorts } from '../../portAllocator'
 
+export type LocalOs = 'osx' | 'win' | 'linux'
+
 export interface ResolvedMenuIndexes {
   textureCapture: string | null
   ndiCapture: string | null
@@ -14,21 +16,29 @@ export interface BuildUvArgsInput {
   indexes: ResolvedMenuIndexes
   host: string
   textureReceiverName: string
+  localOs: LocalOs
 }
 
 export function buildUvArgs(input: BuildUvArgsInput): string[] {
   const { config } = input
   const mode = config.network.mode
-  if (mode === '1') return buildMode1Args(input)
-  if (mode === '4') return buildMode4Args(input)
-  throw new Error(`UltraGrid mode ${mode} not yet supported (M2c)`)
+  const args = mode === '1' ? buildMode1Args(input)
+    : mode === '4' ? buildMode4Args(input)
+    : null
+  if (!args) throw new Error(`UltraGrid mode ${mode} not yet supported (M2c)`)
+  // Retained topic values carry texture/NDI names wrapped in `'...'` as a
+  // schema artifact inherited from Max. `child_process.spawn` does no shell
+  // parsing, so the quotes would reach `uv` as literal characters. Strip
+  // them once here at the boundary — downstream builders can emit the raw
+  // values without worrying about quoting.
+  return args.map((a) => a.replace(/'/g, ''))
 }
 
 function buildMode1Args(input: BuildUvArgsInput): string[] {
-  const { config, ports, indexes, host } = input
+  const { config, ports, indexes, host, localOs } = input
   const args: string[] = ['--param', 'log-color=no']
 
-  pushVideoCapture(args, config, indexes)
+  pushVideoCapture(args, config, indexes, localOs)
   pushAudioCapture(args, config, indexes)
 
   args.push(
@@ -39,26 +49,52 @@ function buildMode1Args(input: BuildUvArgsInput): string[] {
 }
 
 function buildMode4Args(input: BuildUvArgsInput): string[] {
-  const { config, indexes, textureReceiverName } = input
+  const { config, indexes, textureReceiverName, localOs } = input
   const args: string[] = ['--param', 'log-color=no']
 
-  pushVideoCapture(args, config, indexes)
+  pushVideoCapture(args, config, indexes, localOs)
   pushAudioCapture(args, config, indexes)
 
-  args.push('-d', `gl:spout='${textureReceiverName}'`)
+  args.push('-d', `${textureDisplayPrefix(localOs)}'${textureReceiverName}'`)
   if (indexes.audioReceive !== null) {
     args.push('-r', `portaudio:${indexes.audioReceive}`)
   }
   return args
 }
 
+function textureCapturePrefix(localOs: LocalOs): string {
+  return localOs === 'win' ? 'spout' : 'syphon'
+}
+
+function textureDisplayPrefix(localOs: LocalOs): string {
+  return localOs === 'win' ? 'gl:spout=' : 'gl:syphon='
+}
+
+function textureFpsFlag(localOs: LocalOs): string {
+  return localOs === 'win' ? 'fps' : 'override_fps'
+}
+
 function pushVideoCapture(
   args: string[],
   config: UltraGridConfig,
-  indexes: ResolvedMenuIndexes
+  indexes: ResolvedMenuIndexes,
+  localOs: LocalOs
 ): void {
-  if (indexes.textureCapture !== null) {
-    args.push('-t', `spout:${indexes.textureCapture}`)
+  const type = config.audioVideo.videoCapture.type
+  if (type === '0') {
+    let flag = textureCapturePrefix(localOs)
+    if (indexes.textureCapture && indexes.textureCapture !== '-default-') {
+      flag += `:${indexes.textureCapture}`
+    }
+    const fps = config.audioVideo.videoCapture.advanced.texture.fps
+    if (fps && fps !== '0') flag += `:${textureFpsFlag(localOs)}=${fps}`
+    args.push('-t', flag)
+  } else if (type === '1') {
+    let flag = 'ndi'
+    if (indexes.ndiCapture && indexes.ndiCapture !== '-default-') {
+      flag += `:${indexes.ndiCapture}`
+    }
+    args.push('-t', flag)
   }
   const { codec, bitrate } = config.audioVideo.videoCapture.advanced.compress
   args.push('-c', `libavcodec:codec=${videoCodecName(codec)}:bitrate=${bitrate}M`)

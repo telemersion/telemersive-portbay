@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useMqttBinding } from '../../composables/useMqttBinding'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+
+const MONITOR_LOG_CAPACITY = 200
 
 const props = defineProps<{
   peerId: string
@@ -32,6 +34,21 @@ const audioRxType = computed(() => audioReceiver.value?.type ?? '0')
 
 const monitorGateOn = computed(() => monitor.value?.monitorGate === '1')
 const monitorLog = computed(() => monitor.value?.log ?? '')
+
+const monitorLogBuffer = ref<string[]>([])
+const monitorLogText = computed(() => monitorLogBuffer.value.join('\n'))
+
+watch(monitorLog, (line) => {
+  if (!line) return
+  monitorLogBuffer.value.push(line)
+  while (monitorLogBuffer.value.length > MONITOR_LOG_CAPACITY) {
+    monitorLogBuffer.value.shift()
+  }
+})
+
+function clearMonitorLog() {
+  monitorLogBuffer.value = []
+}
 
 const localMenus = computed(() => props.peerSettings?.localMenus ?? {})
 
@@ -136,7 +153,7 @@ function toggleMonitorGate() {
 
 async function removeDevice() {
   const topic = `/peer/${props.peerId}/rack/page_0/channel.${props.channelIndex}/loaded`
-  await window.api.invoke('mqtt:publish', true, topic, '0')
+  await window.api.invoke('mqtt:publish', { topic, value: '0', retain: true })
   emit('remove')
 }
 
@@ -522,11 +539,16 @@ async function refreshEnumeration() {
     <section>
       <h4>
         Monitor
-        <button class="toggle-btn" :class="{ on: monitorGateOn }" @click="toggleMonitorGate">
-          {{ monitorGateOn ? 'ON' : 'OFF' }}
-        </button>
+        <span class="monitor-controls">
+          <button class="toggle-btn" @click="clearMonitorLog" :disabled="monitorLogBuffer.length === 0">
+            Clear
+          </button>
+          <button class="toggle-btn" :class="{ on: monitorGateOn }" @click="toggleMonitorGate">
+            {{ monitorGateOn ? 'ON' : 'OFF' }}
+          </button>
+        </span>
       </h4>
-      <pre v-if="monitorGateOn" class="monitor-log">{{ monitorLog || '(no output)' }}</pre>
+      <pre v-if="monitorGateOn" class="monitor-log">{{ monitorLogText || '(no output)' }}</pre>
     </section>
 
     <div class="panel-actions">
@@ -555,6 +577,8 @@ h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px
 .port-input { max-width: 80px !important; flex: none !important; }
 .toggle-btn { padding: 2px 8px; border-radius: 4px; border: 1px solid #555; background: none; color: #888; cursor: pointer; font-size: 10px; }
 .toggle-btn.on { background: #36ABFF; color: white; border-color: #36ABFF; }
+.toggle-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.monitor-controls { display: flex; gap: 6px; }
 .unsupported-mode { padding: 16px; margin: 8px 0; border: 1px dashed #555; border-radius: 4px; color: #aaa; font-size: 12px; text-align: center; }
 .monitor-log { max-height: 160px; overflow-y: auto; background: #0d0d0d; border: 1px solid #333; border-radius: 4px; padding: 6px 8px; color: #9c9; font-family: monospace; font-size: 10px; white-space: pre-wrap; }
 .panel-actions { margin-top: 16px; padding-top: 8px; border-top: 1px solid #333; display: flex; gap: 8px; }

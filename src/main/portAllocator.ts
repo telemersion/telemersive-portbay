@@ -40,3 +40,7 @@ export function allocateUgPorts(roomId: number, channelIndex: number): UgPorts {
     audioPort: base + 4
   }
 }
+
+export function allocateStageControlPort(roomId: number): number {
+  return roomId * 1000 + 902
+}

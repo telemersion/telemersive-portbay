@@ -10,14 +10,16 @@ import { defaultUltraGridConfig, applyTopicChange } from '../../../../src/main/d
 import { allocateUgPorts } from '../../../../src/main/portAllocator'
 
 function shellTokenize(line: string): string[] {
+  // Mirrors bash word-splitting and quote-stripping: quotes group tokens but
+  // are themselves removed, which is what `spawn(binary, args)` would receive.
   const tokens: string[] = []
   let acc = ''
   let inSingle = false
   let inDouble = false
   for (let i = 0; i < line.length; i++) {
     const ch = line[i]
-    if (ch === "'" && !inDouble) { inSingle = !inSingle; acc += ch; continue }
-    if (ch === '"' && !inSingle) { inDouble = !inDouble; acc += ch; continue }
+    if (ch === "'" && !inDouble) { inSingle = !inSingle; continue }
+    if (ch === '"' && !inSingle) { inDouble = !inDouble; continue }
     if (!inSingle && !inDouble && /\s/.test(ch)) {
       if (acc) { tokens.push(acc); acc = '' }
       continue
@@ -87,7 +89,8 @@ describe('buildUvArgs — mode 1 (send-to-router)', () => {
       ports,
       indexes,
       host: 'telemersion.zhdk.ch',
-      textureReceiverName: 'room_channel_0'
+      textureReceiverName: 'room_channel_0',
+      localOs: 'win'
     })
     const expected = loadFixture('max-cli-mode1.txt')
     expect(actual).toEqual(expected)
@@ -112,7 +115,8 @@ describe('buildUvArgs — mode 1 (send-to-router)', () => {
       ports,
       indexes,
       host: 'telemersion.zhdk.ch',
-      textureReceiverName: 'room_channel_0'
+      textureReceiverName: 'room_channel_0',
+      localOs: 'win'
     })
     const expected = loadFixture('max-cli-mode1-ch5.txt')
     expect(actual).toEqual(expected)
@@ -134,7 +138,8 @@ describe('buildUvArgs — mode 4 (peer-to-peer-automatic)', () => {
       ports,
       indexes,
       host: 'telemersion.zhdk.ch',
-      textureReceiverName: 'room_channel_0'
+      textureReceiverName: 'room_channel_0',
+      localOs: 'win'
     })
     const expected = loadFixture('max-cli-mode4.txt')
     expect(actual).toEqual(expected)
@@ -154,9 +159,50 @@ describe('buildUvArgs — mode 4 (peer-to-peer-automatic)', () => {
       ports,
       indexes,
       host: 'telemersion.zhdk.ch',
-      textureReceiverName: 'room_channel_0'
+      textureReceiverName: 'room_channel_0',
+      localOs: 'win'
     })
     expect(actual).not.toContain('-r')
+  })
+})
+
+describe('buildUvArgs — OS-dependent texture backend', () => {
+  it('uses syphon on osx for mode 1 capture', () => {
+    const config = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '1')
+    const withSel = applyTopicChange(
+      config,
+      'audioVideo/videoCapture/texture/menu/selection',
+      "name='Simple Server'"
+    )
+    const actual = buildUvArgs({
+      config: withSel,
+      ports: allocateUgPorts(11, 0),
+      indexes: {
+        textureCapture: "name='Simple Server'",
+        ndiCapture: null,
+        audioCapture: null,
+        audioReceive: null
+      },
+      host: 'telemersion.zhdk.ch',
+      textureReceiverName: 's_channel_0',
+      localOs: 'osx'
+    })
+    expect(actual).toContain("syphon:name=Simple Server")
+    expect(actual).not.toContain("spout:name=Simple Server")
+  })
+
+  it('uses gl:syphon= on osx for mode 4 display', () => {
+    const config = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '4')
+    const actual = buildUvArgs({
+      config,
+      ports: allocateUgPorts(11, 0),
+      indexes: { textureCapture: null, ndiCapture: null, audioCapture: null, audioReceive: null },
+      host: 'x',
+      textureReceiverName: 'room_channel_0',
+      localOs: 'osx'
+    })
+    expect(actual).toContain("gl:syphon=room_channel_0")
+    expect(actual).not.toContain("gl:spout=room_channel_0")
   })
 })
 
@@ -169,7 +215,8 @@ describe('buildUvArgs — unsupported modes', () => {
         ports: allocateUgPorts(11, 0),
         indexes: { textureCapture: null, ndiCapture: null, audioCapture: null, audioReceive: null },
         host: 'x',
-        textureReceiverName: 'y'
+        textureReceiverName: 'y',
+        localOs: 'win'
       })
     ).toThrow(/M2c/)
   })
@@ -182,7 +229,8 @@ describe('buildUvArgs — unsupported modes', () => {
         ports: allocateUgPorts(11, 0),
         indexes: { textureCapture: null, ndiCapture: null, audioCapture: null, audioReceive: null },
         host: 'x',
-        textureReceiverName: 'y'
+        textureReceiverName: 'y',
+        localOs: 'win'
       })
     ).toThrow()
   })
@@ -195,7 +243,8 @@ describe('buildUvArgs — unsupported modes', () => {
         ports: allocateUgPorts(11, 0),
         indexes: { textureCapture: null, ndiCapture: null, audioCapture: null, audioReceive: null },
         host: 'x',
-        textureReceiverName: 'y'
+        textureReceiverName: 'y',
+        localOs: 'win'
       })
     ).toThrow()
   })

@@ -11,6 +11,10 @@ export class MonitorLogBuffer {
     return this.lines.join('\n')
   }
 
+  replay(): readonly string[] {
+    return this.lines
+  }
+
   clear(): void {
     this.lines.length = 0
   }

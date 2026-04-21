@@ -124,7 +124,7 @@ function publishInitSequence(): void {
   trackedPublish(1, topics.settings(peerId, 'localMenus/wasapiReceiveRange'), '0')
   trackedPublish(1, topics.settings(peerId, 'localMenus/jackReceiveRange'), '0')
 
-  trackedPublish(1, topics.settings(peerId, 'localProps/ug_enable'), '0')
+  trackedPublish(1, topics.settings(peerId, 'localProps/ug_enable'), resolveUgPath() ? '1' : '0')
   trackedPublish(1, topics.settings(peerId, 'localProps/natnet_enable'), '0')
 
   const savedRack = loadRack()
@@ -279,8 +279,8 @@ function setupIpcHandlers(): void {
     bus!.leave()
   })
 
-  ipcMain.handle('mqtt:publish', async (_event, retained, topic, ...values) => {
-    trackedPublish(retained ? 1 : 0, topic, ...values)
+  ipcMain.handle('mqtt:publish', async (_event, payload: { topic: string; value: string; retain: boolean }) => {
+    trackedPublish(payload.retain ? 1 : 0, payload.topic, payload.value)
   })
 
   ipcMain.handle('mqtt:subscribe', async (_event, topic) => {
@@ -373,6 +373,7 @@ app.on('before-quit', (e) => {
   isShuttingDown = true
   e.preventDefault()
   flushRackSave()
+  rackSaveSuppressed = true
   if (bus) {
     performShutdown(bus, deviceRouter, [...retainedTopics.keys()])
   }

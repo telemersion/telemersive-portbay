@@ -20,6 +20,8 @@ type SpawnFactory = (opts: LifecycleOptions) => ChildProcessLifecycle
 const UG_DEVICE_TYPE = 2
 const MONITOR_LOG_CAPACITY = 50
 
+export type LocalOs = 'osx' | 'win' | 'linux'
+
 export interface UltraGridDeviceOptions {
   channelIndex: number
   peerId: string
@@ -31,6 +33,13 @@ export interface UltraGridDeviceOptions {
   host?: string
   resolveBinary?: () => string | null
   spawnFactory?: SpawnFactory
+  osOverride?: LocalOs
+}
+
+function detectLocalOs(): LocalOs {
+  if (process.platform === 'darwin') return 'osx'
+  if (process.platform === 'win32') return 'win'
+  return 'linux'
 }
 
 export class UltraGridDevice implements DeviceHandler {
@@ -45,6 +54,7 @@ export class UltraGridDevice implements DeviceHandler {
   private readonly getSetting: GetSettingFn
   private readonly resolveBinary: () => string | null
   private readonly spawnFactory: SpawnFactory
+  private readonly localOs: LocalOs
 
   private config: UltraGridConfig = defaultUltraGridConfig()
   private readonly publishedTopics = new Set<string>()
@@ -64,10 +74,16 @@ export class UltraGridDevice implements DeviceHandler {
     this.getSetting = opts.getSetting ?? (() => null)
     this.resolveBinary = opts.resolveBinary ?? (() => null)
     this.spawnFactory = opts.spawnFactory ?? ((o) => new ChildProcessLifecycle(o))
+    this.localOs = opts.osOverride ?? detectLocalOs()
+    this.config = applyTopicChange(this.config, 'remoteValues/local_os', this.localOs)
   }
 
   publishDefaults(): void {
-    const defaults = defaultUltraGridConfig()
+    const defaults = applyTopicChange(
+      defaultUltraGridConfig(),
+      'remoteValues/local_os',
+      this.localOs
+    )
     for (const { subpath, value } of snapshotTopics(defaults)) {
       this.pubDeviceGui(subpath, value, false)
     }
@@ -119,7 +135,7 @@ export class UltraGridDevice implements DeviceHandler {
   private handleMonitorGate(on: boolean): void {
     if (on === this.monitorGateOn) return
     this.monitorGateOn = on
-    if (on) this.publishMonitorLog()
+    if (on) this.replayMonitorLog()
   }
 
   private startProcess(): void {
@@ -141,7 +157,8 @@ export class UltraGridDevice implements DeviceHandler {
         ports,
         indexes,
         host: this.host,
-        textureReceiverName: this.config.audioVideo.videoReciever.texture.name
+        textureReceiverName: this.config.audioVideo.videoReciever.texture.name,
+        localOs: this.localOs
       })
     } catch (err) {
       this.logWarn(`cannot build UV args: ${(err as Error).message}`)
@@ -151,9 +168,15 @@ export class UltraGridDevice implements DeviceHandler {
     }
 
     this.monitor.clear()
+    const cliLine = `${binary} ${args.join(' ')}`
+    console.log(`[UG ch.${this.channelIndex}] spawn: ${cliLine}`)
+    const cliLogLine = `[CLI] ${cliLine}`
+    this.monitor.append(cliLogLine)
+    if (this.monitorGateOn) this.publishMonitorLine(cliLogLine)
     this.lifecycle = this.spawnFactory({
       binary,
       args,
+      env: sanitizedChildEnv(),
       onStdout: (line) => this.handleLogLine(line),
       onStderr: (line) => this.handleLogLine(line),
       onExit: (reason, code) => this.handleExit(reason, code, ports)
@@ -167,25 +190,28 @@ export class UltraGridDevice implements DeviceHandler {
 
   private handleLogLine(line: string): void {
     this.monitor.append(line)
-    if (this.monitorGateOn) this.publishMonitorLog()
+    if (this.monitorGateOn) this.publishMonitorLine(line)
   }
 
-  private publishMonitorLog(): void {
+  private publishMonitorLine(line: string): void {
     this.publish(
       1,
       topics.deviceGui(this.peerId, this.channelIndex, 'monitor/log'),
-      this.monitor.snapshot()
+      line
     )
+  }
+
+  private replayMonitorLog(): void {
+    for (const line of this.monitor.replay()) {
+      this.publishMonitorLine(line)
+    }
   }
 
   private handleExit(reason: ExitReason, code: number | null, _ports: UgPorts): void {
     this.lifecycle = null
     if (reason === 'killed') return
-    if (reason === 'spawn-failure') {
-      this.logWarn(`UV spawn-failure (code ${code}); leaving enable=1 for retry`)
-      return
-    }
-    this.logWarn(`UV crashed (code ${code}); disabling`)
+    const label = reason === 'spawn-failure' ? 'UV spawn-failure' : 'UV crashed'
+    this.logWarn(`${label} (code ${code}); disabling`)
     this.enabled = false
     this.publishEnableOff()
   }
@@ -195,8 +221,9 @@ export class UltraGridDevice implements DeviceHandler {
   }
 
   private logWarn(message: string): void {
-    this.monitor.append(`[NG] ${message}`)
-    if (this.monitorGateOn) this.publishMonitorLog()
+    const line = `[NG] ${message}`
+    this.monitor.append(line)
+    if (this.monitorGateOn) this.publishMonitorLine(line)
     console.warn(`[UG ch.${this.channelIndex}] ${message}`)
   }
 
@@ -254,4 +281,16 @@ function audioBackendFromType(type: string): 'portaudio' | 'coreaudio' | 'wasapi
   if (type === '2') return 'wasapi'
   if (type === '3') return 'jack'
   return null
+}
+
+// Strip env vars Electron injects into the main process so the UV child can't
+// inherit Electron's launch identity. On macOS, `__CFBundleIdentifier` in
+// particular conflates the child with the Electron host, which blocks Syphon
+// server discovery across the launch boundary.
+function sanitizedChildEnv(): NodeJS.ProcessEnv {
+  const env = { ...process.env }
+  delete env.ELECTRON_RUN_AS_NODE
+  delete env.__CFBundleIdentifier
+  delete env.MallocNanoZone
+  return env
 }

@@ -131,7 +131,7 @@ export function defaultUltraGridConfig(): UltraGridConfig {
       monitorGate: '0'
     },
     remoteValues: {
-      local_os: 'mac'
+      local_os: 'osx'
     },
     enable: '0',
     print_cli: '0'

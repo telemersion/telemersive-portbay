@@ -27,6 +27,14 @@ NG addresses three goals, in priority order when they conflict:
 
 ### 2.1 In Scope for v1.0
 
+**Milestone scope note [2026-04-21]:** v1.0 covers all four device types below, but
+**M2b ships only OSC + UltraGrid**. NatNet/MoCap and StageControl handlers are
+deferred to a later milestone — their absence is *expected scope*, not a spec
+gap. Until those handlers land, `natnet_enable` and `stagec_enable` are
+published as `0` unconditionally, and `loaded=3` (MoCap) / `loaded=4` (StageC)
+values from remote peers are rendered read-only in the matrix without local
+spawn behavior.
+
 - All four device types: **OSC**, **UltraGrid**, **NatNet/MoCap**, **StageControl**.
 - Full remote control of other peers' channels (matrix-wide editing, subject to lock state).
 - Login flow against telemersive-router (mirroring telemersive-bus's `configure → connect → join` sequence).
@@ -101,6 +109,29 @@ When NG publishes capabilities Max cannot render (e.g., channels above 19), the 
 
 **Crash / force-quit.** If the process dies without running step 3 (OS kill, hardware fault), retained topics remain on the broker. The next launch gets a fresh peerId (§6.1), so stale retained topics under the dead peerId never collide with the new session. They age out via broker TTL / room-cleanup policy (broker-side; outside NG's concern). Local rack restore (§6.6) still works because `rack.json` is written on every mutation, not only on quit — confirm §6.6 reflects write-on-mutation at next pass.
 
+### 3.7 Leaving a Room (without quitting)
+
+`bus:leave` is distinct from app shutdown: the process keeps running and can
+re-join another room afterward. Ordering matters because the rack save reflects
+*retained topic state*, and device teardown publishes retained clears that
+would otherwise corrupt the saved rack.
+
+**Leave sequence (triggered by the renderer's leave action):**
+
+1. **Flush pending rack save** to `rack.json` synchronously — captures the
+   rack as the user sees it, before any teardown publishes land.
+2. **Suppress further rack saves** for the duration of the teardown. Retained
+   clears from `destroyAll()` must not re-arm the save scheduler; otherwise
+   the debounced write that lands after suppression lifts would overwrite the
+   flushed-good rack with an empty one.
+3. **Tear down all device handlers** (`destroyAll()`) — kills child
+   processes, publishes retained clears for each handler's tracked topics.
+4. **Lift suppression.**
+5. **`Client.leave()`** via telemersive-bus.
+
+On the next `bus:join`, the rack restore path (§6.6) reads the persisted
+`rack.json` and replays retained publishes — the same file written in step 1.
+
 ---
 
 ## 4. Architecture
@@ -149,8 +180,7 @@ The IPC bridge between main and renderer carries **raw MQTT traffic only**:
 
 - `ipc.send('mqtt:message', {topic, value})` — main forwards every received MQTT message to renderer.
 - `ipc.invoke('mqtt:publish', {topic, value, retain})` — renderer requests publishes.
-- `ipc.send('roster:add', {peerId, peerName, ...})` and `roster:remove` — main forwards bus-level peer events. **peerName arrives on this channel only**, never via MQTT (§6.2).
-- `ipc.send('mqtt:subtree-delete', {peerId})` — main signals "remove this peer's whole subtree" (used on roster-remove after unsubscribe).
+- `ipc.send('roster:add', {peerId, peerName, ...})` and `roster:remove` — main forwards bus-level peer events. **peerName arrives on this channel only**, never via MQTT (§6.2). On `roster:remove`, the renderer drops the peer from both `roster` and `peerState` in a single handler — no separate subtree-delete IPC is needed since the renderer owns the state tree and `roster:remove` fires at exactly the right moment (§4.6 step 5).
 
 The renderer reconstructs the entire peer state tree from the raw MQTT stream. The main process owns no parsed view of the room state. Device handlers in main parse the subset of topics they need (see §4.5).
 
@@ -187,13 +217,13 @@ Subscription pattern **[verified 2026-04-16]** from [creating_4_devices_locally.
 3. After receiving `/peer/{ownPeerId}/rack/page_0/channel.N/loaded` with value `> 0`, add per-channel subscription:
    - `/peer/{ownPeerId}/rack/page_0/channel.N/device/#`
    (Unsubscribe on `loaded 0`.)
-4. On `bus peers remote joined {name} {peerId} {localIP} {publicIP}`: subscribe to the **same narrow pattern** for that peerId:
-   - `/peer/{remotePeerId}/settings/#`
-   - `/peer/{remotePeerId}/rack/+/+/loaded`
-   Then same per-channel rule as step 3 as remote `loaded>0` values arrive.
-5. On `roster:remove(remotePeerId)`: unsubscribe from all of the above and signal renderer to delete that peer's subtree.
+4. On `bus peers remote joined {name} {peerId} {localIP} {publicIP}`: subscribe **wide** for that peerId:
+   - `/peer/{remotePeerId}/#`
 
-Never subscribe with a wide `/peer/{id}/#` pattern — Max uses the narrow form for both own and remote peers.
+   Rationale: NG routes every incoming topic through the renderer's peer-state reconstruction (§4.5) and the main-process device router regardless of subscription shape, so narrowing the remote subscribe yields no functional benefit. Wide avoids per-channel subscribe/unsubscribe bookkeeping for remote peers. This is an **NG-specific simplification** — Max uses a narrow pattern for remote peers (verified 2026-04-16 log trace), but the broker accepts both; wire compatibility is preserved because NG only *receives* more than Max would, it does not publish anything extra.
+5. On `roster:remove(remotePeerId)`: unsubscribe from the wide pattern. The `roster:remove` IPC (§4.3) already reaches the renderer, which clears both `roster[peerId]` and `peerState[peerId]` in a single handler — no dedicated subtree-delete IPC.
+
+Own-peer subscriptions remain narrow (steps 2–3) so the per-channel `device/#` unsubscribe on `loaded=0` (§5.2.2) retains its meaning for channels NG owns.
 
 ---
 
@@ -236,7 +266,7 @@ State machine:
 3. **Live.** Buffered topics drained. Handler listens for triggers:
    - `enable: 0 → 1` → spawn CLI with current state.
    - `enable: 1 → 0` → kill CLI.
-   - `reset: 0 → 1` **[verified 2026-04-16]** — only fires while `enable=0`; the UI lock (§5.3) prevents reset mid-stream. Handler performs clear/reset logic. If a rogue peer publishes `reset 0→1` while `enable=1`, the handler updates state silently per §5.3's trust-the-protocol stance.
+   - `reset: 0 → 1` **[verified 2026-04-16]** — only fires while `enable=0`; the UI lock (§5.3) prevents reset mid-stream. Handler performs clear/reset logic **where reset semantics exist**. Reset is **device-type-specific**: OSC/StageControl restore local port allocations and clear IP overrides; UltraGrid has no analogous runtime state that outlives `enable=0` (port allocations are deterministic from `roomId + channelIndex`, config is already in retained topics), so UG has no reset topic or button. If a rogue peer publishes `reset 0→1` while `enable=1`, handlers that implement reset update state silently per §5.3's trust-the-protocol stance.
    - Any other topic: update handler state silently. Effect at next `enable 0→1`.
 4. **Re-load.** `loaded` republished with a **different** non-zero value → kill CLI if running, tear down handler, instantiate new handler for the new type. (Republishing the same value is a no-op / state echo.)
 5. **Unload.** `loaded` republished as `0` (from any peer). See §5.2.2.
@@ -299,7 +329,7 @@ Consequence: there is no "restart on codec change" edge case. Codec cannot chang
 StageControl's device panel and topic shape are **identical to OSC**: `forward to` IP:port(s), `receiving at` local IP:port, enable toggle, reset buttons. NG uses a single shared device handler for both `loaded=1` (OSC) and `loaded=4` (StageC); the two differ only in:
 
 - **Default `description`:** `OSC` vs `StageC` (the 6-char short-name). Both are user-editable per §5.2 — `description` is a label, not the type.
-- **Matrix-cell presentation:** different color and icon (per `context.md` §4.4 / §4.5).
+- **Matrix-cell presentation:** different color, identical icon. Per the canonical [color_scheme.html](mockups/color_scheme.html) mockup: OSC uses `#36ABFF`, StageC uses `#FE5FF5`; both render the shared bidi SVG (sink + up arrow + down arrow) unchanged. `context.md` §4.4 / §4.5 are superseded where they conflict.
 - **Breadcrumb label:** `... > OSC > ...` vs `... > StageControl > ...` (panel may render the full name; the matrix cell uses the `description` value, which defaults to the short form).
 - **Convention:** StageControl's `forward to` destination points at the Open Stage Control app running on the telemersive-broker host (i.e., the broker IP, not a peer IP). NG does not enforce this — the field is free IP:port input — but default/placeholder values in the panel should hint at it.
 
@@ -351,7 +381,7 @@ Stored as JSON in `app.getPath('userData')`:
 Contents:
 - `peerName: string`
 - `peerColor: string` (hex; converted to RGBA floats on publish)
-- `brokerUrl: string`
+- `brokerUrl: string` — stored as a bare host (e.g. `telemersion.zhdk.ch`), *not* a URL. The main process prepends `mqtt://` when calling telemersive-bus `configureServer()`. The field keeps the legacy name for on-disk compatibility.
 - `brokerPort: number`
 - `brokerUser: string`
 - `brokerPwd: string` *(plain text — see §12 security note)*
@@ -459,7 +489,13 @@ Spawned on join, per backend:
 - `uv -r wasapi:help` → `wasapiReceiveRange` (Windows)
 - `uv -r jack:help` → `jackReceiveRange`
 
-Video sources (`textureCaptureRange`, `ndiRange`) — TBD-5: exact CLI invocations to enumerate; default to `-default-` until determined.
+Video sources (`textureCaptureRange`, `ndiRange`) **[resolved 2026-04-21]**:
+
+- `uv -t syphon:help` → `textureCaptureRange` (macOS)
+- `uv -t spout:help` → `textureCaptureRange` (Windows)
+- `uv -t ndi:help` → `ndiRange`
+
+Parsers are fixture-verified against UG 1.10.3 — see [parsers/textureSender.ts](../src/main/enumeration/parsers/textureSender.ts) and [parsers/ndi.ts](../src/main/enumeration/parsers/ndi.ts). Both backends feed `-default-` when the probe returns no servers or the backend plugin is absent.
 
 ### 8.2 Output Format on the Wire
 
@@ -480,28 +516,39 @@ Modular parsers in `src/main/enumeration/menuParsers/`:
 
 Each parser is fixture-driven testable. Fixtures in `tests/fixtures/uv-output/{platform}/{backend}-{capture|receive}.txt` captured from a real `uv` invocation per platform. Parser tests assert output matches the captured wire format.
 
-### 8.4 `updateMenu` Re-query
+### 8.4 `updateMenu` (Max-legacy, not implemented in NG) **[revised 2026-04-21]**
 
-The `/channel.N/device/gui/updateMenu` topic ("triggers CLI query to populate device menus" per `context.md` §3.5) is a **re-query trigger**. Example value observed **[verified]**: `"audioCapture jack"` → NG re-spawns `uv -s jack:help` and republishes `jackCaptureRange`. Full value-string mapping narrowed to `{direction}Capture {backend}` / `{direction}Receive {backend}` conjecture (TBD-6: confirm the complete token grammar — e.g., `videoCapture texture`, `audioReceive coreaudio`).
+The `/channel.N/device/gui/updateMenu` topic is a Max-era mechanism for triggering a targeted backend re-probe (e.g. value `"audioCapture jack"` → re-spawn `uv -s jack:help` and republish only `jackCaptureRange`). It is a **local-to-peer** trigger — each client observes the topic under its own subtree and re-enumerates its own hardware; no other peer acts on it.
 
-### 8.5 UltraGrid Binary
+NG does not implement the targeted path:
 
-- Bundled in `externals/ultragrid/uv` (macOS) / `externals/ultragrid/uv.exe` (Windows). The Qt GUI variant (`uv-qt`) is not used by NG — NG is the GUI.
-- Binary version pinned in spec; parsers are version-coupled. Upgrading UV requires recapturing fixtures and re-verifying parsers.
+- Incoming `updateMenu` values are treated as transient — accepted but not acted on. See [config.ts](../src/main/devices/ultragrid/config.ts) `TRANSIENT_SUBPATHS`.
+- NG never publishes `updateMenu` itself.
+- The UX equivalent is the "Refresh Devices" button in the UltraGrid panel, which calls the blanket `enumerate:refresh` IPC and re-probes all backends (~1–2s on modern hardware). See [UltraGridPanel.vue](../src/renderer/components/panels/UltraGridPanel.vue).
 
-### 8.6 Windows Per-Channel Binary Copies **[verified]**
+Rationale: the targeted optimization was a Max-era concern. NG's blanket re-probe is fast enough that per-backend routing adds code and UI surface for no measurable gain. If per-backend refresh becomes a user-visible UX need, it's a clean addition on top (parse the value, call a backend-filtered `enumerate()`).
 
-On Windows, Max copies `uv.exe` to `uv_tb{index}.exe` for each active channel (observed in [shellHelper.js](docs/javascript/shellHelper.js) and FAQ). Rationale: `taskkill /IM uv.exe /F` would kill *all* UV processes in the room; per-channel renames let the kill target a single process.
+### 8.5 UltraGrid Binary **[revised 2026-04-21]**
 
-NG inherits this pattern on Windows:
+UltraGrid is vendored at `vendor/ultragrid/active/` as the CESNET-distributed `uv-qt.app` bundle (macOS; equivalent directory on Windows TBD when that platform is staged). CESNET ships UG as a single bundle containing both the CLI (`uv` wrapper → `uv-real`) and the Qt GUI (`uv-qt` wrapper → `uv-qt-real`) — the two entry points share libs/frameworks via the app bundle structure and are not separable without repackaging. NG spawns only the CLI wrapper — the `uv-qt` GUI is shipped inside the bundle as an inseparable part of the upstream distribution but is never invoked; NG is the GUI.
 
-- On channel activation for an UltraGrid device, copy `externals/ultragrid/uv.exe` → `externals/ultragrid/uv_tb{channelIndex}.exe` if not already present.
-- Spawn the per-channel copy.
-- On disable: `taskkill /IM uv_tb{channelIndex}.exe /F`.
-- Same pattern applies to NatNetThree2OSC — Windows firewall/kill considerations require per-channel copies.
-- macOS uses the single `uv` binary; SIGTERM/SIGKILL by PID.
+- **macOS path:** `vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv` — the upstream CLI wrapper (a shell script gating macOS version, which execs `uv-real`).
+- **Windows path:** `vendor/ultragrid/active/uv.exe` (CLI) once Windows is vendored. Update this section when the Windows bundle layout is confirmed.
+- **Binary version pinned in spec; parsers are version-coupled.** Upgrading UV requires recapturing fixtures and re-verifying parsers.
 
-Additional Windows quirk **[verified]**: single-quotes in CLI argument strings must be replaced with double-quotes before spawn (from [shellHelper.js](docs/javascript/shellHelper.js)). NG's spawn layer applies this substitution on Windows.
+### 8.6 Child-Process Spawn and Kill **[revised 2026-04-21]**
+
+**Historical context (Max).** On Windows, Max copied `uv.exe` to `uv_tb{index}.exe` for each active channel (observed in [shellHelper.js](docs/javascript/shellHelper.js) and FAQ). The rationale was kill-targeting: Max issued `taskkill /IM uv_tb{index}.exe /F` to terminate a single channel's UV process, and `taskkill /IM` matches by image name — without the per-channel rename, the kill would have terminated *all* UV processes in the room. This was a workaround for Max's toolchain, not a mechanical requirement of Windows.
+
+**NG approach.** NG spawns the stock `externals/ultragrid/uv.exe` / `externals/ultragrid/uv` on both platforms and kills by PID via Node's `child_process` (`child.kill('SIGTERM')` → `SIGKILL` grace). On Windows, Node's `child.kill()` maps to `TerminateProcess` on the specific PID, so there is no need for per-channel renames or `taskkill /IM`. The per-channel copy is *not* carried forward.
+
+- macOS: spawn `externals/ultragrid/uv`, kill by PID (SIGTERM → SIGKILL).
+- Windows: spawn `externals/ultragrid/uv.exe`, kill by PID (same pipeline).
+- Same applies to NatNetThree2OSC.
+
+**Windows firewall note.** Users who previously approved `uv_tb{N}.exe` entries in Windows Firewall under Max may see a one-time prompt for `uv.exe` when NG first spawns UV. Acceptable — one prompt per install, not per channel.
+
+**Argument quoting.** NG spawns children with `child_process.spawn(binary, args, …)` — no shell, no word-splitting. Each argv element is passed to the child verbatim, so values containing whitespace (e.g. `syphon:name=Simple Server`) work without wrapping. Retained topic values inherited from Max's schema sometimes arrive wrapped in single-quotes (e.g. `app='Simple Server'` in `*Range` menus); NG strips those at the CLI-build boundary in a single pass — see [cliBuilder.ts:22-34](../src/main/devices/ultragrid/cliBuilder.ts#L22-L34). Verified against live `uv` with a regression test — see [uvArgvParsing.integration.test.ts](../tests/main/devices/ultragrid/uvArgvParsing.integration.test.ts). Max's Windows single-→double-quote substitution (from [shellHelper.js](docs/javascript/shellHelper.js)) existed because Max built shell command strings for `cmd.exe`; NG does not, so no substitution is applied.
 
 ### 8.7 Port Allocation ("PortRanges V5") **[verified 2026-04-16]**
 
@@ -513,21 +560,25 @@ Port numbers for CLI spawns are derived from the 5-digit pattern `{roomID}{chann
 
 **Per-channel slot layout** (channel N, shown with `xx` = roomID, `cc` = channel index zero-padded to 2 digits):
 
-- `xxcc0 ↔ xxcc1` — paired port (one-to-many bidirectional, e.g., OSC or UG audio).
-- `xxcc4 ↔ xxcc8` — paired port (second bidirectional pair).
+Slots 0..9 are all valid addresses. The grammar groups them by topology:
+
+- `xxcc0 ↔ xxcc1` — paired bidirectional (e.g. MoCap / UG audio).
+- `xxcc4 ↔ xxcc8` — paired bidirectional (second pair).
+- `xxcc2` — single port (typical input/receive slot for paired-topology devices — e.g. MoCap `inputPort 10012` on channel 1 sits alongside the 0↔1 pair).
 - `xxcc6` — single port (one-to-many outbound).
-- `xxcc9` — single port (reserved / control).
+- `xxcc7`, `xxcc8`, `xxcc9` — OSC/StageC triple: `outputPortTwo`, `outputPortOne`, `inputPort` respectively (verified from [remote_creates_device_on_local.log](docs/logs/remote_creates_device_on_local.log) — channel.0 values 10007/10008/10009). On the control channel `cc` (non-user channels), slot 9 may instead carry reserved/control traffic; the context disambiguates.
 
-**Device-type allocation within a channel** (per the diagram's left column):
+The abstract grammar describes which slots *can* be paired; the per-device-type assignment below specifies which slots each device actually uses.
 
-- **OSC:** many-to-many bidirectional.
-- **UltraGrid video/audio:** one-to-many bidirectional (dual-pair uses both `xxcc0↔xxcc1` and `xxcc4↔xxcc8` — matches the `-P{port}:{port}:{port+2}:{port+2}` formula in [tg.ultragrid.js](docs/javascript/tg.ultragrid.js)).
-- **NatNet2OSC:** one-to-many.
-- **NatNetBridge:** one-to-many bidirectional.
+**Device-type allocation within a channel** (per the diagram's left column, plus verified log evidence):
+
+- **OSC / StageC:** triple at slots `7, 8, 9` → `outputPortTwo`, `outputPortOne`, `inputPort`. Verified from trace; see "Ports on the wire" subsection below.
+- **UltraGrid video/audio:** two ports at slots `xxcc2` (video) and `xxcc4` (audio). Verified from Max capture ([m2b-max-capture-notes.md §165-192](logs/m2b-max-capture-notes.md)): `-P11052:11052:11054:11054` for roomId=11, channel.5 → slots 2 and 4. The `-P{p}:{p}:{p+2}:{p+2}` formula in [tg.ultragrid.js:623](javascript/tg.ultragrid.js#L623) uses a single base port `p` with rx=tx and audio at `p+2`; Max sets `p = xxcc2`. Earlier speculation that UG used the `0↔1` and `4↔8` pairs was wrong — UG needs only two distinct ports.
+- **NatNet2OSC / NatNetBridge (MoCap):** paired `xxcc0↔xxcc1` for outputs, single `xxcc2` for input. Verified: channel.1 MoCap → outputPortOne=10010, outputPortTwo=10011, inputPort=10012.
 
 **Reserved channels** (not in the 00..19 matrix):
 
-- **Channel `cc` (control channel):** single port `xx900` and an unused/reserved `xx902` slot. Used for room-level control traffic (not a user-visible channel).
+- **Channel `cc` (control channel):** single port `xx900` and reserved `xx902` slot. Used for room-level control traffic (not a user-visible channel).
 - **OpenStageControl:** many-to-many bidirectional, uses the channel-cc slot.
 
 **Worked examples** (roomID=11):
@@ -695,22 +746,14 @@ Conditional rendering driven by these three axes plus the audio codec / video co
 
 ## 13. Open Items (with proposed defaults)
 
+Resolved TBDs have been removed — their decisions are documented inline in the referenced spec sections, and the decision trail lives in §14 and git history. TBD numbering is preserved (non-contiguous) so prior references remain resolvable.
+
 - **TBD-1:** Packaging tool. Default: defer to release milestone. `electron-vite` defaults to `electron-builder`; switch to `electron-forge` only if notarization/auto-update pain emerges.
-- **TBD-2:** ~~Subscription pattern for remote peers.~~ **[resolved 2026-04-16]** Remote-peer subscription uses the same narrow pattern as own-peer (`/settings/#`, `/rack/+/+/loaded`, + per-channel `/rack/page_0/channel.N/device/#` on `loaded>0`). Confirmed in multi-peer trace. §4.6 updated.
-- **TBD-3:** ~~Local peer's own UI behavior under lock.~~ **[resolved 2026-04-16]** Local (owning) peer is unaffected by its own lock — edits its own rack freely. Lock only greys-out the locked peer's row on *remote* peers' UIs. §5.5 rewritten.
-- **TBD-4:** ~~Who can flip another peer's lock.~~ **[resolved 2026-04-16]** Only the owning peer's UI exposes the toggle. Lock is a gentleman's agreement — a patched remote client could publish `lock/enable 0` to any peer's subtree and the broker would accept it, but no well-behaved UI does so. §5.5 rewritten.
-- **TBD-5:** CLI invocations to enumerate `textureCaptureRange` and `ndiRange`. Default: publish `-default-` until determined; investigate Max patcher.
-- **TBD-6:** `updateMenu` value-string grammar. Example `"audioCapture jack"` verified; complete token set (video backends, receive direction) needs further trace coverage.
-- **TBD-7:** ~~Closed~~ **[resolved]**. `network/mode` wire values are Max dropdown indices `{1, 2, 4, 5, 7}` (with 0, 3, 6 as unselectable separators). NG must preserve these indices on publish regardless of how its own UI renders the menu. See §9.6.
-- **TBD-8:** StageControl **[resolved 2026-04-16]**. Wire description is `StageC` (deliberate short-name for the matrix-cell button). Panel and topic shape are **identical to OSC** — forward-to IP:port(s) + receive-at local IP:port + enable toggle. The `forward to` destination conventionally points at the Open Stage Control app running on the telemersive-broker machine (i.e., the broker host IP, not a peer IP). NG shares the OSC device handler implementation for StageC — only the breadcrumb label, matrix-cell color, and icon differ.
-- **TBD-9:** ~~Reset semantics~~ **[resolved 2026-04-16]**. Reset only fires while disabled; UI lock enforces this. §5.2 updated.
-- **TBD-10:** ~~Child-process lifecycle details.~~ **[resolved 2026-04-16]** No auto-respawn on crash or port conflict — publish `enable 0` retained and surface stderr to the channel's monitor log. Broker disconnect does not kill CLIs (resilience). App-quit clears all retained topics before disconnecting. See §8.8 and §3.6.
 - **TBD-11:** Log streaming UX — `monitor/log` volume, history retention in renderer, panel presentation. Inquisition continued.
 - **TBD-12:** Error surfacing — broker disconnect, CLI crash, bad config. UI presentation TBD.
 - **TBD-13:** Per-OS audio device enumeration on Linux — moot for v1 (Linux out of scope), revisit if Linux added.
 - **TBD-14:** Switchboard/proxy interaction — `maxBusClient.js` has a `restartProxy` HTTP hack against `:3591/proxies/` **[verified]**. Whether NG needs this is unclear; defer until a UltraGrid network mode forces the question. Hack is described in [maxBusClient.js:132-163](docs/javascript/maxBusClient.js#L132-L163) as a workaround "until switchboard works fine again."
-- **TBD-15:** ~~Device-state persistence policy.~~ **[resolved 2026-04-16]** NG persists the local peer's full rack on quit and restores on launch. Only local devices — never remote peers' state. See §6.6. Remaining sub-question: exact UI for "start empty" vs "restore previous session" on the join screen — inquisition TBD.
-- **TBD-16:** Port allocation **[resolved 2026-04-16]** via the "PortRanges V5" diagram. See §8.7.
+- **TBD-17:** Channel≥20 UI behaviour. Proposed default: implement dynamic column expansion (§3.4 `max(20, highest+1, +2 trailing)`) and the ≥20 warning badge when switchboard-side support for channel≥20 ports lands. Until then, v1.0 ships with fixed 20-column rendering — any peer publishing under `channel.20+` is **not** rendered by NG (and won't produce media traffic anyway per §8.7 ceiling). Revisit jointly with the switchboard extension.
 
 ---
 
@@ -731,52 +774,8 @@ All other decisions are reasonably reversible at moderate cost.
 
 ## 15. Open Questions for the User
 
-After reviewing `docs/wiki/`, `docs/mockups/`, `docs/logs/`, and `docs/javascript/`, the gaps below cannot be closed by further reading — they need your decision or domain knowledge.
+Remaining gaps that cannot be closed by further reading — they need your decision, a trace capture, or domain knowledge. Resolved questions (Q-A through Q-H) have been removed; their decisions are documented in the referenced spec sections.
 
-### Q-A. ~~`network/mode` — the value `5` in the trace~~ **[resolved 2026-04-16]**
+### Q-D'. Port topic shape for enabled devices
 
-Wire values are Max dropdown indices including grayed-out separators. Full enum documented in §9.6 / TBD-7. Value `5` = `peer to peer (manual)`. NG must preserve these indices for Max compatibility.
-
-### Q-B. ~~Device-state persistence on quit~~ **[resolved 2026-04-16]**
-
-Option 1 chosen — NG persists local rack state on quit and restores on next launch, matching Max. Only local devices, never remote peers' state. Spec §6.6 documents the restore flow; §2.2 updated; TBD-15 resolved.
-
-### Q-C. ~~StageControl — `StageC` truncation + panel design~~ **[resolved 2026-04-16]**
-
-`StageC` is a deliberate short-name for the matrix-cell button. The panel and topic shape are **identical to OSC**; the `forward to` destination conventionally points at the Open Stage Control app running on the telemersive-broker host. NG reuses the OSC device handler for both. §5.4 documents the full decision; §5.2 and §4.1 updated; TBD-8 resolved.
-
-### Q-D. ~~Port allocation formula~~ **[resolved 2026-04-16]**
-
-Decoded from the "PortRanges V5" diagram. Full scheme in §8.7. Format: `{roomID}{channelIndex}{slot}` with per-channel slot assignments (0↔1, 4↔8 paired, 6 single, 9 reserved). TBD-16 resolved.
-
-**Operational ceiling:** switchboard pre-allocates ports for channels 00..19 only. Channels ≥20 are protocol-legal but won't produce media traffic until the switchboard is extended. §3.4 and §8.7 updated.
-
-**One remaining sub-question:** which exact MQTT topic(s) carry the allocated port value(s)? Best guess: `/channel.N/device/gui/port` (single-port) and `/channel.N/device/gui/portIn` + `/portOut` (paired). An OSC or StageC trace with an enabled device would confirm — same trace that resolves Q-E.
-
-### Q-E. ~~Multi-peer trace~~ **[resolved 2026-04-16]**
-
-[logging_in_to_room_with.log](docs/logs/logging_in_to_room_with.log) closed the big-ticket items:
-
-- **Remote-peer subscribe pattern** = narrow, same as own-peer. §4.6 updated, TBD-2 resolved.
-- **Full bus-event vocabulary** documented in new §7.2 (including `bus peers remote joined {name} {peerId} {localIP} {publicIP}` confirming peerName arrives via roster only).
-- **`loaded` is the device-type discriminator** (0=empty, 1=OSC, 2=ultragrid, 3=MoCap, 4=StageC), **not** a boolean. `description` is a user-editable label (examples: `Olivia`, `Flowers`). §5.2 rewritten.
-- **Max publish order for channel creation:** device subtopics first, `description` next, `loaded` last — so remote peers only see the channel "become alive" when all state is in place. §6.6 restore flow now matches.
-- **Port topic shape** `gui/localudp/{inputPort, outputIPOne, outputPortOne, outputIPTwo, outputPortTwo, listeningIP, reset}`. §8.7 already captured the port examples; full field list now verified.
-
-**Remaining multi-peer items still not observed** in this log (not blockers — inquisition items):
-
-- ~~**Cross-peer publishes**~~ **[resolved 2026-04-16]** — [remote_creates_device_on_local.log](docs/logs/remote_creates_device_on_local.log) shows remote peer creating, enabling, disabling, and removing a device on the local peer's channel 0. Device-subtree authorship is owner-driven: creating peer publishes only `loaded`, target peer publishes the full device subtree (ports, local IP, defaults) and owns teardown (empty-payload retained-clear on unload). §5.2.1 and §5.2.2 added; §5.3 updated to note cross-peer enable toggle works. §8.7 port-topic shape confirmed.
-- ~~**Lock semantics**~~ **[resolved 2026-04-16]** — lock is a gentleman's agreement, enforced UI-side only on remote peers. Owner's own UI unaffected by its own lock. §5.5 rewritten; TBD-3/TBD-4 closed.
-- ~~**Peer leaving**~~ **[resolved 2026-04-17]** — verified: `bus peers remote left {peerName} {peerId}`. After leave, bus sends full peer-list refresh: `peers menu clear` → `peers menu append {name} {id} {localIP} {publicIP}` per remaining peer → `peers done`. Also confirmed: `peer localIP` can arrive as empty string.
-
-### Q-F. ~~APPVERSION — is `TeGateway_v0612` still current?~~ **[resolved 2026-04-16]**
-
-Confirmed current. §3.3 updated.
-
-### Q-G. ~~peerName topic~~ **[resolved 2026-04-16]**
-
-peerName is a **bus-level control-plane message** — the first positional arg in the `join peerName roomName roomPassword` command. Not published as a retained MQTT topic. Remote peers learn it via roster events. NG keeps peerName in a separate `roster` map alongside `peerState` and joins them by peerId at render time. §6.2, §4.3, §4.4 updated.
-
-### Q-H. ~~`reset` semantics~~ **[resolved 2026-04-16]**
-
-Confirmed: reset only fires while disabled. §5.2 and TBD-9 updated.
+Sub-question carried from the original Q-D. Which exact MQTT topic(s) carry the allocated port value(s)? Best guess: `/channel.N/device/gui/port` (single-port) and `/channel.N/device/gui/portIn` + `/portOut` (paired). An OSC or StageC trace with an enabled device would confirm.

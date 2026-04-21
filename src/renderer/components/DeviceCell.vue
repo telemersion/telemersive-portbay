@@ -27,10 +27,9 @@ const isEnabled = computed(() => props.enable === '1')
 
 const DEVICE_STYLES: Record<string, { color: string; label: string }> = {
   '1': { color: '#36ABFF', label: 'OSC' },
-  '2': { color: '#FFA126', label: 'MoCap' },
-  '3': { color: '#F0DE01', label: 'ultragrid' },
-  '4': { color: '#1BFEE9', label: 'ultragrid' },
-  '5': { color: '#00E411', label: 'ultragrid' }
+  '2': { color: '#F0DE01', label: 'UltraGrid' },
+  '3': { color: '#FFA126', label: 'MoCap' },
+  '4': { color: '#FE5FF5', label: 'StageC' }
 }
 
 const style = computed(() => DEVICE_STYLES[props.loaded] ?? { color: '#888', label: 'device' })

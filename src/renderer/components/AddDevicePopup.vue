@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue'
+import { computed, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps<{
   anchorRect: DOMRect
+  targetLocalProps?: Record<string, string>
 }>()
 
 const emit = defineEmits<{
@@ -14,15 +15,33 @@ interface Tile {
   type: number
   label: string
   color: string
-  enabled: boolean
+  flag: string | null
+  implemented: boolean
 }
 
-const tiles: Tile[] = [
-  { type: 1, label: 'OSC',          color: '#36ABFF', enabled: true  },
-  { type: 4, label: 'StageControl', color: '#1BFEE9', enabled: true  },
-  { type: 2, label: 'UltraGrid',    color: '#F0DE01', enabled: true  },
-  { type: 6, label: 'MoCap',        color: '#FFA126', enabled: false }
+const TILES: Tile[] = [
+  { type: 1, label: 'OSC',          color: '#36ABFF', flag: 'osc_enable',    implemented: true  },
+  { type: 4, label: 'StageControl', color: '#FE5FF5', flag: 'stagec_enable', implemented: false },
+  { type: 2, label: 'UltraGrid',    color: '#F0DE01', flag: 'ug_enable',     implemented: true  },
+  { type: 3, label: 'MoCap',        color: '#FFA126', flag: 'natnet_enable', implemented: false }
 ]
+
+function flagValue(name: string): string | undefined {
+  return props.targetLocalProps?.[name]
+}
+
+const tiles = computed(() =>
+  TILES.map((t) => {
+    const explicitlyDisabled = t.flag ? flagValue(t.flag) === '0' : false
+    const enabled = t.implemented && !explicitlyDisabled
+    const reason = !t.implemented
+      ? `${t.label} (not yet available)`
+      : explicitlyDisabled
+        ? `${t.label} (not available on this peer)`
+        : t.label
+    return { ...t, enabled, title: reason }
+  })
+)
 
 const POPUP_WIDTH = 180
 const POPUP_HEIGHT = 188
@@ -77,7 +96,7 @@ onBeforeUnmount(() => {
         :class="{ disabled: !tile.enabled }"
         :style="{ '--tile-color': tile.color } as any"
         :disabled="!tile.enabled"
-        :title="tile.enabled ? tile.label : `${tile.label} (not yet available)`"
+        :title="tile.title"
         @click="onTileClick(tile)"
       >
         <div class="tile-dot" />

@@ -5,6 +5,7 @@ export type ExitReason = 'spawn-failure' | 'crash' | 'killed'
 export interface LifecycleOptions {
   binary: string
   args: string[]
+  env?: NodeJS.ProcessEnv
   spawnGraceMs?: number
   terminationGraceMs?: number
   onStdout?: (line: string) => void
@@ -35,7 +36,9 @@ export class ChildProcessLifecycle {
 
     let child: ChildProcess
     try {
-      child = spawn(this.opts.binary, this.opts.args)
+      child = spawn(this.opts.binary, this.opts.args, {
+        env: this.opts.env ?? process.env
+      })
     } catch {
       this.opts.onExit?.('spawn-failure', null)
       return
