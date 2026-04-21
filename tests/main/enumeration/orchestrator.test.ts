@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { enumerate, registerBackend, resetRegistry } from '../../../src/main/enumeration'
+import { enumerate, handleRefreshTrigger, registerBackend, resetRegistry } from '../../../src/main/enumeration'
 import { applicableBackends, backendFallback, backendTopic } from '../../../src/main/enumeration/topics'
 
 describe('enumerate — no UV binary', () => {
@@ -86,6 +86,53 @@ describe('enumerate — only filter', () => {
         .toBe(backendFallback('wasapiCapture'))
     } else {
       expect(published.has(backendTopic('peerA', 'wasapiCapture'))).toBe(false)
+    }
+  })
+})
+
+describe('handleRefreshTrigger', () => {
+  beforeEach(() => {
+    process.env.UG_PATH = '/definitely/not/a/real/binary/uv'
+    resetRegistry()
+  })
+
+  it('returns false for topics that do not match a refresh trigger', async () => {
+    const calls: string[] = []
+    const handled = await handleRefreshTrigger(
+      'peerA',
+      '/peer/peerA/settings/localMenus/portaudioCaptureRange',
+      (_r, t) => { calls.push(t) }
+    )
+    expect(handled).toBe(false)
+    expect(calls).toEqual([])
+  })
+
+  it('returns false for refresh triggers aimed at a different peer', async () => {
+    const calls: string[] = []
+    const handled = await handleRefreshTrigger(
+      'peerA',
+      '/peer/peerB/settings/localProps/ug_refresh_portaudioCapture',
+      (_r, t) => { calls.push(t) }
+    )
+    expect(handled).toBe(false)
+    expect(calls).toEqual([])
+  })
+
+  it('runs single-backend enumeration when the trigger matches', async () => {
+    const published = new Map<string, string>()
+    const handled = await handleRefreshTrigger(
+      'peerA',
+      '/peer/peerA/settings/localProps/ug_refresh_portaudioCapture',
+      (_r, t, v) => { published.set(t, v) }
+    )
+    expect(handled).toBe(true)
+    expect(published.get('/peer/peerA/settings/localProps/ug_enable')).toBe('0')
+    expect(published.get(backendTopic('peerA', 'portaudioCapture')))
+      .toBe(backendFallback('portaudioCapture'))
+    // Other backends not republished
+    for (const backend of applicableBackends()) {
+      if (backend === 'portaudioCapture') continue
+      expect(published.has(backendTopic('peerA', backend))).toBe(false)
     }
   })
 })

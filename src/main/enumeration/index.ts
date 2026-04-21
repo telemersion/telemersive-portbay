@@ -2,6 +2,7 @@ import { resolveUgPath, spawnCli } from './spawnCli'
 import {
   applicableBackends,
   backendFallback,
+  backendFromRefreshTopic,
   backendTopic,
   ugEnableTopic,
   type Backend
@@ -55,6 +56,17 @@ export async function enumerate(
   publish(1, ugEnableTopic(peerId), '1')
 
   await Promise.allSettled(selected.map((b) => runBackend(b, uvPath, peerId, publish)))
+}
+
+export async function handleRefreshTrigger(
+  peerId: string,
+  topic: string,
+  publish: EnumeratePublish
+): Promise<boolean> {
+  const backend = backendFromRefreshTopic(peerId, topic)
+  if (!backend) return false
+  await enumerate(peerId, publish, { only: [backend] })
+  return true
 }
 
 async function runBackend(
