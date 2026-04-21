@@ -8,6 +8,7 @@ export interface LifecycleOptions {
   env?: NodeJS.ProcessEnv
   spawnGraceMs?: number
   terminationGraceMs?: number
+  zombieEscapeMs?: number
   onStdout?: (line: string) => void
   onStderr?: (line: string) => void
   onExit?: (reason: ExitReason, code: number | null) => void
@@ -15,12 +16,14 @@ export interface LifecycleOptions {
 
 const DEFAULT_SPAWN_GRACE_MS = 2000
 const DEFAULT_TERMINATION_GRACE_MS = 500
+const DEFAULT_ZOMBIE_ESCAPE_MS = 2000
 
 export class ChildProcessLifecycle {
   private child: ChildProcess | null = null
   private spawnedAt = 0
   private stopRequested = false
   private killTimer: NodeJS.Timeout | null = null
+  private escapeTimer: NodeJS.Timeout | null = null
   private stdoutBuf = ''
   private stderrBuf = ''
 
@@ -36,8 +39,12 @@ export class ChildProcessLifecycle {
 
     let child: ChildProcess
     try {
+      // detached: true puts the child in a new process group so we can signal
+      // the entire group on stop — catches helper subprocesses UV may fork
+      // (and works around PID-vs-group ambiguity with the shell-wrapped `uv`).
       child = spawn(this.opts.binary, this.opts.args, {
-        env: this.opts.env ?? process.env
+        env: this.opts.env ?? process.env,
+        detached: true
       })
     } catch {
       this.opts.onExit?.('spawn-failure', null)
@@ -75,14 +82,30 @@ export class ChildProcessLifecycle {
     this.stopRequested = true
 
     const child = this.child
-    try { child.kill('SIGTERM') } catch { /* already dead */ }
+    this.signalGroup(child, 'SIGTERM')
 
     this.killTimer = setTimeout(() => {
       this.killTimer = null
       if (this.child === child) {
-        try { child.kill('SIGKILL') } catch { /* already dead */ }
+        this.signalGroup(child, 'SIGKILL')
+        // Escape hatch: a process stuck in uninterruptible kernel wait (e.g.
+        // macOS Syphon teardown deadlock) cannot be killed by SIGKILL. If the
+        // exit event doesn't fire, move our own state forward so the app
+        // isn't blocked waiting on a zombie.
+        this.escapeTimer = setTimeout(() => {
+          this.escapeTimer = null
+          if (this.child === child) this.finalize('killed', null)
+        }, this.opts.zombieEscapeMs ?? DEFAULT_ZOMBIE_ESCAPE_MS)
       }
     }, this.opts.terminationGraceMs ?? DEFAULT_TERMINATION_GRACE_MS)
+  }
+
+  private signalGroup(child: ChildProcess, signal: NodeJS.Signals): void {
+    if (typeof child.pid !== 'number') return
+    try { process.kill(-child.pid, signal) } catch {
+      // Group kill can fail if the leader already died; fall back to the PID.
+      try { child.kill(signal) } catch { /* already dead */ }
+    }
   }
 
   isRunning(): boolean {
@@ -99,6 +122,7 @@ export class ChildProcessLifecycle {
 
   private finalize(reason: ExitReason, code: number | null): void {
     if (this.killTimer) { clearTimeout(this.killTimer); this.killTimer = null }
+    if (this.escapeTimer) { clearTimeout(this.escapeTimer); this.escapeTimer = null }
     this.child = null
     this.opts.onExit?.(reason, code)
   }

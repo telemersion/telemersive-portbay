@@ -137,6 +137,36 @@ describe('ChildProcessLifecycle', () => {
     await exit.promise
   })
 
+  it('stop signals the whole process group (kills forked helpers)', async () => {
+    // Shell script forks a `sleep` helper in its own background, prints the
+    // helper's PID, then waits. If stop() only signals the shell's PID, the
+    // helper would be orphaned (re-parented to PID 1) and survive.
+    const exit = waitForExit()
+    const helperPids: string[] = []
+    const lifecycle = new ChildProcessLifecycle({
+      binary: SH,
+      args: ['-c', 'sleep 30 & echo $!; wait'],
+      spawnGraceMs: 50,
+      onStdout: (line) => helperPids.push(line.trim()),
+      onExit: (reason, code) => exit.resolve({ reason, code })
+    })
+    lifecycle.start()
+    // Wait for the shell to print the helper PID.
+    await new Promise((r) => setTimeout(r, 100))
+    lifecycle.stop()
+    await exit.promise
+    expect(helperPids).toHaveLength(1)
+    const helperPid = Number(helperPids[0])
+    expect(Number.isFinite(helperPid)).toBe(true)
+    // Give the OS a moment to finalize exit state.
+    await new Promise((r) => setTimeout(r, 50))
+    // Signal 0 is the "does this PID exist" probe. If the helper survived,
+    // process.kill(pid, 0) resolves without throwing; if it's gone, it throws ESRCH.
+    let helperAlive = true
+    try { process.kill(helperPid, 0) } catch { helperAlive = false }
+    expect(helperAlive).toBe(false)
+  })
+
   it('start is idempotent while running', async () => {
     const exits: ExitReason[] = []
     const exit = waitForExit()
