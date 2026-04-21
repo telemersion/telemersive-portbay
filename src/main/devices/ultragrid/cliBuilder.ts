@@ -59,7 +59,8 @@ function buildMode1Args(input: BuildUvArgsInput): string[] {
   if (shouldEmitVideo(transmission)) pushVideoCapture(args, config, indexes, localOs)
   if (shouldEmitAudio(transmission)) pushAudioCapture(args, config, indexes)
 
-  if (transmission === '2') {
+  // Single-port -P reuses the video port even for audio-only (Max does this faithfully).
+  if (shouldEmitVideo(transmission) && shouldEmitAudio(transmission)) {
     args.push(`-P${ports.videoPort}:${ports.videoPort}:${ports.audioPort}:${ports.audioPort}`)
   } else {
     args.push(`-P${ports.videoPort}`)
