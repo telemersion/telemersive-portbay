@@ -300,6 +300,78 @@ function parseTopic(topic) {
   }
   return null;
 }
+const BACKEND_TOPIC_TAIL = {
+  textureCapture: "localMenus/textureCaptureRange",
+  ndi: "localMenus/ndiRange",
+  portaudioCapture: "localMenus/portaudioCaptureRange",
+  portaudioReceive: "localMenus/portaudioReceiveRange",
+  coreaudioCapture: "localMenus/coreaudioCaptureRange",
+  coreaudioReceive: "localMenus/coreaudioReceiveRange",
+  wasapiCapture: "localMenus/wasapiCaptureRange",
+  wasapiReceive: "localMenus/wasapiReceiveRange",
+  jackCapture: "localMenus/jackCaptureRange",
+  jackReceive: "localMenus/jackReceiveRange"
+};
+const BACKEND_FALLBACK = {
+  textureCapture: "-default-",
+  ndi: "-default-",
+  portaudioCapture: "0",
+  portaudioReceive: "0",
+  coreaudioCapture: "0",
+  coreaudioReceive: "0",
+  wasapiCapture: "0",
+  wasapiReceive: "0",
+  jackCapture: "0",
+  jackReceive: "0"
+};
+const UG_REFRESH_TAIL = {
+  textureCapture: "localProps/ug_refresh_textureCapture",
+  ndi: "localProps/ug_refresh_ndi",
+  portaudioCapture: "localProps/ug_refresh_portaudioCapture",
+  portaudioReceive: "localProps/ug_refresh_portaudioReceive",
+  coreaudioCapture: "localProps/ug_refresh_coreaudioCapture",
+  coreaudioReceive: "localProps/ug_refresh_coreaudioReceive",
+  wasapiCapture: "localProps/ug_refresh_wasapiCapture",
+  wasapiReceive: "localProps/ug_refresh_wasapiReceive",
+  jackCapture: "localProps/ug_refresh_jackCapture",
+  jackReceive: "localProps/ug_refresh_jackReceive"
+};
+const REFRESH_TAIL_TO_BACKEND = Object.fromEntries(
+  Object.entries(UG_REFRESH_TAIL).map(([b, tail]) => [tail, b])
+);
+function backendTopic(peerId, backend) {
+  return topics.settings(peerId, BACKEND_TOPIC_TAIL[backend]);
+}
+function backendFallback(backend) {
+  return BACKEND_FALLBACK[backend];
+}
+function ugEnableTopic(peerId) {
+  return topics.settings(peerId, "localProps/ug_enable");
+}
+function backendFromRefreshTopic(peerId, topic) {
+  const parsed = parseTopic(topic);
+  if (!parsed || parsed.type !== "settings") return null;
+  if (parsed.peerId !== peerId) return null;
+  return REFRESH_TAIL_TO_BACKEND[parsed.subpath] ?? null;
+}
+function applicableBackends() {
+  const all = [
+    "textureCapture",
+    "ndi",
+    "portaudioCapture",
+    "portaudioReceive"
+  ];
+  if (process.platform === "darwin") {
+    all.push("coreaudioCapture", "coreaudioReceive");
+  }
+  if (process.platform === "linux") {
+    all.push("jackCapture", "jackReceive");
+  }
+  if (process.platform === "win32") {
+    all.push("wasapiCapture", "wasapiReceive");
+  }
+  return all;
+}
 class DeviceRouter {
   handlers = /* @__PURE__ */ new Map();
   ownPeerId;
@@ -1291,75 +1363,31 @@ function performShutdown(bus2, deviceRouter2, publishedTopics) {
   } catch {
   }
 }
-const BACKEND_TOPIC_TAIL = {
-  textureCapture: "localMenus/textureCaptureRange",
-  ndi: "localMenus/ndiRange",
-  portaudioCapture: "localMenus/portaudioCaptureRange",
-  portaudioReceive: "localMenus/portaudioReceiveRange",
-  coreaudioCapture: "localMenus/coreaudioCaptureRange",
-  coreaudioReceive: "localMenus/coreaudioReceiveRange",
-  wasapiCapture: "localMenus/wasapiCaptureRange",
-  wasapiReceive: "localMenus/wasapiReceiveRange",
-  jackCapture: "localMenus/jackCaptureRange",
-  jackReceive: "localMenus/jackReceiveRange"
-};
-const BACKEND_FALLBACK = {
-  textureCapture: "-default-",
-  ndi: "-default-",
-  portaudioCapture: "0",
-  portaudioReceive: "0",
-  coreaudioCapture: "0",
-  coreaudioReceive: "0",
-  wasapiCapture: "0",
-  wasapiReceive: "0",
-  jackCapture: "0",
-  jackReceive: "0"
-};
-function backendTopic(peerId, backend) {
-  return topics.settings(peerId, BACKEND_TOPIC_TAIL[backend]);
-}
-function backendFallback(backend) {
-  return BACKEND_FALLBACK[backend];
-}
-function ugEnableTopic(peerId) {
-  return topics.settings(peerId, "localProps/ug_enable");
-}
-function applicableBackends() {
-  const all = [
-    "textureCapture",
-    "ndi",
-    "portaudioCapture",
-    "portaudioReceive"
-  ];
-  if (process.platform === "darwin") {
-    all.push("coreaudioCapture", "coreaudioReceive");
-  }
-  if (process.platform === "linux") {
-    all.push("jackCapture", "jackReceive");
-  }
-  if (process.platform === "win32") {
-    all.push("wasapiCapture", "wasapiReceive");
-  }
-  return all;
-}
 let registry = {};
 function registerBackend(backend, spec) {
   registry[backend] = spec;
 }
-async function enumerate(peerId, publish) {
+async function enumerate(peerId, publish, options = {}) {
   if (!peerId) return;
   const uvPath = resolveUgPath();
+  const applicable = applicableBackends();
+  const selected = options.only ? applicable.filter((b) => options.only.includes(b)) : applicable;
   if (!uvPath) {
     publish(1, ugEnableTopic(peerId), "0");
-    for (const backend of applicableBackends()) {
+    for (const backend of selected) {
       publish(1, backendTopic(peerId, backend), backendFallback(backend));
     }
     console.warn("[enumerate] UltraGrid binary not found; publishing fallback enumeration");
     return;
   }
   publish(1, ugEnableTopic(peerId), "1");
-  const backends = applicableBackends();
-  await Promise.allSettled(backends.map((b) => runBackend(b, uvPath, peerId, publish)));
+  await Promise.allSettled(selected.map((b) => runBackend(b, uvPath, peerId, publish)));
+}
+async function handleRefreshTrigger(peerId, topic, publish) {
+  const backend = backendFromRefreshTopic(peerId, topic);
+  if (!backend) return false;
+  await enumerate(peerId, publish, { only: [backend] });
+  return true;
 }
 async function runBackend(backend, uvPath, peerId, publish) {
   const spec = registry[backend];
@@ -1699,6 +1727,16 @@ function setupBus() {
     if (deviceRouter) {
       deviceRouter.onMqttMessage(msg.topic, msg.payload);
     }
+    if (localPeerId) {
+      handleRefreshTrigger(
+        localPeerId,
+        msg.topic,
+        (retained, topic, value) => trackedPublish(retained, topic, value)
+      ).catch((err) => {
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn(`[enumerate] refresh trigger failed: ${message}`);
+      });
+    }
   });
   const channels = [
     "broker:connected",
@@ -1752,8 +1790,8 @@ function setupIpcHandlers() {
     }
     bus.leave();
   });
-  electron.ipcMain.handle("mqtt:publish", async (_event, retained, topic, ...values) => {
-    trackedPublish(retained ? 1 : 0, topic, ...values);
+  electron.ipcMain.handle("mqtt:publish", async (_event, payload) => {
+    trackedPublish(payload.retain ? 1 : 0, payload.topic, payload.value);
   });
   electron.ipcMain.handle("mqtt:subscribe", async (_event, topic) => {
     bus.subscribe(topic);
@@ -1784,13 +1822,6 @@ function setupIpcHandlers() {
   });
   electron.ipcMain.handle("log:clear", () => {
     clearLogBuffer();
-  });
-  electron.ipcMain.handle("enumerate:refresh", async () => {
-    if (!localPeerId) return;
-    await enumerate(
-      localPeerId,
-      (retained, topic, value) => trackedPublish(retained, topic, value)
-    );
   });
 }
 electron.app.whenReady().then(async () => {
