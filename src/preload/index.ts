@@ -5,8 +5,7 @@ const INVOKE_CHANNELS = [
   'bus:init', 'bus:connect', 'bus:disconnect', 'bus:join', 'bus:leave', 'bus:localPeer', 'bus:state',
   'mqtt:publish', 'mqtt:subscribe', 'mqtt:unsubscribe',
   'settings:load', 'settings:save',
-  'log:get', 'log:clear',
-  'enumerate:refresh'
+  'log:get', 'log:clear'
 ] as const
 const RECEIVE_CHANNELS = [
   'broker:connected', 'peer:joined', 'peer:id', 'peer:name',

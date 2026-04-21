@@ -329,12 +329,6 @@ function setupIpcHandlers(): void {
     clearLogBuffer()
   })
 
-  ipcMain.handle('enumerate:refresh', async () => {
-    if (!localPeerId) return
-    await enumerate(localPeerId, (retained, topic, value) =>
-      trackedPublish(retained, topic, value)
-    )
-  })
 }
 
 app.whenReady().then(async () => {
