@@ -81,7 +81,7 @@ describe('UltraGridDevice', () => {
     expect(spawned).toHaveLength(1)
     expect(spawned[0].start).toHaveBeenCalled()
     expect(spawned[0].opts.binary).toBe('/fake/uv')
-    expect(spawned[0].opts.args).toContain("gl:spout=room_channel_0")
+    expect(spawned[0].opts.args).toContain("gl:spout='room_channel_0'")
     expect(spawned[0].opts.args).toContain('-t')
   })
 
