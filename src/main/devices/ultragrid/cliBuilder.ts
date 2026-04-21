@@ -71,14 +71,21 @@ function buildMode1Args(input: BuildUvArgsInput): string[] {
 
 function buildMode4Args(input: BuildUvArgsInput): string[] {
   const { config, indexes, textureReceiverName, localOs } = input
+  const transmission = config.audioVideo.transmission
+  const connection = config.audioVideo.connection
   const args: string[] = ['--param', 'log-color=no']
 
-  pushVideoCapture(args, config, indexes, localOs)
-  pushAudioCapture(args, config, indexes)
-
-  args.push('-d', `${textureDisplayPrefix(localOs)}'${textureReceiverName}'`)
-  if (indexes.audioReceive !== null) {
-    args.push('-r', `portaudio:${indexes.audioReceive}`)
+  if (shouldEmitSend(connection)) {
+    if (shouldEmitVideo(transmission)) pushVideoCapture(args, config, indexes, localOs)
+    if (shouldEmitAudio(transmission)) pushAudioCapture(args, config, indexes)
+  }
+  if (shouldEmitReceive(connection)) {
+    if (shouldEmitVideo(transmission)) {
+      args.push('-d', `${textureDisplayPrefix(localOs)}'${textureReceiverName}'`)
+    }
+    if (shouldEmitAudio(transmission) && indexes.audioReceive !== null) {
+      args.push('-r', `portaudio:${indexes.audioReceive}`)
+    }
   }
   return args
 }

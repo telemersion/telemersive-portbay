@@ -268,6 +268,120 @@ describe('buildUvArgs — mode 4 (peer-to-peer-automatic)', () => {
   })
 })
 
+describe('buildUvArgs — mode 4 connection × transmission gating', () => {
+  function mode4Config(connection: string, transmission: string) {
+    let c = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '4')
+    c = applyTopicChange(c, 'audioVideo/connection', connection)
+    c = applyTopicChange(c, 'audioVideo/transmission', transmission)
+    c = applyTopicChange(
+      c,
+      'audioVideo/videoCapture/texture/menu/selection',
+      "name='Spout Sender'"
+    )
+    return c
+  }
+
+  const defaultIndexes: ResolvedMenuIndexes = {
+    textureCapture: "name='Spout Sender'",
+    ndiCapture: null,
+    audioCapture: 12,
+    audioReceive: 11
+  }
+
+  const commonInputs = {
+    ports: allocateUgPorts(11, 0),
+    indexes: defaultIndexes,
+    host: 'telemersion.zhdk.ch',
+    textureReceiverName: 'room_channel_0',
+    localOs: 'win' as const
+  }
+
+  it('connection=0, transmission=0: send-only, video-only (no -s, no -d, no -r)', () => {
+    const actual = buildUvArgs({ config: mode4Config('0', '0'), ...commonInputs })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-t', "spout:name='Spout Sender'",
+      '-c', 'libavcodec:codec=H.264:bitrate=10M'
+    ])
+  })
+
+  it('connection=0, transmission=1: send-only, audio-only (no -t/-c, no -d, no -r)', () => {
+    const actual = buildUvArgs({ config: mode4Config('0', '1'), ...commonInputs })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-s', 'portaudio:12',
+      '--audio-codec', 'OPUS:bitrate=64000',
+      '--audio-capture-format', 'channels=1'
+    ])
+  })
+
+  it('connection=0, transmission=2: send-only, both (no -d, no -r)', () => {
+    const actual = buildUvArgs({ config: mode4Config('0', '2'), ...commonInputs })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-t', "spout:name='Spout Sender'",
+      '-c', 'libavcodec:codec=H.264:bitrate=10M',
+      '-s', 'portaudio:12',
+      '--audio-codec', 'OPUS:bitrate=64000',
+      '--audio-capture-format', 'channels=1'
+    ])
+  })
+
+  it('connection=1, transmission=0: receive-only, video-only (only -d)', () => {
+    const actual = buildUvArgs({ config: mode4Config('1', '0'), ...commonInputs })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-d', "gl:spout='room_channel_0'"
+    ])
+  })
+
+  it('connection=1, transmission=1: receive-only, audio-only (only -r)', () => {
+    const actual = buildUvArgs({ config: mode4Config('1', '1'), ...commonInputs })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-r', 'portaudio:11'
+    ])
+  })
+
+  it('connection=1, transmission=2: receive-only, both', () => {
+    const actual = buildUvArgs({ config: mode4Config('1', '2'), ...commonInputs })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-d', "gl:spout='room_channel_0'",
+      '-r', 'portaudio:11'
+    ])
+  })
+
+  it('connection=2, transmission=0: both sides, video-only', () => {
+    const actual = buildUvArgs({ config: mode4Config('2', '0'), ...commonInputs })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-t', "spout:name='Spout Sender'",
+      '-c', 'libavcodec:codec=H.264:bitrate=10M',
+      '-d', "gl:spout='room_channel_0'"
+    ])
+  })
+
+  it('connection=2, transmission=1: both sides, audio-only', () => {
+    const actual = buildUvArgs({ config: mode4Config('2', '1'), ...commonInputs })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-s', 'portaudio:12',
+      '--audio-codec', 'OPUS:bitrate=64000',
+      '--audio-capture-format', 'channels=1',
+      '-r', 'portaudio:11'
+    ])
+  })
+
+  it('connection=2, transmission=2: both sides, both kinds (regression for existing fixture)', () => {
+    const actual = buildUvArgs({ config: mode4Config('2', '2'), ...commonInputs })
+    expect(actual).toContain('-t')
+    expect(actual).toContain('-s')
+    expect(actual).toContain('-d')
+    expect(actual).toContain('-r')
+  })
+})
+
 describe('buildUvArgs — OS-dependent texture backend', () => {
   it('uses syphon on osx for mode 1 capture', () => {
     const config = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '1')
