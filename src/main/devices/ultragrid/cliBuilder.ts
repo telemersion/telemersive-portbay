@@ -26,12 +26,29 @@ export function buildUvArgs(input: BuildUvArgsInput): string[] {
     : mode === '4' ? buildMode4Args(input)
     : null
   if (!args) throw new Error(`UltraGrid mode ${mode} not yet supported (M2c)`)
-  // Retained topic values carry texture/NDI names wrapped in `'...'` as a
-  // schema artifact inherited from Max. `child_process.spawn` does no shell
-  // parsing, so the quotes would reach `uv` as literal characters. Strip
-  // them once here at the boundary — downstream builders can emit the raw
-  // values without worrying about quoting.
-  return args.map((a) => a.replace(/'/g, ''))
+  return args
+}
+
+// Gating rules derived from tg.ultragrid.js:
+//   transmission_mode: 0=video, 1=audio, 2=both
+//   connection_type:   0=send,  1=receive, 2=both
+// Mode 1 is always send-only; connection is ignored.
+// Mode 4 gates each side on connection and each block-within-side on transmission.
+
+function shouldEmitVideo(transmission: string): boolean {
+  return transmission !== '1'
+}
+
+function shouldEmitAudio(transmission: string): boolean {
+  return transmission !== '0'
+}
+
+function shouldEmitSend(connection: string): boolean {
+  return connection !== '1'
+}
+
+function shouldEmitReceive(connection: string): boolean {
+  return connection !== '0'
 }
 
 function buildMode1Args(input: BuildUvArgsInput): string[] {
