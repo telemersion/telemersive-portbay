@@ -10,7 +10,7 @@ import { UltraGridDevice } from './devices/ultragrid/UltraGridDevice'
 import { resolveUgPath } from './enumeration/spawnCli'
 import { performShutdown } from './shutdown'
 import { logEvent, setLogSink, getLogBuffer, clearLogBuffer } from './logBus'
-import { enumerate } from './enumeration'
+import { enumerate, handleRefreshTrigger } from './enumeration'
 import { registerDefaultBackends } from './enumeration/parsers'
 
 let mainWindow: BrowserWindow | null = null
@@ -233,6 +233,14 @@ function setupBus(): void {
     mainWindow?.webContents.send('mqtt:message', msg)
     if (deviceRouter) {
       deviceRouter.onMqttMessage(msg.topic, msg.payload)
+    }
+    if (localPeerId) {
+      handleRefreshTrigger(localPeerId, msg.topic, (retained, topic, value) =>
+        trackedPublish(retained, topic, value)
+      ).catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err)
+        console.warn(`[enumerate] refresh trigger failed: ${message}`)
+      })
     }
   })
 
