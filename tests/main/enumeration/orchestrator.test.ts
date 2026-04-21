@@ -51,3 +51,41 @@ describe('enumerate — backend registry', () => {
     }
   })
 })
+
+describe('enumerate — only filter', () => {
+  beforeEach(() => {
+    process.env.UG_PATH = '/definitely/not/a/real/binary/uv'
+    resetRegistry()
+  })
+
+  it('publishes only the requested backend when `only` is passed, plus ug_enable=0', async () => {
+    const published = new Map<string, string>()
+    await enumerate('peerA', (_r, t, v) => { published.set(t, v) }, {
+      only: ['portaudioCapture']
+    })
+
+    expect(published.get('/peer/peerA/settings/localProps/ug_enable')).toBe('0')
+    expect(published.get(backendTopic('peerA', 'portaudioCapture')))
+      .toBe(backendFallback('portaudioCapture'))
+
+    for (const backend of applicableBackends()) {
+      if (backend === 'portaudioCapture') continue
+      expect(published.has(backendTopic('peerA', backend))).toBe(false)
+    }
+  })
+
+  it('ignores entries in `only` that are not in applicableBackends()', async () => {
+    const published = new Map<string, string>()
+    await enumerate('peerA', (_r, t, v) => { published.set(t, v) }, {
+      only: ['wasapiCapture'] // not applicable on darwin/linux CI hosts
+    })
+
+    expect(published.get('/peer/peerA/settings/localProps/ug_enable')).toBe('0')
+    if (process.platform === 'win32') {
+      expect(published.get(backendTopic('peerA', 'wasapiCapture')))
+        .toBe(backendFallback('wasapiCapture'))
+    } else {
+      expect(published.has(backendTopic('peerA', 'wasapiCapture'))).toBe(false)
+    }
+  })
+})

@@ -26,13 +26,26 @@ export function resetRegistry(): void {
   registry = {}
 }
 
-export async function enumerate(peerId: string, publish: EnumeratePublish): Promise<void> {
+export interface EnumerateOptions {
+  only?: Backend[]
+}
+
+export async function enumerate(
+  peerId: string,
+  publish: EnumeratePublish,
+  options: EnumerateOptions = {}
+): Promise<void> {
   if (!peerId) return
 
   const uvPath = resolveUgPath()
+  const applicable = applicableBackends()
+  const selected = options.only
+    ? applicable.filter((b) => options.only!.includes(b))
+    : applicable
+
   if (!uvPath) {
     publish(1, ugEnableTopic(peerId), '0')
-    for (const backend of applicableBackends()) {
+    for (const backend of selected) {
       publish(1, backendTopic(peerId, backend), backendFallback(backend))
     }
     console.warn('[enumerate] UltraGrid binary not found; publishing fallback enumeration')
@@ -41,8 +54,7 @@ export async function enumerate(peerId: string, publish: EnumeratePublish): Prom
 
   publish(1, ugEnableTopic(peerId), '1')
 
-  const backends = applicableBackends()
-  await Promise.allSettled(backends.map((b) => runBackend(b, uvPath, peerId, publish)))
+  await Promise.allSettled(selected.map((b) => runBackend(b, uvPath, peerId, publish)))
 }
 
 async function runBackend(
