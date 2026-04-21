@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useMqttBinding } from '../../composables/useMqttBinding'
 import { computed, ref, watch } from 'vue'
+import { type Backend, refreshTopic } from '../../../shared/topics'
 
 const MONITOR_LOG_CAPACITY = 200
 
@@ -213,8 +214,13 @@ const modeLabels: Record<string, string> = {
   '7': 'capture to local'
 }
 
-async function refreshEnumeration() {
-  await window.api.invoke('enumerate:refresh')
+async function triggerRefresh(backend: Backend) {
+  if (isEnabled.value || isLocked.value) return
+  await window.api.invoke('mqtt:publish', {
+    topic: refreshTopic(props.peerId, backend),
+    value: '1',
+    retain: false
+  })
 }
 </script>
 
@@ -313,6 +319,7 @@ async function refreshEnumeration() {
             <option value="-default-">— select —</option>
             <option v-for="name in textureOptions" :key="name" :value="name">{{ name }}</option>
           </select>
+          <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('textureCapture')" title="Refresh">↻</button>
         </div>
 
         <div v-if="videoType === '1'" class="field-row">
@@ -325,6 +332,7 @@ async function refreshEnumeration() {
             <option value="-default-">— select —</option>
             <option v-for="name in ndiOptions" :key="name" :value="name">{{ name }}</option>
           </select>
+          <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('ndi')" title="Refresh">↻</button>
         </div>
 
         <div class="field-row">
@@ -396,6 +404,7 @@ async function refreshEnumeration() {
               {{ d.label }}
             </option>
           </select>
+          <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('portaudioCapture')" title="Refresh">↻</button>
         </div>
         <div v-if="audioType === '1'" class="field-row">
           <label>device</label>
@@ -409,6 +418,7 @@ async function refreshEnumeration() {
               {{ d.label }}
             </option>
           </select>
+          <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('coreaudioCapture')" title="Refresh">↻</button>
         </div>
         <div v-if="audioType === '2'" class="field-row">
           <label>device</label>
@@ -422,6 +432,7 @@ async function refreshEnumeration() {
               {{ d.label }}
             </option>
           </select>
+          <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('wasapiCapture')" title="Refresh">↻</button>
         </div>
         <div v-if="audioType === '3'" class="field-row">
           <label>device</label>
@@ -435,6 +446,7 @@ async function refreshEnumeration() {
               {{ d.label }}
             </option>
           </select>
+          <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('jackCapture')" title="Refresh">↻</button>
         </div>
 
         <div class="field-row">
@@ -493,6 +505,7 @@ async function refreshEnumeration() {
               {{ d.label }}
             </option>
           </select>
+          <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('portaudioReceive')" title="Refresh">↻</button>
         </div>
         <div v-if="audioRxType === '1'" class="field-row">
           <label>device</label>
@@ -506,6 +519,7 @@ async function refreshEnumeration() {
               {{ d.label }}
             </option>
           </select>
+          <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('coreaudioReceive')" title="Refresh">↻</button>
         </div>
         <div v-if="audioRxType === '2'" class="field-row">
           <label>device</label>
@@ -519,6 +533,7 @@ async function refreshEnumeration() {
               {{ d.label }}
             </option>
           </select>
+          <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('wasapiReceive')" title="Refresh">↻</button>
         </div>
         <div v-if="audioRxType === '3'" class="field-row">
           <label>device</label>
@@ -532,6 +547,7 @@ async function refreshEnumeration() {
               {{ d.label }}
             </option>
           </select>
+          <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('jackReceive')" title="Refresh">↻</button>
         </div>
       </section>
     </template>
@@ -552,9 +568,6 @@ async function refreshEnumeration() {
     </section>
 
     <div class="panel-actions">
-      <button class="refresh-btn" @click="refreshEnumeration" :disabled="isEnabled">
-        Refresh Devices
-      </button>
       <button class="remove-btn" @click="removeDevice" :disabled="isEnabled || (!isLocal && targetLocked)">
         Remove Device
       </button>
@@ -582,8 +595,20 @@ h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px
 .unsupported-mode { padding: 16px; margin: 8px 0; border: 1px dashed #555; border-radius: 4px; color: #aaa; font-size: 12px; text-align: center; }
 .monitor-log { max-height: 160px; overflow-y: auto; background: #0d0d0d; border: 1px solid #333; border-radius: 4px; padding: 6px 8px; color: #9c9; font-family: monospace; font-size: 10px; white-space: pre-wrap; }
 .panel-actions { margin-top: 16px; padding-top: 8px; border-top: 1px solid #333; display: flex; gap: 8px; }
-.refresh-btn { padding: 6px 12px; border-radius: 4px; border: 1px solid #888; background: none; color: #aaa; cursor: pointer; font-size: 11px; }
-.refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .remove-btn { padding: 6px 12px; border-radius: 4px; border: 1px solid #a33; background: none; color: #a33; cursor: pointer; font-size: 11px; }
 .remove-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.refresh-icon {
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background: #333;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+}
+.refresh-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 </style>
