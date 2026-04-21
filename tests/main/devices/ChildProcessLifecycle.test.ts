@@ -59,22 +59,23 @@ describe('ChildProcessLifecycle', () => {
     expect(reason).toBe('killed')
   })
 
-  it('SIGKILL fires after termination grace if SIGTERM is ignored', async () => {
+  it('stop kills immediately even when SIGTERM would be trapped', async () => {
+    // We send SIGKILL directly (no SIGTERM), so a process that traps/ignores
+    // TERM still dies without waiting. Verifies stop() doesn't rely on
+    // graceful cooperation from the child.
     const exit = waitForExit()
-    const started = Date.now()
     const lifecycle = new ChildProcessLifecycle({
       binary: SH,
       args: ['-c', 'trap "" TERM; sleep 10'],
-      terminationGraceMs: 150,
       onExit: (reason) => exit.resolve({ reason, code: null })
     })
     lifecycle.start()
     await new Promise((r) => setTimeout(r, 50))
+    const stopStarted = Date.now()
     lifecycle.stop()
     await exit.promise
-    const elapsed = Date.now() - started
-    expect(elapsed).toBeGreaterThanOrEqual(150)
-    expect(elapsed).toBeLessThan(2000)
+    const killLatency = Date.now() - stopStarted
+    expect(killLatency).toBeLessThan(500)
   })
 
   it('splits stdout into lines', async () => {

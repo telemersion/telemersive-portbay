@@ -7,7 +7,6 @@ export interface LifecycleOptions {
   args: string[]
   env?: NodeJS.ProcessEnv
   spawnGraceMs?: number
-  terminationGraceMs?: number
   zombieEscapeMs?: number
   onStdout?: (line: string) => void
   onStderr?: (line: string) => void
@@ -15,14 +14,12 @@ export interface LifecycleOptions {
 }
 
 const DEFAULT_SPAWN_GRACE_MS = 2000
-const DEFAULT_TERMINATION_GRACE_MS = 500
 const DEFAULT_ZOMBIE_ESCAPE_MS = 2000
 
 export class ChildProcessLifecycle {
   private child: ChildProcess | null = null
   private spawnedAt = 0
   private stopRequested = false
-  private killTimer: NodeJS.Timeout | null = null
   private escapeTimer: NodeJS.Timeout | null = null
   private stdoutBuf = ''
   private stderrBuf = ''
@@ -82,22 +79,20 @@ export class ChildProcessLifecycle {
     this.stopRequested = true
 
     const child = this.child
-    this.signalGroup(child, 'SIGTERM')
+    // Go straight to SIGKILL. SIGTERM would trigger UV's graceful teardown,
+    // which calls vidcap_syphon_done and deadlocks against Syphon's dispatch
+    // queue — leaving uninterruptible-wait zombies the kernel can never reap.
+    // We don't need graceful socket close (UDP media is broker-independent),
+    // so skipping user-space cleanup avoids the race entirely.
+    this.signalGroup(child, 'SIGKILL')
 
-    this.killTimer = setTimeout(() => {
-      this.killTimer = null
-      if (this.child === child) {
-        this.signalGroup(child, 'SIGKILL')
-        // Escape hatch: a process stuck in uninterruptible kernel wait (e.g.
-        // macOS Syphon teardown deadlock) cannot be killed by SIGKILL. If the
-        // exit event doesn't fire, move our own state forward so the app
-        // isn't blocked waiting on a zombie.
-        this.escapeTimer = setTimeout(() => {
-          this.escapeTimer = null
-          if (this.child === child) this.finalize('killed', null)
-        }, this.opts.zombieEscapeMs ?? DEFAULT_ZOMBIE_ESCAPE_MS)
-      }
-    }, this.opts.terminationGraceMs ?? DEFAULT_TERMINATION_GRACE_MS)
+    // Escape hatch: even SIGKILL cannot interrupt a process already stuck in
+    // kernel-wait. If the exit event doesn't fire, move our own state forward
+    // so the app isn't blocked waiting on a zombie.
+    this.escapeTimer = setTimeout(() => {
+      this.escapeTimer = null
+      if (this.child === child) this.finalize('killed', null)
+    }, this.opts.zombieEscapeMs ?? DEFAULT_ZOMBIE_ESCAPE_MS)
   }
 
   private signalGroup(child: ChildProcess, signal: NodeJS.Signals): void {
@@ -121,7 +116,6 @@ export class ChildProcessLifecycle {
   }
 
   private finalize(reason: ExitReason, code: number | null): void {
-    if (this.killTimer) { clearTimeout(this.killTimer); this.killTimer = null }
     if (this.escapeTimer) { clearTimeout(this.escapeTimer); this.escapeTimer = null }
     this.child = null
     this.opts.onExit?.(reason, code)
