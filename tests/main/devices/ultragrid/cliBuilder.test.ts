@@ -10,17 +10,22 @@ import { defaultUltraGridConfig, applyTopicChange } from '../../../../src/main/d
 import { allocateUgPorts } from '../../../../src/main/portAllocator'
 
 function shellTokenize(line: string): string[] {
-  // Mirrors bash word-splitting and quote-stripping: quotes group tokens but
-  // are themselves removed, which is what `spawn(binary, args)` would receive.
+  // Split on whitespace at the top level, keeping single-quoted substrings
+  // intact (including the quotes themselves). Max emits selections like
+  // `spout:name='Spout Sender'` where the quotes are part of the argv element
+  // that UV receives. `child_process.spawn` passes argv verbatim, so our
+  // builder must also emit the quotes; this tokenizer matches that shape.
   const tokens: string[] = []
   let acc = ''
   let inSingle = false
-  let inDouble = false
   for (let i = 0; i < line.length; i++) {
     const ch = line[i]
-    if (ch === "'" && !inDouble) { inSingle = !inSingle; continue }
-    if (ch === '"' && !inSingle) { inDouble = !inDouble; continue }
-    if (!inSingle && !inDouble && /\s/.test(ch)) {
+    if (ch === "'") {
+      inSingle = !inSingle
+      acc += ch
+      continue
+    }
+    if (!inSingle && /\s/.test(ch)) {
       if (acc) { tokens.push(acc); acc = '' }
       continue
     }
@@ -187,8 +192,8 @@ describe('buildUvArgs — OS-dependent texture backend', () => {
       textureReceiverName: 's_channel_0',
       localOs: 'osx'
     })
-    expect(actual).toContain("syphon:name=Simple Server")
-    expect(actual).not.toContain("spout:name=Simple Server")
+    expect(actual).toContain("syphon:name='Simple Server'")
+    expect(actual).not.toContain("spout:name='Simple Server'")
   })
 
   it('uses gl:syphon= on osx for mode 4 display', () => {
@@ -201,8 +206,8 @@ describe('buildUvArgs — OS-dependent texture backend', () => {
       textureReceiverName: 'room_channel_0',
       localOs: 'osx'
     })
-    expect(actual).toContain("gl:syphon=room_channel_0")
-    expect(actual).not.toContain("gl:spout=room_channel_0")
+    expect(actual).toContain("gl:syphon='room_channel_0'")
+    expect(actual).not.toContain("gl:spout='room_channel_0'")
   })
 })
 
