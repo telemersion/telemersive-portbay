@@ -128,6 +128,103 @@ describe('buildUvArgs — mode 1 (send-to-router)', () => {
   })
 })
 
+describe('buildUvArgs — mode 1 transmission gating', () => {
+  it('emits video-only when transmission=0 (no audio flags, -P uses single port)', () => {
+    let config = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '1')
+    config = applyTopicChange(config, 'audioVideo/transmission', '0')
+    config = applyTopicChange(
+      config,
+      'audioVideo/videoCapture/texture/menu/selection',
+      "name='Spout Sender'"
+    )
+    const ports = allocateUgPorts(11, 0)
+    const actual = buildUvArgs({
+      config,
+      ports,
+      indexes: {
+        textureCapture: "name='Spout Sender'",
+        ndiCapture: null,
+        audioCapture: 44,
+        audioReceive: null
+      },
+      host: 'telemersion.zhdk.ch',
+      textureReceiverName: 'room_channel_0',
+      localOs: 'win'
+    })
+
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-t', "spout:name='Spout Sender'",
+      '-c', 'libavcodec:codec=H.264:bitrate=10M',
+      `-P${ports.videoPort}`,
+      'telemersion.zhdk.ch'
+    ])
+    expect(actual).not.toContain('-s')
+    expect(actual).not.toContain('--audio-codec')
+    expect(actual).not.toContain('--audio-capture-format')
+  })
+
+  it('emits audio-only when transmission=1 (no video flags, -P uses single video port)', () => {
+    let config = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '1')
+    config = applyTopicChange(config, 'audioVideo/transmission', '1')
+    const ports = allocateUgPorts(11, 0)
+    const actual = buildUvArgs({
+      config,
+      ports,
+      indexes: {
+        textureCapture: "name='Spout Sender'",
+        ndiCapture: null,
+        audioCapture: 44,
+        audioReceive: null
+      },
+      host: 'telemersion.zhdk.ch',
+      textureReceiverName: 'room_channel_0',
+      localOs: 'win'
+    })
+
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-s', 'portaudio:44',
+      '--audio-codec', 'OPUS:bitrate=64000',
+      '--audio-capture-format', 'channels=1',
+      `-P${ports.videoPort}`,
+      'telemersion.zhdk.ch'
+    ])
+    expect(actual).not.toContain('-t')
+    expect(actual).not.toContain('-c')
+  })
+
+  it('emits both + dual-port -P when transmission=2 (unchanged behavior, regression guard)', () => {
+    let config = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '1')
+    config = applyTopicChange(config, 'audioVideo/transmission', '2')
+    config = applyTopicChange(
+      config,
+      'audioVideo/videoCapture/texture/menu/selection',
+      "name='Spout Sender'"
+    )
+    const ports = allocateUgPorts(11, 0)
+    const actual = buildUvArgs({
+      config,
+      ports,
+      indexes: {
+        textureCapture: "name='Spout Sender'",
+        ndiCapture: null,
+        audioCapture: 44,
+        audioReceive: null
+      },
+      host: 'telemersion.zhdk.ch',
+      textureReceiverName: 'room_channel_0',
+      localOs: 'win'
+    })
+
+    expect(actual).toContain('-t')
+    expect(actual).toContain('-s')
+    expect(actual).toContain(
+      `-P${ports.videoPort}:${ports.videoPort}:${ports.audioPort}:${ports.audioPort}`
+    )
+  })
+})
+
 describe('buildUvArgs — mode 4 (peer-to-peer-automatic)', () => {
   it('matches the captured Max CLI for room 11, channel 0', () => {
     const config = configFromCapture('capture-mode4-room11-ch0-raw.txt')

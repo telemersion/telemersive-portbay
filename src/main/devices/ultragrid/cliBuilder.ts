@@ -53,15 +53,18 @@ function shouldEmitReceive(connection: string): boolean {
 
 function buildMode1Args(input: BuildUvArgsInput): string[] {
   const { config, ports, indexes, host, localOs } = input
+  const transmission = config.audioVideo.transmission
   const args: string[] = ['--param', 'log-color=no']
 
-  pushVideoCapture(args, config, indexes, localOs)
-  pushAudioCapture(args, config, indexes)
+  if (shouldEmitVideo(transmission)) pushVideoCapture(args, config, indexes, localOs)
+  if (shouldEmitAudio(transmission)) pushAudioCapture(args, config, indexes)
 
-  args.push(
-    `-P${ports.videoPort}:${ports.videoPort}:${ports.audioPort}:${ports.audioPort}`,
-    host
-  )
+  if (transmission === '2') {
+    args.push(`-P${ports.videoPort}:${ports.videoPort}:${ports.audioPort}:${ports.audioPort}`)
+  } else {
+    args.push(`-P${ports.videoPort}`)
+  }
+  args.push(host)
   return args
 }
 
