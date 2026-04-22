@@ -876,4 +876,105 @@ h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px
   opacity: 0.4;
   cursor: not-allowed;
 }
+.section-icon {
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.advanced-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+.advanced-pill {
+  padding: 3px 10px;
+  border-radius: 10px;
+  border: 1px solid #555;
+  background: #2a2a2a;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  text-transform: lowercase;
+}
+.advanced-pill:hover {
+  background: #333;
+  color: #ddd;
+}
+.advanced-fold {
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #1a1a1a;
+}
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+.chip-btn {
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid #444;
+  background: #262626;
+  color: #bbb;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: monospace;
+}
+.chip-btn:hover:not(:disabled) {
+  background: #333;
+  color: #fff;
+}
+.chip-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.clear-btn {
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background: #333;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 10px;
+}
+.clear-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.peerid-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.peerid-label {
+  min-width: 70px;
+  font-size: 11px;
+  color: #888;
+}
+.peerid-suggest {
+  flex: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #222;
+  color: #9cf;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 11px;
+  text-align: left;
+}
+.peerid-suggest:hover:not(:disabled) {
+  background: #2a2a2a;
+  color: #cef;
+}
+.peerid-suggest:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 </style>
