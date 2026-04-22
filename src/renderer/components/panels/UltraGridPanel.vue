@@ -133,6 +133,10 @@ const audioChannels = bind(
   'audioVideo/audioCapture/advanced/channels/channels',
   () => audioCapture.value?.advanced?.channels?.channels
 )
+const audioSamplerate = bind(
+  'audioVideo/audioCapture/advanced/compress/samplerate',
+  () => audioCapture.value?.advanced?.compress?.samplerate
+)
 
 const audioRxTypeBinding = bind('audioVideo/audioReceiver/type', () => audioReceiver.value?.type)
 const portaudioRxSel = bind(
@@ -150,6 +154,27 @@ const wasapiRxSel = bind(
 const jackRxSel = bind(
   'audioVideo/audioReceiver/jack/menu/selection',
   () => audioReceiver.value?.jack?.menu?.selection
+)
+
+const videoFilterParams = bind(
+  'audioVideo/videoCapture/advanced/filter/params',
+  () => videoCapture.value?.advanced?.filter?.params
+)
+const videoPostprocessParams = bind(
+  'audioVideo/videoReciever/advanced/postprocessor/params',
+  () => videoReciever.value?.advanced?.postprocessor?.params
+)
+const audioMappingParams = bind(
+  'audioVideo/audioReceiver/advanced/channels/params',
+  () => audioReceiver.value?.advanced?.channels?.params
+)
+const globalParams = bind(
+  'audioVideo/advanced/advanced/params/params',
+  () => av.value?.advanced?.advanced?.params?.params
+)
+const encryptionKey = bind(
+  'audioVideo/advanced/advanced/encryption/key',
+  () => av.value?.advanced?.advanced?.encryption?.key
 )
 
 const monitorGateBinding = bind('monitor/monitorGate', () => monitor.value?.monitorGate)
