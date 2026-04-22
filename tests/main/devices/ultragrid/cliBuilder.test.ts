@@ -465,3 +465,115 @@ describe('buildUvArgs — unsupported modes', () => {
     ).toThrow()
   })
 })
+
+describe('buildUvArgs — video codec table', () => {
+  function buildMode1VideoOnly(videoCodecIndex: string): string[] {
+    let config = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '1')
+    config = applyTopicChange(config, 'audioVideo/transmission', '0')
+    config = applyTopicChange(
+      config,
+      'audioVideo/videoCapture/texture/menu/selection',
+      "name='Spout Sender'"
+    )
+    config = applyTopicChange(
+      config,
+      'audioVideo/videoCapture/advanced/compress/codec',
+      videoCodecIndex
+    )
+    const ports = allocateUgPorts(11, 0)
+    return buildUvArgs({
+      config,
+      ports,
+      indexes: {
+        textureCapture: "name='Spout Sender'",
+        ndiCapture: null,
+        audioCapture: null,
+        audioReceive: null
+      },
+      host: 'telemersion.zhdk.ch',
+      textureReceiverName: 'room_channel_0',
+      localOs: 'win'
+    })
+  }
+
+  it.each([
+    ['1', 'JPEG'],    // Max label "MJPEG" → UG-accepted "JPEG"
+    ['2', 'H.264'],
+    ['3', 'H.265'],
+    ['4', 'J2K'],
+    ['5', 'AV1'],
+    ['6', 'VP8'],
+    ['7', 'VP9'],
+    ['8', 'HFYU'],
+    ['9', 'FFV1']
+  ])('codec index %s → libavcodec:codec=%s:bitrate=10M', (idx, name) => {
+    const args = buildMode1VideoOnly(idx)
+    expect(args).toContain('-c')
+    const cIndex = args.indexOf('-c')
+    expect(args[cIndex + 1]).toBe(`libavcodec:codec=${name}:bitrate=10M`)
+  })
+
+  it('codec index 0 (-none-) omits the -c flag entirely', () => {
+    const args = buildMode1VideoOnly('0')
+    expect(args).not.toContain('-c')
+  })
+
+  it('unknown codec index throws a descriptive error', () => {
+    expect(() => buildMode1VideoOnly('42')).toThrow(/unsupported video codec id: 42/)
+  })
+})
+
+describe('buildUvArgs — audio codec table', () => {
+  function buildMode1AudioOnly(audioCodecIndex: string): string[] {
+    let config = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '1')
+    config = applyTopicChange(config, 'audioVideo/transmission', '1')
+    config = applyTopicChange(
+      config,
+      'audioVideo/audioCapture/advanced/compress/codec',
+      audioCodecIndex
+    )
+    const ports = allocateUgPorts(11, 0)
+    return buildUvArgs({
+      config,
+      ports,
+      indexes: {
+        textureCapture: null,
+        ndiCapture: null,
+        audioCapture: 44,
+        audioReceive: null
+      },
+      host: 'telemersion.zhdk.ch',
+      textureReceiverName: 'room_channel_0',
+      localOs: 'win'
+    })
+  }
+
+  it.each([
+    ['1', 'OPUS'],
+    ['3', 'FLAC'],
+    ['4', 'AAC'],
+    ['5', 'MP3'],
+    ['6', 'G.722'],
+    ['7', 'u-law'],
+    ['8', 'A-law'],
+    ['9', 'PCM']
+  ])('codec index %s → --audio-codec %s:bitrate=64000', (idx, name) => {
+    const args = buildMode1AudioOnly(idx)
+    expect(args).toContain('--audio-codec')
+    const cIndex = args.indexOf('--audio-codec')
+    expect(args[cIndex + 1]).toBe(`${name}:bitrate=64000`)
+  })
+
+  it('codec index 0 (-none-) omits the --audio-codec flag entirely', () => {
+    const args = buildMode1AudioOnly('0')
+    expect(args).not.toContain('--audio-codec')
+  })
+
+  it('codec index 2 (speex) throws because UG 1.10.3 cannot encode it', () => {
+    expect(() => buildMode1AudioOnly('2')).toThrow(/speex/)
+  })
+
+  it('unknown audio codec index throws a descriptive error', () => {
+    expect(() => buildMode1AudioOnly('99')).toThrow(/unsupported audio codec id: 99/)
+  })
+})
