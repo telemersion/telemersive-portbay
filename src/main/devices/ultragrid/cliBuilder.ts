@@ -125,7 +125,9 @@ function pushVideoCapture(
     args.push('-t', flag)
   }
   const { codec, bitrate } = config.audioVideo.videoCapture.advanced.compress
-  args.push('-c', `libavcodec:codec=${videoCodecName(codec)}:bitrate=${bitrate}M`)
+  if (codec !== '0') {
+    args.push('-c', `libavcodec:codec=${videoCodecName(codec)}:bitrate=${bitrate}M`)
+  }
 }
 
 function pushAudioCapture(
@@ -142,13 +144,22 @@ function pushAudioCapture(
 }
 
 // Video codec umenu from Max tg.deviceUG_view.maxpat (line 22391).
-// Index 0 (-none-) and index 1 (MJPEG in Max) are deliberately absent here:
-//   - index 0 means "no -c flag at all" — handled by the caller, not this map
-//   - index 1 Max-label is MJPEG but UG 1.10.3 rejects that literal; UG accepts
-//     "JPEG" instead. Max has shipped this broken for years; we map to JPEG.
+// Index 0 (-none-) is deliberately absent here: it means "no -c flag at all",
+// which is handled by the caller (see pushVideoCapture).
+// Index 1 Max-label is MJPEG but UG 1.10.3 rejects that literal; UG accepts
+// "JPEG" instead. Max has shipped this broken for years; we map to JPEG.
+// Codec name acceptance re-verified with scripts/probe-uv-codecs.sh — see
+// docs/ug-codecs-<version>.txt for the live probe output.
 const VIDEO_CODEC_NAMES: Readonly<Record<string, string>> = {
   '1': 'JPEG',
-  '2': 'H.264'
+  '2': 'H.264',
+  '3': 'H.265',
+  '4': 'J2K',
+  '5': 'AV1',
+  '6': 'VP8',
+  '7': 'VP9',
+  '8': 'HFYU',
+  '9': 'FFV1'
 }
 
 // Audio codec umenu from Max tg.deviceUG_view.maxpat (line 12555).
