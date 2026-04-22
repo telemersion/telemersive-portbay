@@ -450,8 +450,16 @@ async function triggerRefresh(backend: Backend) {
               :disabled="isLocked"
               @change="videoCodec.set(($event.target as HTMLSelectElement).value)"
             >
+              <option value="0">-none-</option>
+              <option value="1">MJPEG</option>
               <option value="2">H.264</option>
-              <option value="1">JPEG</option>
+              <option value="3">H.265</option>
+              <option value="4">J2K</option>
+              <option value="5">AV1</option>
+              <option value="6">VP8</option>
+              <option value="7">VP9</option>
+              <option value="8">HFYU</option>
+              <option value="9">FFV1</option>
             </select>
           </div>
           <div class="field-row">
@@ -629,7 +637,16 @@ async function triggerRefresh(backend: Backend) {
               :disabled="isLocked"
               @change="audioCodec.set(($event.target as HTMLSelectElement).value)"
             >
+              <option value="0">-none-</option>
               <option value="1">OPUS</option>
+              <option value="2">speex (unavailable)</option>
+              <option value="3">FLAC</option>
+              <option value="4">AAC</option>
+              <option value="5">MP3</option>
+              <option value="6">G.722</option>
+              <option value="7">u-law</option>
+              <option value="8">A-law</option>
+              <option value="9">PCM</option>
             </select>
           </div>
           <div class="field-row">
