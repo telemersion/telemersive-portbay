@@ -1,0 +1,28 @@
+UltraGrid codec acceptance probe
+================================
+Version : 1.10.3
+Binary  : vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv
+Date    : 2026-04-22T22:19:53Z
+
+Video codecs (Max umenu order, probed via '-c libavcodec:codec=<name>:help'):
+  [1] MJPEG => REJECTED
+  [1-alt] JPEG => accepted
+  [2] H.264 => accepted
+  [3] H.265 => accepted
+  [4] J2K => accepted
+  [5] AV1 => accepted
+  [6] VP8 => accepted
+  [7] VP9 => accepted
+  [8] HFYU => accepted
+  [9] FFV1 => accepted
+
+Audio codecs (Max umenu order, probed via short-spawn + capture-init log):
+  [1] OPUS => accepted
+  [2] speex => REJECTED
+  [3] FLAC => accepted
+  [4] AAC => accepted
+  [5] MP3 => accepted
+  [6] G.722 => accepted
+  [7] u-law => accepted
+  [8] A-law => accepted
+  [9] PCM => accepted
