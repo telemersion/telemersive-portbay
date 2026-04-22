@@ -170,6 +170,8 @@ const VIDEO_CODEC_NAMES: Readonly<Record<string, string>> = {
 // "unavailable" — a spawn with --audio-codec speex fails at runtime with
 // "Unable to find encoder for audio codec 'speex'". We throw in audioCodecName
 // rather than letting that reach the user via a spawn crash.
+// Codec name acceptance re-verified with scripts/probe-uv-codecs.sh — see
+// docs/ug-codecs-<version>.txt for the live probe output.
 const AUDIO_CODEC_NAMES: Readonly<Record<string, string>> = {
   '1': 'OPUS',
   '3': 'FLAC',
