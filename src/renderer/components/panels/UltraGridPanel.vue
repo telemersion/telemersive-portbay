@@ -660,8 +660,14 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section v-if="mode === '4' && showReceiveSide && showAudio">
-        <h4>Audio Receiver (Mode 4)</h4>
+      <section v-if="mode === '4' && showReceiveSide && showAudio" class="ug-section">
+        <h4>
+          <svg class="section-icon" viewBox="0 0 200 200" width="18" height="18"
+            stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+            <path :d="DOWNSTREAM_PATH" :fill="AUDIO_COLOR" :stroke="AUDIO_COLOR"/>
+          </svg>
+          Audio Receiver
+        </h4>
         <div class="field-row">
           <label>backend</label>
           <select
@@ -731,6 +737,33 @@ async function triggerRefresh(backend: Backend) {
             </option>
           </select>
           <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('jackReceive')" title="Refresh">↻</button>
+        </div>
+
+        <div class="advanced-row">
+          <button class="advanced-pill" @click="audioReceiverAdvOpen = !audioReceiverAdvOpen">
+            advanced {{ audioReceiverAdvOpen ? '▾' : '▸' }}
+          </button>
+        </div>
+
+        <div v-if="audioReceiverAdvOpen" class="advanced-fold">
+          <div class="field-row">
+            <label>mapping</label>
+            <input
+              :value="audioMappingParams.value.value"
+              :disabled="isLocked"
+              @change="audioMappingParams.set(($event.target as HTMLInputElement).value)"
+            />
+            <button class="clear-btn" :disabled="isLocked" @click="clearField(audioMappingParams)">clear</button>
+          </div>
+          <div class="chip-row">
+            <button
+              v-for="preset in AUDIO_MAPPING_CHIPS"
+              :key="preset"
+              class="chip-btn"
+              :disabled="isLocked"
+              @click="applyChip(audioMappingParams, preset)"
+            >{{ preset }}</button>
+          </div>
         </div>
       </section>
     </template>
