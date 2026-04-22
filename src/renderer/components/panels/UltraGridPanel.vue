@@ -536,8 +536,14 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section v-if="showSendSide && showAudio">
-        <h4>Audio Capture</h4>
+      <section v-if="showSendSide && showAudio" class="ug-section">
+        <h4>
+          <svg class="section-icon" viewBox="0 0 200 200" width="18" height="18"
+            stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+            <path :d="UPSTREAM_PATH" :fill="AUDIO_COLOR" :stroke="AUDIO_COLOR"/>
+          </svg>
+          Audio Capture
+        </h4>
         <div class="field-row">
           <label>backend</label>
           <select
@@ -609,31 +615,48 @@ async function triggerRefresh(backend: Backend) {
           <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('jackCapture')" title="Refresh">↻</button>
         </div>
 
-        <div class="field-row">
-          <label>codec</label>
-          <select
-            :value="audioCodec.value.value"
-            :disabled="isLocked"
-            @change="audioCodec.set(($event.target as HTMLSelectElement).value)"
-          >
-            <option value="1">OPUS</option>
-          </select>
+        <div class="advanced-row">
+          <button class="advanced-pill" @click="audioCaptureAdvOpen = !audioCaptureAdvOpen">
+            advanced {{ audioCaptureAdvOpen ? '▾' : '▸' }}
+          </button>
         </div>
-        <div class="field-row">
-          <label>bitrate</label>
-          <input
-            class="port-input"
-            :value="audioBitrate.value.value"
-            :disabled="isLocked"
-            @change="audioBitrate.set(($event.target as HTMLInputElement).value)"
-          />
-          <label>channels</label>
-          <input
-            class="port-input"
-            :value="audioChannels.value.value"
-            :disabled="isLocked"
-            @change="audioChannels.set(($event.target as HTMLInputElement).value)"
-          />
+
+        <div v-if="audioCaptureAdvOpen" class="advanced-fold">
+          <div class="field-row">
+            <label>codec</label>
+            <select
+              :value="audioCodec.value.value"
+              :disabled="isLocked"
+              @change="audioCodec.set(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="1">OPUS</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label>bitrate</label>
+            <input
+              class="port-input"
+              :value="audioBitrate.value.value"
+              :disabled="isLocked"
+              @change="audioBitrate.set(($event.target as HTMLInputElement).value)"
+            />
+            <label>sample</label>
+            <input
+              class="port-input"
+              :value="audioSamplerate.value.value"
+              :disabled="isLocked"
+              @change="audioSamplerate.set(($event.target as HTMLInputElement).value)"
+            />
+          </div>
+          <div class="field-row">
+            <label>channels</label>
+            <input
+              class="port-input"
+              :value="audioChannels.value.value"
+              :disabled="isLocked"
+              @change="audioChannels.set(($event.target as HTMLInputElement).value)"
+            />
+          </div>
         </div>
       </section>
 
