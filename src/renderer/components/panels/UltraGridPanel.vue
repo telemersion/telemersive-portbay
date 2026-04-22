@@ -390,8 +390,14 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section v-if="showSendSide && showVideo">
-        <h4>Video Capture</h4>
+      <section v-if="showSendSide && showVideo" class="ug-section">
+        <h4>
+          <svg class="section-icon" viewBox="0 0 200 200" width="18" height="18"
+            stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+            <path :d="UPSTREAM_PATH" :fill="VIDEO_COLOR" :stroke="VIDEO_COLOR"/>
+          </svg>
+          Video Capture
+        </h4>
         <div class="field-row">
           <label>source</label>
           <select
@@ -430,32 +436,58 @@ async function triggerRefresh(backend: Backend) {
           <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('ndi')" title="Refresh">↻</button>
         </div>
 
-        <div class="field-row">
-          <label>codec</label>
-          <select
-            :value="videoCodec.value.value"
-            :disabled="isLocked"
-            @change="videoCodec.set(($event.target as HTMLSelectElement).value)"
-          >
-            <option value="2">H.264</option>
-            <option value="1">JPEG</option>
-          </select>
+        <div class="advanced-row">
+          <button class="advanced-pill" @click="videoCaptureAdvOpen = !videoCaptureAdvOpen">
+            advanced {{ videoCaptureAdvOpen ? '▾' : '▸' }}
+          </button>
         </div>
-        <div class="field-row">
-          <label>bitrate (M)</label>
-          <input
-            class="port-input"
-            :value="videoBitrate.value.value"
-            :disabled="isLocked"
-            @change="videoBitrate.set(($event.target as HTMLInputElement).value)"
-          />
-          <label>fps</label>
-          <input
-            class="port-input"
-            :value="videoFps.value.value"
-            :disabled="isLocked"
-            @change="videoFps.set(($event.target as HTMLInputElement).value)"
-          />
+
+        <div v-if="videoCaptureAdvOpen" class="advanced-fold">
+          <div class="field-row">
+            <label>codec</label>
+            <select
+              :value="videoCodec.value.value"
+              :disabled="isLocked"
+              @change="videoCodec.set(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="2">H.264</option>
+              <option value="1">JPEG</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label>bitrate (M)</label>
+            <input
+              class="port-input"
+              :value="videoBitrate.value.value"
+              :disabled="isLocked"
+              @change="videoBitrate.set(($event.target as HTMLInputElement).value)"
+            />
+            <label>fps</label>
+            <input
+              class="port-input"
+              :value="videoFps.value.value"
+              :disabled="isLocked"
+              @change="videoFps.set(($event.target as HTMLInputElement).value)"
+            />
+          </div>
+          <div class="field-row">
+            <label>filter</label>
+            <input
+              :value="videoFilterParams.value.value"
+              :disabled="isLocked"
+              @change="videoFilterParams.set(($event.target as HTMLInputElement).value)"
+            />
+            <button class="clear-btn" :disabled="isLocked" @click="clearField(videoFilterParams)">clear</button>
+          </div>
+          <div class="chip-row">
+            <button
+              v-for="preset in VIDEO_FILTER_CHIPS"
+              :key="preset"
+              class="chip-btn"
+              :disabled="isLocked"
+              @click="applyChip(videoFilterParams, preset)"
+            >{{ preset }}</button>
+          </div>
         </div>
       </section>
 
