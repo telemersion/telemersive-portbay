@@ -71,6 +71,14 @@ const showReceiveSide = computed(() => connection.value !== '0')
 const showVideo = computed(() => transmission.value !== '1')
 const showAudio = computed(() => transmission.value !== '0')
 
+const VIDEO_COLOR = '#F0DE01'
+const AUDIO_COLOR = '#00E411'
+
+// UpStream SVG path (TX/Capture) — copied from DeviceCell.vue:109
+const UPSTREAM_PATH = 'M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z'
+// DownStream SVG path (RX/Receiver) — copied from DeviceCell.vue:115
+const DOWNSTREAM_PATH = 'M 109.42897,19.940146 110.57103,110 H 130 L 99.999999,149.94015 70,110 h 20.571029 l -1.14206,-90.059854 z'
+
 const monitorGateOn = computed(() => monitor.value?.monitorGate === '1')
 const monitorLog = computed(() => monitor.value?.log ?? '')
 
@@ -93,6 +101,18 @@ watch(monitorLog, (line) => {
 
 function clearMonitorLog() {
   monitorLogBuffer.value = []
+}
+
+function clearField(binding: { set: (v: string) => void }) {
+  binding.set('-none-')
+}
+
+function applyChip(binding: { set: (v: string) => void }, preset: string) {
+  binding.set(preset)
+}
+
+function applyPeerIdAsKey() {
+  encryptionKey.set(props.peerId)
 }
 
 const localMenus = computed(() => props.peerSettings?.localMenus ?? {})
