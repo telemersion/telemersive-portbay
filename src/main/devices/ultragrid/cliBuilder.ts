@@ -141,15 +141,32 @@ function pushAudioCapture(
   args.push('--audio-capture-format', `channels=${audio.channels.channels}`)
 }
 
+// Video codec umenu from Max tg.deviceUG_view.maxpat (line 22391).
+// Index 0 (-none-) and index 1 (MJPEG in Max) are deliberately absent here:
+//   - index 0 means "no -c flag at all" — handled by the caller, not this map
+//   - index 1 Max-label is MJPEG but UG 1.10.3 rejects that literal; UG accepts
+//     "JPEG" instead. Max has shipped this broken for years; we map to JPEG.
+const VIDEO_CODEC_NAMES: Readonly<Record<string, string>> = {
+  '1': 'JPEG',
+  '2': 'H.264'
+}
+
+// Audio codec umenu from Max tg.deviceUG_view.maxpat (line 12555).
+// Index 0 means "no --audio-codec flag" — handled by caller.
+const AUDIO_CODEC_NAMES: Readonly<Record<string, string>> = {
+  '1': 'OPUS'
+}
+
 function videoCodecName(codec: string): string {
-  if (codec === '2') return 'H.264'
-  if (codec === '1') return 'JPEG'
-  throw new Error(`unsupported video codec id: ${codec}`)
+  const name = VIDEO_CODEC_NAMES[codec]
+  if (!name) throw new Error(`unsupported video codec id: ${codec}`)
+  return name
 }
 
 function audioCodecName(codec: string): string {
-  if (codec === '1') return 'OPUS'
-  throw new Error(`unsupported audio codec id: ${codec}`)
+  const name = AUDIO_CODEC_NAMES[codec]
+  if (!name) throw new Error(`unsupported audio codec id: ${codec}`)
+  return name
 }
 
 export function extractMenuIndex(rangeString: string, selection: string): number | null {
