@@ -139,7 +139,9 @@ function pushAudioCapture(
     args.push('-s', `portaudio:${indexes.audioCapture}`)
   }
   const audio = config.audioVideo.audioCapture.advanced
-  args.push('--audio-codec', `${audioCodecName(audio.compress.codec)}:bitrate=${audio.compress.bitrate}`)
+  if (audio.compress.codec !== '0') {
+    args.push('--audio-codec', `${audioCodecName(audio.compress.codec)}:bitrate=${audio.compress.bitrate}`)
+  }
   args.push('--audio-capture-format', `channels=${audio.channels.channels}`)
 }
 
@@ -163,9 +165,20 @@ const VIDEO_CODEC_NAMES: Readonly<Record<string, string>> = {
 }
 
 // Audio codec umenu from Max tg.deviceUG_view.maxpat (line 12555).
-// Index 0 means "no --audio-codec flag" — handled by caller.
+// Index 0 (-none-) means "no --audio-codec flag" — handled by caller.
+// Index 2 (speex) is intentionally absent: UG 1.10.3 lists speex as
+// "unavailable" — a spawn with --audio-codec speex fails at runtime with
+// "Unable to find encoder for audio codec 'speex'". We throw in audioCodecName
+// rather than letting that reach the user via a spawn crash.
 const AUDIO_CODEC_NAMES: Readonly<Record<string, string>> = {
-  '1': 'OPUS'
+  '1': 'OPUS',
+  '3': 'FLAC',
+  '4': 'AAC',
+  '5': 'MP3',
+  '6': 'G.722',
+  '7': 'u-law',
+  '8': 'A-law',
+  '9': 'PCM'
 }
 
 function videoCodecName(codec: string): string {
@@ -175,6 +188,9 @@ function videoCodecName(codec: string): string {
 }
 
 function audioCodecName(codec: string): string {
+  if (codec === '2') {
+    throw new Error('audio codec index 2 (speex) is unavailable in UG 1.10.3')
+  }
   const name = AUDIO_CODEC_NAMES[codec]
   if (!name) throw new Error(`unsupported audio codec id: ${codec}`)
   return name
