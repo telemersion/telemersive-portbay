@@ -766,6 +766,54 @@ async function triggerRefresh(backend: Backend) {
           </div>
         </div>
       </section>
+
+      <section class="ug-section">
+        <h4>Advanced</h4>
+        <div class="advanced-row">
+          <button class="advanced-pill" @click="globalAdvOpen = !globalAdvOpen">
+            advanced {{ globalAdvOpen ? '▾' : '▸' }}
+          </button>
+        </div>
+
+        <div v-if="globalAdvOpen" class="advanced-fold">
+          <div class="field-row">
+            <label>params</label>
+            <input
+              :value="globalParams.value.value"
+              :disabled="isLocked"
+              @change="globalParams.set(($event.target as HTMLInputElement).value)"
+            />
+            <button class="clear-btn" :disabled="isLocked" @click="clearField(globalParams)">clear</button>
+          </div>
+          <div class="chip-row">
+            <button
+              v-for="preset in ADVANCED_PARAMS_CHIPS"
+              :key="preset"
+              class="chip-btn"
+              :disabled="isLocked"
+              @click="applyChip(globalParams, preset)"
+            >{{ preset }}</button>
+          </div>
+          <div class="field-row">
+            <label>encrypt key</label>
+            <input
+              :value="encryptionKey.value.value"
+              :disabled="isLocked"
+              @change="encryptionKey.set(($event.target as HTMLInputElement).value)"
+            />
+            <button class="clear-btn" :disabled="isLocked" @click="clearField(encryptionKey)">clear</button>
+          </div>
+          <div class="peerid-row">
+            <span class="peerid-label">use peerId:</span>
+            <button
+              class="peerid-suggest"
+              :disabled="isLocked"
+              @click="applyPeerIdAsKey"
+              :title="'Click to use this peerId as the encrypt key'"
+            >{{ props.peerId }}</button>
+          </div>
+        </div>
+      </section>
     </template>
 
     <section>
