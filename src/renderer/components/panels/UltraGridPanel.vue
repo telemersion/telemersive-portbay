@@ -491,8 +491,14 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section v-if="mode === '4' && showReceiveSide && showVideo">
-        <h4>Video Receiver (Mode 4)</h4>
+      <section v-if="mode === '4' && showReceiveSide && showVideo" class="ug-section">
+        <h4>
+          <svg class="section-icon" viewBox="0 0 200 200" width="18" height="18"
+            stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+            <path :d="DOWNSTREAM_PATH" :fill="VIDEO_COLOR" :stroke="VIDEO_COLOR"/>
+          </svg>
+          Video Receiver
+        </h4>
         <div class="field-row">
           <label>spout name</label>
           <input
@@ -500,6 +506,33 @@ async function triggerRefresh(backend: Backend) {
             :disabled="isLocked"
             @change="videoRxName.set(($event.target as HTMLInputElement).value)"
           />
+        </div>
+
+        <div class="advanced-row">
+          <button class="advanced-pill" @click="videoReceiverAdvOpen = !videoReceiverAdvOpen">
+            advanced {{ videoReceiverAdvOpen ? '▾' : '▸' }}
+          </button>
+        </div>
+
+        <div v-if="videoReceiverAdvOpen" class="advanced-fold">
+          <div class="field-row">
+            <label>postprocess</label>
+            <input
+              :value="videoPostprocessParams.value.value"
+              :disabled="isLocked"
+              @change="videoPostprocessParams.set(($event.target as HTMLInputElement).value)"
+            />
+            <button class="clear-btn" :disabled="isLocked" @click="clearField(videoPostprocessParams)">clear</button>
+          </div>
+          <div class="chip-row">
+            <button
+              v-for="preset in VIDEO_POSTPROCESS_CHIPS"
+              :key="preset"
+              class="chip-btn"
+              :disabled="isLocked"
+              @click="applyChip(videoPostprocessParams, preset)"
+            >{{ preset }}</button>
+          </div>
         </div>
       </section>
 
