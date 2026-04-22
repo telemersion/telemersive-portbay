@@ -5,6 +5,34 @@ import { type Backend, refreshTopic } from '../../../shared/topics'
 
 const MONITOR_LOG_CAPACITY = 200
 
+const VIDEO_FILTER_CHIPS = [
+  'blank:10:10:50:20', 'flip', 'resize:1/2',
+  'blank:10%:10%:3%:2%', 'grayscale', 'resize:1920x1080',
+  'mirror', 'every:2', 'display:ndi'
+] as const
+
+const VIDEO_POSTPROCESS_CHIPS = [
+  'crop:wdith=200:height=200:xoff=20:yoff=20',
+  'border:color=#ff0000:width=20==8', 'flip',
+  'double_framerate:d:nodelay', 'scale:200:20',
+  'resize:1920x1080', 'split:2:2', 'grayscale'
+] as const
+
+const AUDIO_MAPPING_CHIPS = [
+  '0:0', '0:0, 1:0', '0:0\\,:1', '0:0,0:1', '4:0\\,5:1'
+] as const
+
+const ADVANCED_PARAMS_CHIPS = [
+  'audio-buffer-len=<ms>', 'low-latency-audio[=ultra]', 'no-dither',
+  'audio-cap-frames=<f>', 'disable-keyboard-control',
+  'udp-queue-len=<l>', 'audio-disable-adaptive-buffer',
+  'lavc-use-codec=<c>', 'stdout-buf={no|line|full}', 'use-hw-accel',
+  'audioenc-frame-duration=<ms>', 'resampler-quality=[0-10]',
+  'ldgm-device={CPU|GPU}', 'window-title=<title>', 'errors-fatal',
+  'lavc-h264-interlaced-dct', 'gl-disable-10b',
+  'glfw-window-hint=<k>=<v>[:<k2>=<v2>...]'
+] as const
+
 const props = defineProps<{
   peerId: string
   channelIndex: number
@@ -48,6 +76,12 @@ const monitorLog = computed(() => monitor.value?.log ?? '')
 
 const monitorLogBuffer = ref<string[]>([])
 const monitorLogText = computed(() => monitorLogBuffer.value.join('\n'))
+
+const videoCaptureAdvOpen = ref(false)
+const videoReceiverAdvOpen = ref(false)
+const audioCaptureAdvOpen = ref(false)
+const audioReceiverAdvOpen = ref(false)
+const globalAdvOpen = ref(false)
 
 watch(monitorLog, (line) => {
   if (!line) return
