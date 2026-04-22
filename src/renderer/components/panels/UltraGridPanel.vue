@@ -29,9 +29,19 @@ const isEnabled = computed(() => gui.value?.enable === '1')
 const isLocked = computed(() => isEnabled.value || (!props.isLocal && props.targetLocked))
 
 const mode = computed(() => network.value?.mode ?? '1')
+const connection = computed(() => av.value?.connection ?? '2')
+const transmission = computed(() => av.value?.transmission ?? '2')
 const videoType = computed(() => videoCapture.value?.type ?? '0')
 const audioType = computed(() => audioCapture.value?.type ?? '0')
 const audioRxType = computed(() => audioReceiver.value?.type ?? '0')
+
+// Mode locks direction: mode=1 (send to router) forces connection=0 (send),
+// mode=2 (receive from router) forces connection=1 (receive).
+const directionLocked = computed(() => mode.value === '1' || mode.value === '2')
+const showSendSide = computed(() => connection.value !== '1')
+const showReceiveSide = computed(() => connection.value !== '0')
+const showVideo = computed(() => transmission.value !== '1')
+const showAudio = computed(() => transmission.value !== '0')
 
 const monitorGateOn = computed(() => monitor.value?.monitorGate === '1')
 const monitorLog = computed(() => monitor.value?.log ?? '')
@@ -143,6 +153,12 @@ const jackRxSel = bind(
 )
 
 const monitorGateBinding = bind('monitor/monitorGate', () => monitor.value?.monitorGate)
+
+watch([mode, connection], ([m, c]) => {
+  if (!props.isLocal) return
+  const target = m === '1' ? '0' : m === '2' ? '1' : null
+  if (target !== null && c !== target) connectionBinding.set(target)
+}, { immediate: true })
 
 function toggleEnable() {
   enableBinding.set(isEnabled.value ? '0' : '1')
@@ -272,8 +288,8 @@ async function triggerRefresh(backend: Backend) {
         <div class="field-row">
           <label>direction</label>
           <select
-            :value="av.connection"
-            :disabled="isLocked"
+            :value="connection"
+            :disabled="isLocked || directionLocked"
             @change="connectionBinding.set(($event.target as HTMLSelectElement).value)"
           >
             <option value="0">send</option>
@@ -284,7 +300,7 @@ async function triggerRefresh(backend: Backend) {
         <div class="field-row">
           <label>transmission</label>
           <select
-            :value="av.transmission"
+            :value="transmission"
             :disabled="isLocked"
             @change="transmissionBinding.set(($event.target as HTMLSelectElement).value)"
           >
@@ -295,7 +311,7 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section>
+      <section v-if="showSendSide && showVideo">
         <h4>Video Capture</h4>
         <div class="field-row">
           <label>source</label>
@@ -364,7 +380,7 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section v-if="mode === '4'">
+      <section v-if="mode === '4' && showReceiveSide && showVideo">
         <h4>Video Receiver (Mode 4)</h4>
         <div class="field-row">
           <label>spout name</label>
@@ -376,7 +392,7 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section>
+      <section v-if="showSendSide && showAudio">
         <h4>Audio Capture</h4>
         <div class="field-row">
           <label>backend</label>
@@ -477,7 +493,7 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section v-if="mode === '4'">
+      <section v-if="mode === '4' && showReceiveSide && showAudio">
         <h4>Audio Receiver (Mode 4)</h4>
         <div class="field-row">
           <label>backend</label>
