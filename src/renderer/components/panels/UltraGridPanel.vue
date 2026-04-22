@@ -639,7 +639,7 @@ async function triggerRefresh(backend: Backend) {
             >
               <option value="0">-none-</option>
               <option value="1">OPUS</option>
-              <option value="2">speex (unavailable)</option>
+              <option value="2" disabled>speex (unavailable)</option>
               <option value="3">FLAC</option>
               <option value="4">AAC</option>
               <option value="5">MP3</option>
