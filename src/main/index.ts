@@ -197,7 +197,7 @@ function setupBus(): void {
               peerId: localPeerId,
               localIP,
               roomId,
-              publish: (retained, topic, value) => trackedPublish(retained, topic, value),
+              publish: (retained, topic, ...values) => trackedPublish(retained, topic, ...values),
               hasRetained: (topic: string) => retainedTopics.has(topic),
               getSetting: (subpath: string) =>
                 retainedTopics.get(topics.settings(localPeerId, subpath)) ?? null,

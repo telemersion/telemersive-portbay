@@ -12,8 +12,9 @@ import {
 } from './config'
 import { buildUvArgs, extractMenuIndex, type ResolvedMenuIndexes } from './cliBuilder'
 import { MonitorLogBuffer } from './monitorLog'
+import { UltraGridIndicatorParser } from './indicators'
 
-type PublishFn = (retained: 0 | 1, topic: string, value: string) => void
+type PublishFn = (retained: 0 | 1, topic: string, ...values: string[]) => void
 type GetSettingFn = (subpath: string) => string | null
 type SpawnFactory = (opts: LifecycleOptions) => ChildProcessLifecycle
 
@@ -63,6 +64,7 @@ export class UltraGridDevice implements DeviceHandler {
 
   private lifecycle: ChildProcessLifecycle | null = null
   private enabled = false
+  private indicatorParser: UltraGridIndicatorParser
 
   constructor(opts: UltraGridDeviceOptions) {
     this.channelIndex = opts.channelIndex
@@ -76,6 +78,14 @@ export class UltraGridDevice implements DeviceHandler {
     this.spawnFactory = opts.spawnFactory ?? ((o) => new ChildProcessLifecycle(o))
     this.localOs = opts.osOverride ?? detectLocalOs()
     this.config = applyTopicChange(this.config, 'remoteValues/local_os', this.localOs)
+    const indicatorTopic = topics.deviceGui(opts.peerId, opts.channelIndex, 'indicators')
+    this.indicatorParser = new UltraGridIndicatorParser(
+      (_, topic, ...values) => {
+        this.publishedTopics.add(topic)
+        opts.publish(1, topic, ...values)
+      },
+      indicatorTopic
+    )
   }
 
   publishDefaults(): void {
@@ -88,8 +98,7 @@ export class UltraGridDevice implements DeviceHandler {
       this.pubDeviceGui(subpath, value, false)
     }
     this.pubDeviceGui('description', 'UG', false)
-    this.pubDeviceGui('indicators/inputIndicator', '0', false)
-    this.pubDeviceGui('indicators/outputIndicator', '0', false)
+    this.pubDeviceGui('indicators', '0 0 0 0 0 0', false)
     this.pubDeviceGui('monitor/log', '', false)
     this.pubDeviceGui('monitor/monitorGate', '0', false)
   }
@@ -189,11 +198,14 @@ export class UltraGridDevice implements DeviceHandler {
 
   private stopProcess(): void {
     this.lifecycle?.stop()
+    this.indicatorParser.reset()
+    this.pubDeviceGui('indicators', '0 0 0 0 0 0', true)
   }
 
   private handleLogLine(line: string): void {
     this.monitor.append(line)
     if (this.monitorGateOn) this.publishMonitorLine(line)
+    this.indicatorParser.handleLogLine(line)
   }
 
   private publishMonitorLine(line: string): void {

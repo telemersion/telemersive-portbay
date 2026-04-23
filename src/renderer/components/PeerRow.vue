@@ -38,7 +38,10 @@ function channelData(index: number) {
     description: ch?.device?.gui?.description ?? '',
     enable: ch?.device?.gui?.enable ?? '0',
     inputIndicator: ch?.device?.gui?.inputIndicator ?? '0',
-    outputIndicator: ch?.device?.gui?.outputIndicator ?? '0'
+    outputIndicator: ch?.device?.gui?.outputIndicator ?? '0',
+    indicators: typeof ch?.device?.gui?.indicators === 'string'
+      ? ch.device.gui.indicators
+      : ''
   }
 }
 
@@ -111,6 +114,7 @@ const peerColors = computed(() => {
         :enable="channelData(i - 1).enable"
         :input-indicator="channelData(i - 1).inputIndicator"
         :output-indicator="channelData(i - 1).outputIndicator"
+        :indicators="channelData(i - 1).indicators"
         :is-local="isLocal"
         :is-locked="cellsLocked"
         :selected="selectedChannel === i - 1"

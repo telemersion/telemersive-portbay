@@ -1,8 +1,8 @@
 UltraGrid codec acceptance probe
 ================================
 Version : 1.10.3
-Binary  : vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv
-Date    : 2026-04-22T22:19:53Z
+Binary  : /Volumes/Ddrive/04_projects/Telematics/01_telemersion/telemersive-portbay/vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv
+Date    : 2026-04-22T22:20:14Z
 
 Video codecs (Max umenu order, probed via '-c libavcodec:codec=<name>:help'):
   [1] MJPEG => REJECTED
@@ -19,10 +19,3 @@ Video codecs (Max umenu order, probed via '-c libavcodec:codec=<name>:help'):
 Audio codecs (Max umenu order, probed via short-spawn + capture-init log):
   [1] OPUS => accepted
   [2] speex => REJECTED
-  [3] FLAC => accepted
-  [4] AAC => accepted
-  [5] MP3 => accepted
-  [6] G.722 => accepted
-  [7] u-law => accepted
-  [8] A-law => accepted
-  [9] PCM => accepted

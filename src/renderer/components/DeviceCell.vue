@@ -7,6 +7,7 @@ const props = defineProps<{
   enable: string
   inputIndicator: string
   outputIndicator: string
+  indicators: string
   isLocal: boolean
   isLocked: boolean
   selected: boolean
@@ -49,12 +50,25 @@ const direction = computed(() => {
   }
 })
 
-// Data flow indicators
-// OSC/StageControl: inputIndicator > 0 → TX (UpStream) active, outputIndicator > 0 → RX (DownStream) active
-// inputIndicator = data coming IN to device from local apps → sent UP to server
-// outputIndicator = data coming OUT from server → flowing DOWN to local apps
-const txActive = computed(() => isEnabled.value && Number(props.inputIndicator) > 0)
-const rxActive = computed(() => isEnabled.value && Number(props.outputIndicator) > 0)
+// Data flow indicators — per-device-type wire format (see docs/device-icon-mapping.md).
+// OSC/StageC (loaded=1|4): separate inputIndicator/outputIndicator topics.
+// UG (loaded=2): single `indicators` topic, space-separated, positions 1=TX active, 2=RX active.
+// MoCap (loaded=3): same layout, positions 1=major, 2=minor — deferred until handler lands.
+const indicatorTokens = computed(() => props.indicators.trim().split(/\s+/).filter(Boolean))
+const txActive = computed(() => {
+  if (!isEnabled.value) return false
+  if (props.loaded === '2' || props.loaded === '3') {
+    return indicatorTokens.value[0] === '1'
+  }
+  return Number(props.inputIndicator) > 0
+})
+const rxActive = computed(() => {
+  if (!isEnabled.value) return false
+  if (props.loaded === '2' || props.loaded === '3') {
+    return indicatorTokens.value[1] === '1'
+  }
+  return Number(props.outputIndicator) > 0
+})
 
 // Per-arrow rendering: active = filled device color, idle = white stroke, disabled = #999 stroke
 const deviceColor = computed(() => style.value.color)

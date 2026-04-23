@@ -1026,24 +1026,53 @@ function pushVideoCapture(args, config, indexes, localOs) {
     args.push("-t", flag);
   }
   const { codec, bitrate } = config.audioVideo.videoCapture.advanced.compress;
-  args.push("-c", `libavcodec:codec=${videoCodecName(codec)}:bitrate=${bitrate}M`);
+  if (codec !== "0") {
+    args.push("-c", `libavcodec:codec=${videoCodecName(codec)}:bitrate=${bitrate}M`);
+  }
 }
 function pushAudioCapture(args, config, indexes) {
   if (indexes.audioCapture !== null) {
     args.push("-s", `portaudio:${indexes.audioCapture}`);
   }
   const audio = config.audioVideo.audioCapture.advanced;
-  args.push("--audio-codec", `${audioCodecName(audio.compress.codec)}:bitrate=${audio.compress.bitrate}`);
+  if (audio.compress.codec !== "0") {
+    args.push("--audio-codec", `${audioCodecName(audio.compress.codec)}:bitrate=${audio.compress.bitrate}`);
+  }
   args.push("--audio-capture-format", `channels=${audio.channels.channels}`);
 }
+const VIDEO_CODEC_NAMES = {
+  "1": "JPEG",
+  "2": "H.264",
+  "3": "H.265",
+  "4": "J2K",
+  "5": "AV1",
+  "6": "VP8",
+  "7": "VP9",
+  "8": "HFYU",
+  "9": "FFV1"
+};
+const AUDIO_CODEC_NAMES = {
+  "1": "OPUS",
+  "3": "FLAC",
+  "4": "AAC",
+  "5": "MP3",
+  "6": "G.722",
+  "7": "u-law",
+  "8": "A-law",
+  "9": "PCM"
+};
 function videoCodecName(codec) {
-  if (codec === "2") return "H.264";
-  if (codec === "1") return "JPEG";
-  throw new Error(`unsupported video codec id: ${codec}`);
+  const name = VIDEO_CODEC_NAMES[codec];
+  if (!name) throw new Error(`unsupported video codec id: ${codec}`);
+  return name;
 }
 function audioCodecName(codec) {
-  if (codec === "1") return "OPUS";
-  throw new Error(`unsupported audio codec id: ${codec}`);
+  if (codec === "2") {
+    throw new Error("audio codec index 2 (speex) is unavailable in UG 1.10.3");
+  }
+  const name = AUDIO_CODEC_NAMES[codec];
+  if (!name) throw new Error(`unsupported audio codec id: ${codec}`);
+  return name;
 }
 function extractMenuIndex(rangeString, selection) {
   if (!rangeString || !selection) return null;
@@ -1086,6 +1115,107 @@ class MonitorLogBuffer {
     this.lines.length = 0;
   }
 }
+const TIMESTAMP_PATTERN = /^\[\d+\.\d+\]\s+/;
+const SOURCE_PATTERN = /\[(Syphon|SYPHON|Spout|SPOUT|Decklink|DeckLink|screen|AVfoundation|NDI|ndi|Audio|dshow|GL|testcard|syphon)[^\]]*\]/i;
+const DIRECTION_PATTERN = /(sender|capture|cap|display|decoder|disp)[.\]]/;
+class UltraGridIndicatorParser {
+  constructor(publish, topic) {
+    this.publish = publish;
+    this.topic = topic;
+  }
+  state = {
+    txActive: false,
+    rxActive: false,
+    txFps: "0",
+    txVol: "0",
+    rxFps: "0",
+    rxVol: "0"
+  };
+  lastPublished = null;
+  handleLogLine(line) {
+    const stripped = line.replace(TIMESTAMP_PATTERN, "").trim();
+    if (!stripped) return;
+    const sourceMatch = stripped.match(SOURCE_PATTERN);
+    if (!sourceMatch) return;
+    const dirMatch = stripped.match(DIRECTION_PATTERN);
+    if (!dirMatch) return;
+    const isTx = /sender|capture|cap/.test(dirMatch[0]);
+    let fpsMatch = stripped.match(/FPS\s+(\d+)\/(\d+)/);
+    if (fpsMatch) {
+      const num = parseInt(fpsMatch[1], 10);
+      const den = parseInt(fpsMatch[2], 10);
+      const fps = Math.round(num / den * 10) / 10;
+      if (isTx) {
+        this.state.txFps = String(fps);
+        this.pulseTxActive();
+      } else {
+        this.state.rxFps = String(fps);
+        this.pulseRxActive();
+      }
+    } else {
+      fpsMatch = stripped.match(/=\s+([\d.]+)\s+FPS/);
+      if (fpsMatch) {
+        const fps = parseFloat(fpsMatch[1]);
+        if (isTx) {
+          this.state.txFps = String(fps);
+          this.pulseTxActive();
+        } else {
+          this.state.rxFps = String(fps);
+          this.pulseRxActive();
+        }
+      }
+    }
+    const volMatch = stripped.match(/Volume:\s*([-\d.]+)/);
+    if (volMatch) {
+      const vol = volMatch[1];
+      if (isTx) {
+        this.state.txVol = vol;
+        this.pulseTxActive();
+      } else {
+        this.state.rxVol = vol;
+        this.pulseRxActive();
+      }
+    }
+    this.publishIfChanged();
+  }
+  pulseTxActive() {
+    const wasInactive = !this.state.txActive;
+    this.state.txActive = true;
+    if (wasInactive) this.publishIfChanged();
+  }
+  pulseRxActive() {
+    const wasInactive = !this.state.rxActive;
+    this.state.rxActive = true;
+    if (wasInactive) this.publishIfChanged();
+  }
+  publishIfChanged() {
+    const atoms = [
+      this.state.txActive ? "1" : "0",
+      this.state.rxActive ? "1" : "0",
+      this.state.txFps,
+      this.state.txVol,
+      this.state.rxFps,
+      this.state.rxVol
+    ];
+    const joined = atoms.join(" ");
+    if (joined !== this.lastPublished) {
+      this.lastPublished = joined;
+      this.publish(1, this.topic, ...atoms);
+    }
+  }
+  reset() {
+    this.state = {
+      txActive: false,
+      rxActive: false,
+      txFps: "0",
+      txVol: "0",
+      rxFps: "0",
+      rxVol: "0"
+    };
+    this.lastPublished = null;
+    this.publishIfChanged();
+  }
+}
 const UG_DEVICE_TYPE = 2;
 const MONITOR_LOG_CAPACITY = 50;
 function detectLocalOs() {
@@ -1111,6 +1241,7 @@ class UltraGridDevice {
   monitorGateOn = false;
   lifecycle = null;
   enabled = false;
+  indicatorParser;
   constructor(opts) {
     this.channelIndex = opts.channelIndex;
     this.peerId = opts.peerId;
@@ -1123,6 +1254,14 @@ class UltraGridDevice {
     this.spawnFactory = opts.spawnFactory ?? ((o) => new ChildProcessLifecycle(o));
     this.localOs = opts.osOverride ?? detectLocalOs();
     this.config = applyTopicChange(this.config, "remoteValues/local_os", this.localOs);
+    const indicatorTopic = topics.deviceGui(opts.peerId, opts.channelIndex, "indicators");
+    this.indicatorParser = new UltraGridIndicatorParser(
+      (_, topic, ...values) => {
+        this.publishedTopics.add(topic);
+        opts.publish(1, topic, ...values);
+      },
+      indicatorTopic
+    );
   }
   publishDefaults() {
     const defaults = applyTopicChange(
@@ -1134,8 +1273,7 @@ class UltraGridDevice {
       this.pubDeviceGui(subpath, value, false);
     }
     this.pubDeviceGui("description", "UG", false);
-    this.pubDeviceGui("indicators/inputIndicator", "0", false);
-    this.pubDeviceGui("indicators/outputIndicator", "0", false);
+    this.pubDeviceGui("indicators", "0 0 0 0 0 0", false);
     this.pubDeviceGui("monitor/log", "", false);
     this.pubDeviceGui("monitor/monitorGate", "0", false);
   }
@@ -1219,10 +1357,13 @@ class UltraGridDevice {
   }
   stopProcess() {
     this.lifecycle?.stop();
+    this.indicatorParser.reset();
+    this.pubDeviceGui("indicators", "0 0 0 0 0 0", true);
   }
   handleLogLine(line) {
     this.monitor.append(line);
     if (this.monitorGateOn) this.publishMonitorLine(line);
+    this.indicatorParser.handleLogLine(line);
   }
   publishMonitorLine(line) {
     this.publish(
@@ -1725,7 +1866,7 @@ function setupBus() {
               peerId: localPeerId,
               localIP,
               roomId,
-              publish: (retained, topic, value) => trackedPublish(retained, topic, value),
+              publish: (retained, topic, ...values) => trackedPublish(retained, topic, ...values),
               hasRetained: (topic) => retainedTopics.has(topic),
               getSetting: (subpath) => retainedTopics.get(topics.settings(localPeerId, subpath)) ?? null,
               host: loadSettings().brokerUrl,
