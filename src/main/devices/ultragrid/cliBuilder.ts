@@ -29,6 +29,7 @@ export function buildUvArgs(input: BuildUvArgsInput): string[] {
     case '1': return buildMode1Args(input)
     case '2': return buildMode2Args(input)
     case '4': return buildMode4Args(input)
+    case '5': return buildMode5Args(input)
     case '7': return buildMode7Args(input)
     default:
       throw new Error(`UltraGrid mode ${mode} not yet supported (M2c)`)
@@ -41,6 +42,8 @@ export function buildUvArgs(input: BuildUvArgsInput): string[] {
 // Mode 1 is always send-only; connection is ignored.
 // Mode 2 is always receive-only; connection is ignored.
 // Mode 4 gates each side on connection and each block-within-side on transmission.
+// Mode 5 is peer-to-peer manual: -P from customSending port, destination IP from
+// customSending IP on the send side, no router/host. Same gating as mode 4.
 // Mode 7 is video-only loopback; transmission/connection are ignored.
 
 function shouldEmitVideo(transmission: string): boolean {
@@ -133,6 +136,60 @@ function buildMode4Args(input: BuildUvArgsInput): string[] {
     }
   }
   return args
+}
+
+// Mode 5: peer-to-peer manual. customSending carries `ip:port`; the port drives
+// -P (with the usual +2 for audio when transmission=2), the IP is appended at
+// the end only on the send side. No router, no host. Matches the ordering in
+// tg.ultragrid.js:766-789 (-P first, then receive block, then send block).
+function buildMode5Args(input: BuildUvArgsInput): string[] {
+  const { config, indexes, textureReceiverName, localOs } = input
+  const transmission = config.audioVideo.transmission
+  const connection = config.audioVideo.connection
+  const { ip: lanIp, port: lanPort } = parseCustomSending(config.network.local.customSending)
+  const args: string[] = []
+
+  pushTopLevelFlags(args, config)
+  pushLanPort(args, lanPort, transmission)
+
+  if (shouldEmitReceive(connection)) {
+    if (shouldEmitVideo(transmission)) {
+      pushPostprocessor(args, config)
+      pushVideoReceive(args, config, textureReceiverName, localOs)
+    }
+    if (shouldEmitAudio(transmission)) {
+      pushAudioReceive(args, config, indexes)
+      pushAudioMapping(args, config)
+    }
+  }
+  if (shouldEmitSend(connection)) {
+    if (shouldEmitVideo(transmission)) {
+      pushCaptureFilter(args, config)
+      pushVideoCapture(args, config, indexes, localOs)
+    }
+    if (shouldEmitAudio(transmission)) {
+      pushAudioCapture(args, config, indexes)
+    }
+    args.push(lanIp)
+  }
+  return args
+}
+
+function parseCustomSending(raw: string): { ip: string; port: number } {
+  const idx = raw.lastIndexOf(':')
+  if (idx < 0) throw new Error(`invalid customSending value: ${raw}`)
+  const ip = raw.slice(0, idx)
+  const port = parseInt(raw.slice(idx + 1), 10)
+  if (!ip || Number.isNaN(port)) throw new Error(`invalid customSending value: ${raw}`)
+  return { ip, port }
+}
+
+function pushLanPort(args: string[], port: number, transmission: string): void {
+  if (transmission === '2') {
+    args.push(`-P${port}:${port}:${port + 2}:${port + 2}`)
+  } else {
+    args.push(`-P${port}`)
+  }
 }
 
 // Mode 7: capture-to-local (loopback). Video-only by design — transmission and

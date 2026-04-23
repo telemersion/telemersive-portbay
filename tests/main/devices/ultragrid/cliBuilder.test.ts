@@ -728,19 +728,134 @@ describe('buildUvArgs — top-level flags', () => {
   })
 })
 
-describe('buildUvArgs — unsupported modes', () => {
-  it('throws for mode 5 (peer-to-peer manual, deferred)', () => {
-    const config = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '5')
+describe('buildUvArgs — mode 5 (peer-to-peer manual)', () => {
+  function mode5Config(connection: string, transmission: string, customSending: string) {
+    let c = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '5')
+    c = applyTopicChange(c, 'audioVideo/connection', connection)
+    c = applyTopicChange(c, 'audioVideo/transmission', transmission)
+    c = applyTopicChange(c, 'network/local/customSending', customSending)
+    c = applyTopicChange(
+      c,
+      'audioVideo/videoCapture/texture/menu/selection',
+      "name='Spout Sender'"
+    )
+    c = applyTopicChange(c, 'audioVideo/videoReciever/texture/name', 'room_channel_0')
+    return c
+  }
+
+  const defaultIndexes: ResolvedMenuIndexes = {
+    textureCapture: "name='Spout Sender'",
+    ndiCapture: null,
+    audioCapture: 12,
+    audioReceive: 11
+  }
+
+  const commonInputs = {
+    ports: allocateUgPorts(11, 0),
+    indexes: defaultIndexes,
+    host: 'telemersion.zhdk.ch',
+    textureReceiverName: 'room_channel_0',
+    localOs: 'win' as const
+  }
+
+  it('connection=2, transmission=2: -P<p>:<p>:<p+2>:<p+2>, receive then send, LAN IP at tail', () => {
+    const actual = buildUvArgs({
+      config: mode5Config('2', '2', '192.168.1.50:11002'),
+      ...commonInputs
+    })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-P11002:11002:11004:11004',
+      '-d', "gl:spout='room_channel_0'",
+      '-r', 'portaudio:11',
+      '-t', "spout:name='Spout Sender'",
+      '-c', 'libavcodec:codec=H.264:bitrate=10M',
+      '-s', 'portaudio:12',
+      '--audio-codec', 'OPUS:bitrate=64000',
+      '--audio-capture-format', 'channels=1',
+      '192.168.1.50'
+    ])
+  })
+
+  it('connection=0, transmission=0: send-only video, single -P, LAN IP at tail', () => {
+    const actual = buildUvArgs({
+      config: mode5Config('0', '0', '10.0.0.7:11002'),
+      ...commonInputs
+    })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-P11002',
+      '-t', "spout:name='Spout Sender'",
+      '-c', 'libavcodec:codec=H.264:bitrate=10M',
+      '10.0.0.7'
+    ])
+  })
+
+  it('connection=0, transmission=1: send-only audio, no -t, LAN IP at tail', () => {
+    const actual = buildUvArgs({
+      config: mode5Config('0', '1', '10.0.0.7:11002'),
+      ...commonInputs
+    })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-P11002',
+      '-s', 'portaudio:12',
+      '--audio-codec', 'OPUS:bitrate=64000',
+      '--audio-capture-format', 'channels=1',
+      '10.0.0.7'
+    ])
+  })
+
+  it('connection=1, transmission=0: receive-only video, no LAN IP tail, no -s/-r', () => {
+    const actual = buildUvArgs({
+      config: mode5Config('1', '0', '10.0.0.7:11002'),
+      ...commonInputs
+    })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-P11002',
+      '-d', "gl:spout='room_channel_0'"
+    ])
+    expect(actual).not.toContain('10.0.0.7')
+  })
+
+  it('connection=1, transmission=1: receive-only audio, no LAN IP tail', () => {
+    const actual = buildUvArgs({
+      config: mode5Config('1', '1', '10.0.0.7:11002'),
+      ...commonInputs
+    })
+    expect(actual).toEqual([
+      '--param', 'log-color=no',
+      '-P11002',
+      '-r', 'portaudio:11'
+    ])
+  })
+
+  it('dual -P uses customSending port (not the allocator port)', () => {
+    const actual = buildUvArgs({
+      config: mode5Config('2', '2', '10.0.0.7:22000'),
+      ...commonInputs
+    })
+    expect(actual).toContain('-P22000:22000:22002:22002')
+    // Allocator port 11002 must not leak in.
+    expect(actual.find((a) => a.startsWith('-P11'))).toBeUndefined()
+  })
+
+  it('emits no router/host (mode 5 is peer-to-peer, not via a server)', () => {
+    const actual = buildUvArgs({
+      config: mode5Config('2', '2', '10.0.0.7:11002'),
+      ...commonInputs
+    })
+    expect(actual).not.toContain('telemersion.zhdk.ch')
+  })
+
+  it('throws on malformed customSending', () => {
     expect(() =>
       buildUvArgs({
-        config,
-        ports: allocateUgPorts(11, 0),
-        indexes: { textureCapture: null, ndiCapture: null, audioCapture: null, audioReceive: null },
-        host: 'x',
-        textureReceiverName: 'y',
-        localOs: 'win'
+        config: mode5Config('0', '0', 'not-a-valid-value'),
+        ...commonInputs
       })
-    ).toThrow(/M2c/)
+    ).toThrow(/customSending/)
   })
 })
 

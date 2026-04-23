@@ -57,12 +57,13 @@ const direction = computed(() => {
 //   1 (send-to-router)      → tx   (up arrow into sink)
 //   2 (receive-from-router) → rx   (down arrow out of sink)
 //   4 (p2p-auto)            → bidi (up + down arrows)
+//   5 (p2p-manual)          → bidi (up + down arrows)
 //   7 (capture-to-local)    → loop (FromLocal: right-turn loopback, see color_scheme.html)
 // Unknown/missing mode defaults to tx to match pre-mode-2 behavior.
 const ugDirection = computed<'tx' | 'rx' | 'bidi' | 'loop'>(() => {
   switch (props.ugMode) {
     case '2': return 'rx'
-    case '4': return 'bidi'
+    case '4': case '5': return 'bidi'
     case '7': return 'loop'
     default: return 'tx'
   }

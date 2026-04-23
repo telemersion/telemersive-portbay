@@ -89,10 +89,19 @@ export class UltraGridDevice implements DeviceHandler {
   }
 
   publishDefaults(): void {
-    const defaults = applyTopicChange(
+    const txPorts = allocateUgPorts(this.roomId, this.channelIndex)
+    let defaults = applyTopicChange(
       defaultUltraGridConfig(),
       'remoteValues/local_os',
       this.localOs
+    )
+    // Mode 5 (peer-to-peer manual) reads ip:port from customSending; default
+    // to the local TX video port so the user only has to fill in the remote
+    // peer's IP. Matches Max's `ugLANPort = <own channel tx port>` default.
+    defaults = applyTopicChange(
+      defaults,
+      'network/local/customSending',
+      `0.0.0.0:${txPorts.videoPort}`
     )
     for (const { subpath, value } of snapshotTopics(defaults)) {
       this.pubDeviceGui(subpath, value, false)

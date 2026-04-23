@@ -22,6 +22,21 @@ const AUDIO_MAPPING_CHIPS = [
   '0:0', '0:0, 1:0', '0:0\\,:1', '0:0,0:1', '4:0\\,5:1'
 ] as const
 
+// STUN servers offered by Max in the peer-to-peer (automatic) mode dropdown —
+// captured 2026-04-23 from a Max trace cycling through the list. Mirrored here
+// verbatim so NG's selector matches Max's choices.
+const STUN_SERVERS = [
+  'stun.gmx.de:3478',
+  'stun.gmx.net:3478',
+  'stun.stunprotocol.org:3478',
+  'stun.t-online.de:3478',
+  'stun.l.google.com:19302',
+  'stun1.l.google.com:19302',
+  'stun2.l.google.com:19302',
+  'stun3.l.google.com:19302',
+  'stun4.l.google.com:19302'
+] as const
+
 const ADVANCED_PARAMS_CHIPS = [
   'audio-buffer-len=<ms>', 'low-latency-audio[=ultra]', 'no-dither',
   'audio-cap-frames=<f>', 'disable-keyboard-control',
@@ -240,6 +255,15 @@ const encryptionKey = bind(
   () => av.value?.advanced?.advanced?.encryption?.key
 )
 
+const customSending = bind(
+  'network/local/customSending',
+  () => network.value?.local?.customSending
+)
+const stunServer = bind(
+  'network/holepuncher/stunServer',
+  () => network.value?.holepuncher?.stunServer
+)
+
 const monitorGateBinding = bind('monitor/monitorGate', () => monitor.value?.monitorGate)
 
 watch([mode, connection], ([m, c]) => {
@@ -310,11 +334,13 @@ const jackReceiveOptions = computed(() =>
 )
 
 const modeSupported = computed(() =>
-  mode.value === '1' || mode.value === '2' || mode.value === '4' || mode.value === '7'
+  mode.value === '1' || mode.value === '2' ||
+  mode.value === '4' || mode.value === '5' || mode.value === '7'
 )
 
 // Section gating per mode. Mode 1 sends only; mode 2 receives only (capture is
-// auto-testcard, hidden from the user); mode 4 uses connection + transmission;
+// auto-testcard, hidden from the user); modes 4 and 5 use connection +
+// transmission (mode 5 additionally exposes the customSending ip:port field);
 // mode 7 is a video-only local loopback (no audio, no transmission/connection).
 const showVideoCapture = computed(() => {
   if (mode.value === '2') return false
@@ -338,9 +364,11 @@ const showAudioReceive = computed(() => {
 })
 
 // Mode 7 ignores transmission/connection entirely (video-only loopback).
-// Modes 1 and 2 already lock direction; only mode 4 freely exposes both.
+// Modes 1 and 2 already lock direction; modes 4 and 5 freely expose both.
 const showTransmission = computed(() => mode.value !== '7')
-const showConnection = computed(() => mode.value === '4')
+const showConnection = computed(() => mode.value === '4' || mode.value === '5')
+const showCustomSending = computed(() => mode.value === '5')
+const showStun = computed(() => mode.value === '4')
 const modeLabels: Record<string, string> = {
   '1': 'send to router',
   '2': 'receive from router',
@@ -392,6 +420,29 @@ async function triggerRefresh(backend: Backend) {
           <option value="4">peer to peer (automatic)</option>
           <option value="5">peer to peer (manual)</option>
           <option value="7">capture to local</option>
+        </select>
+      </div>
+      <div v-if="showCustomSending" class="field-row">
+        <label>send to</label>
+        <input
+          :value="customSending.value.value"
+          :disabled="isLocked"
+          placeholder="ip:port"
+          @change="customSending.set(($event.target as HTMLInputElement).value)"
+        />
+      </div>
+      <div v-if="showStun" class="field-row">
+        <label>stun server</label>
+        <select
+          :value="stunServer.value.value"
+          :disabled="isLocked"
+          @change="stunServer.set(($event.target as HTMLSelectElement).value)"
+        >
+          <option
+            v-if="!STUN_SERVERS.includes(stunServer.value.value as any)"
+            :value="stunServer.value.value"
+          >{{ stunServer.value.value }}</option>
+          <option v-for="s in STUN_SERVERS" :key="s" :value="s">{{ s }}</option>
         </select>
       </div>
     </section>

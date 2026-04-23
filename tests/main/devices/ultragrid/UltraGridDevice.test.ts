@@ -153,15 +153,15 @@ describe('UltraGridDevice', () => {
     expect(enableOff.length).toBeGreaterThan(0)
   })
 
-  it('throws-handled for unsupported mode 5 (fails soft with enable=0)', () => {
-    const { device, publish, spawned } = makeDevice()
+  it('mode 5 spawns UV with -P from customSending and the LAN IP at the tail', () => {
+    const { device, spawned } = makeDevice()
     device.onTopicChanged('gui/network/mode', '5')
+    device.onTopicChanged('gui/network/local/customSending', '192.168.1.50:11002')
     device.onTopicChanged('gui/enable', '1')
-    expect(spawned).toHaveLength(0)
-    const enableOff = publish.mock.calls.filter(
-      (c) => c[1] === '/peer/p1/rack/page_0/channel.0/device/gui/enable' && c[2] === '0'
-    )
-    expect(enableOff.length).toBeGreaterThan(0)
+    expect(spawned).toHaveLength(1)
+    expect(spawned[0].opts.args).toContain('-P11002:11002:11004:11004')
+    expect(spawned[0].opts.args).toContain('192.168.1.50')
+    expect(spawned[0].opts.args).not.toContain('telemersion.zhdk.ch')
   })
 
   it('resolves portaudio capture index from settings range', () => {
