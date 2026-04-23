@@ -41,7 +41,8 @@ function channelData(index: number) {
     outputIndicator: ch?.device?.gui?.outputIndicator ?? '0',
     indicators: typeof ch?.device?.gui?.indicators === 'string'
       ? ch.device.gui.indicators
-      : ''
+      : '',
+    ugMode: ch?.device?.gui?.network?.mode ?? ''
   }
 }
 
@@ -115,6 +116,7 @@ const peerColors = computed(() => {
         :input-indicator="channelData(i - 1).inputIndicator"
         :output-indicator="channelData(i - 1).outputIndicator"
         :indicators="channelData(i - 1).indicators"
+        :ug-mode="channelData(i - 1).ugMode"
         :is-local="isLocal"
         :is-locked="cellsLocked"
         :selected="selectedChannel === i - 1"

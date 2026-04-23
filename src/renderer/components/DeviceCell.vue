@@ -8,6 +8,7 @@ const props = defineProps<{
   inputIndicator: string
   outputIndicator: string
   indicators: string
+  ugMode: string
   isLocal: boolean
   isLocked: boolean
   selected: boolean
@@ -47,7 +48,22 @@ const borderColor = computed(() => {
 const direction = computed(() => {
   switch (props.loaded) {
     case '1': case '4': return 'bidi'
-    case '2': return 'tx'
+    case '2': return ugDirection.value
+    default: return 'tx'
+  }
+})
+
+// UG icon direction tracks the active network mode:
+//   1 (send-to-router)      → tx   (up arrow into sink)
+//   2 (receive-from-router) → rx   (down arrow out of sink)
+//   4 (p2p-auto)            → bidi (up + down arrows)
+//   7 (capture-to-local)    → loop (FromLocal: right-turn loopback, see color_scheme.html)
+// Unknown/missing mode defaults to tx to match pre-mode-2 behavior.
+const ugDirection = computed<'tx' | 'rx' | 'bidi' | 'loop'>(() => {
+  switch (props.ugMode) {
+    case '2': return 'rx'
+    case '4': return 'bidi'
+    case '7': return 'loop'
     default: return 'tx'
   }
 })
@@ -121,6 +137,12 @@ const sinkFill = computed(() => {
             stroke="none" stroke-linejoin="round" stroke-linecap="round">
             <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" :fill="sinkFill"/>
             <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z" :fill="txFill"/>
+          </svg>
+          <!-- Loop: FromLocal (capture-to-local loopback, see color_scheme.html) -->
+          <svg v-else-if="direction === 'loop'" width="28" height="28" viewBox="0 0 200 200"
+            stroke="none" stroke-linejoin="round" stroke-linecap="round">
+            <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" :fill="sinkFill"/>
+            <path d="m 144.15955,60.595724 v 49.999996 h 20 l -30,39.94015 -30,-39.94015 h 20 V 80.595724 l -51.997483,0.393303 0.0838,70.085463 -22.350659,0.20395 0.09425,-90.602178 z" :fill="sinkFill"/>
           </svg>
           <!-- RX: FromServer (down arrow) -->
           <svg v-else width="28" height="28" viewBox="0 0 200 200"
