@@ -153,9 +153,9 @@ describe('UltraGridDevice', () => {
     expect(enableOff.length).toBeGreaterThan(0)
   })
 
-  it('throws-handled for unsupported mode 2 (fails soft with enable=0)', () => {
+  it('throws-handled for unsupported mode 5 (fails soft with enable=0)', () => {
     const { device, publish, spawned } = makeDevice()
-    device.onTopicChanged('gui/network/mode', '2')
+    device.onTopicChanged('gui/network/mode', '5')
     device.onTopicChanged('gui/enable', '1')
     expect(spawned).toHaveLength(0)
     const enableOff = publish.mock.calls.filter(

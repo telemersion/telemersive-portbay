@@ -1,0 +1,1 @@
+--param log-color=no --capture-filter flip -t syphon:app='Simple Server':name='':override_fps=20 -p flip -d ndi:name='Studio2_channel_0'

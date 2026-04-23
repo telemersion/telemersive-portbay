@@ -153,9 +153,18 @@ const videoFps = bind(
   () => videoCapture.value?.advanced?.texture?.fps
 )
 
+const videoRxTypeBinding = bind(
+  'audioVideo/videoReciever/type',
+  () => videoReciever.value?.type
+)
+const videoRxType = computed(() => videoReciever.value?.type ?? '0')
 const videoRxName = bind(
   'audioVideo/videoReciever/texture/name',
   () => videoReciever.value?.texture?.name
+)
+const videoRxNdiName = bind(
+  'audioVideo/videoReciever/ndi/name',
+  () => videoReciever.value?.ndi?.name
 )
 
 const audioTypeBinding = bind('audioVideo/audioCapture/type', () => audioCapture.value?.type)
@@ -300,7 +309,38 @@ const jackReceiveOptions = computed(() =>
   parseRange(localMenus.value?.jackReceiveRange ?? '')
 )
 
-const modeSupported = computed(() => mode.value === '1' || mode.value === '4')
+const modeSupported = computed(() =>
+  mode.value === '1' || mode.value === '2' || mode.value === '4' || mode.value === '7'
+)
+
+// Section gating per mode. Mode 1 sends only; mode 2 receives only (capture is
+// auto-testcard, hidden from the user); mode 4 uses connection + transmission;
+// mode 7 is a video-only local loopback (no audio, no transmission/connection).
+const showVideoCapture = computed(() => {
+  if (mode.value === '2') return false
+  if (mode.value === '7') return true
+  return showSendSide.value && showVideo.value
+})
+const showVideoReceive = computed(() => {
+  if (mode.value === '1') return false
+  if (mode.value === '2') return showVideo.value
+  if (mode.value === '7') return true
+  return showReceiveSide.value && showVideo.value
+})
+const showAudioCapture = computed(() => {
+  if (mode.value === '2' || mode.value === '7') return false
+  return showSendSide.value && showAudio.value
+})
+const showAudioReceive = computed(() => {
+  if (mode.value === '1' || mode.value === '7') return false
+  if (mode.value === '2') return showAudio.value
+  return showReceiveSide.value && showAudio.value
+})
+
+// Mode 7 ignores transmission/connection entirely (video-only loopback).
+// Modes 1 and 2 already lock direction; only mode 4 freely exposes both.
+const showTransmission = computed(() => mode.value !== '7')
+const showConnection = computed(() => mode.value === '4')
 const modeLabels: Record<string, string> = {
   '1': 'send to router',
   '2': 'receive from router',
@@ -358,13 +398,13 @@ async function triggerRefresh(backend: Backend) {
 
     <div v-if="!modeSupported" class="unsupported-mode">
       Mode {{ mode }} ({{ modeLabels[mode] ?? 'unknown' }}) not yet supported (M2c).
-      Switch to mode 1 or 4 to continue.
+      Switch to mode 1, 2, 4, or 7 to continue.
     </div>
 
     <template v-else>
-      <section>
+      <section v-if="showConnection || showTransmission">
         <h4>Connection</h4>
-        <div class="field-row">
+        <div v-if="showConnection" class="field-row">
           <label>direction</label>
           <select
             :value="connection"
@@ -376,7 +416,7 @@ async function triggerRefresh(backend: Backend) {
             <option value="2">both</option>
           </select>
         </div>
-        <div class="field-row">
+        <div v-if="showTransmission" class="field-row">
           <label>transmission</label>
           <select
             :value="transmission"
@@ -390,7 +430,7 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section v-if="showSendSide && showVideo" class="ug-section">
+      <section v-if="showVideoCapture" class="ug-section">
         <h4>
           <svg class="section-icon" viewBox="0 0 200 200" width="18" height="18"
             stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
@@ -451,7 +491,7 @@ async function triggerRefresh(backend: Backend) {
               @change="videoCodec.set(($event.target as HTMLSelectElement).value)"
             >
               <option value="0">-none-</option>
-              <option value="1">MJPEG</option>
+              <option value="1">JPEG</option>
               <option value="2">H.264</option>
               <option value="3">H.265</option>
               <option value="4">J2K</option>
@@ -499,7 +539,7 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section v-if="mode === '4' && showReceiveSide && showVideo" class="ug-section">
+      <section v-if="showVideoReceive" class="ug-section">
         <h4>
           <svg class="section-icon" viewBox="0 0 200 200" width="18" height="18"
             stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
@@ -508,11 +548,30 @@ async function triggerRefresh(backend: Backend) {
           Video Receiver
         </h4>
         <div class="field-row">
-          <label>spout name</label>
+          <label>display</label>
+          <select
+            :value="videoRxType"
+            :disabled="isLocked"
+            @change="videoRxTypeBinding.set(($event.target as HTMLSelectElement).value)"
+          >
+            <option value="0">texture</option>
+            <option value="1">ndi</option>
+          </select>
+        </div>
+        <div v-if="videoRxType === '0'" class="field-row">
+          <label>texture name</label>
           <input
             :value="videoRxName.value.value"
             :disabled="isLocked"
             @change="videoRxName.set(($event.target as HTMLInputElement).value)"
+          />
+        </div>
+        <div v-if="videoRxType === '1'" class="field-row">
+          <label>ndi name</label>
+          <input
+            :value="videoRxNdiName.value.value"
+            :disabled="isLocked"
+            @change="videoRxNdiName.set(($event.target as HTMLInputElement).value)"
           />
         </div>
 
@@ -544,7 +603,7 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section v-if="showSendSide && showAudio" class="ug-section">
+      <section v-if="showAudioCapture" class="ug-section">
         <h4>
           <svg class="section-icon" viewBox="0 0 200 200" width="18" height="18"
             stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
@@ -677,7 +736,7 @@ async function triggerRefresh(backend: Backend) {
         </div>
       </section>
 
-      <section v-if="mode === '4' && showReceiveSide && showAudio" class="ug-section">
+      <section v-if="showAudioReceive" class="ug-section">
         <h4>
           <svg class="section-icon" viewBox="0 0 200 200" width="18" height="18"
             stroke-width="10" stroke-linejoin="round" stroke-linecap="round">

@@ -1,0 +1,1 @@
+--param log-color=no -t testcard:80:60:1:UYVY -d gl:syphon='Studio2_channel_0' -s testcard:frequency=440 -r portaudio:5 -P11006:11006:11008:11008 telemersion.zhdk.ch

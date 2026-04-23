@@ -1,5 +1,5 @@
 import { topics } from '../../../shared/topics'
-import { allocateUgPorts, type UgPorts } from '../../portAllocator'
+import { allocateUgPorts, allocateUgRxPorts, type UgPorts } from '../../portAllocator'
 import { ChildProcessLifecycle, type LifecycleOptions, type ExitReason } from '../ChildProcessLifecycle'
 import type { DeviceHandler } from '../types'
 import {
@@ -157,7 +157,9 @@ export class UltraGridDevice implements DeviceHandler {
     }
 
     const indexes = this.resolveMenuIndexes()
-    const ports = allocateUgPorts(this.roomId, this.channelIndex)
+    const ports = this.config.network.mode === '2'
+      ? allocateUgRxPorts(this.roomId, this.channelIndex)
+      : allocateUgPorts(this.roomId, this.channelIndex)
 
     let args: string[]
     try {

@@ -459,6 +459,13 @@ function allocateUgPorts(roomId2, channelIndex) {
     audioPort: base + 4
   };
 }
+function allocateUgRxPorts(roomId2, channelIndex) {
+  const base = portBase(roomId2, channelIndex);
+  return {
+    videoPort: base + 6,
+    audioPort: base + 8
+  };
+}
 function allocateStageControlPort(roomId2) {
   return roomId2 * 1e3 + 902;
 }
@@ -947,12 +954,23 @@ function snapshotTopics(config) {
   }
   return out;
 }
+const NONE = "-none-";
+const DEFAULT = "-default-";
 function buildUvArgs(input) {
   const { config } = input;
   const mode = config.network.mode;
-  const args = mode === "1" ? buildMode1Args(input) : mode === "4" ? buildMode4Args(input) : null;
-  if (!args) throw new Error(`UltraGrid mode ${mode} not yet supported (M2c)`);
-  return args;
+  switch (mode) {
+    case "1":
+      return buildMode1Args(input);
+    case "2":
+      return buildMode2Args(input);
+    case "4":
+      return buildMode4Args(input);
+    case "7":
+      return buildMode7Args(input);
+    default:
+      throw new Error(`UltraGrid mode ${mode} not yet supported (M2c)`);
+  }
 }
 function shouldEmitVideo(transmission) {
   return transmission !== "1";
@@ -969,14 +987,35 @@ function shouldEmitReceive(connection) {
 function buildMode1Args(input) {
   const { config, ports, indexes, host, localOs } = input;
   const transmission = config.audioVideo.transmission;
-  const args = ["--param", "log-color=no"];
-  if (shouldEmitVideo(transmission)) pushVideoCapture(args, config, indexes, localOs);
-  if (shouldEmitAudio(transmission)) pushAudioCapture(args, config, indexes);
-  if (shouldEmitVideo(transmission) && shouldEmitAudio(transmission)) {
-    args.push(`-P${ports.videoPort}:${ports.videoPort}:${ports.audioPort}:${ports.audioPort}`);
-  } else {
-    args.push(`-P${ports.videoPort}`);
+  const args = [];
+  pushTopLevelFlags(args, config);
+  if (shouldEmitVideo(transmission)) {
+    pushCaptureFilter(args, config);
+    pushVideoCapture(args, config, indexes, localOs);
   }
+  if (shouldEmitAudio(transmission)) {
+    pushAudioCapture(args, config, indexes);
+  }
+  pushPort(args, ports, transmission);
+  args.push(host);
+  return args;
+}
+function buildMode2Args(input) {
+  const { config, ports, indexes, host, textureReceiverName, localOs } = input;
+  const transmission = config.audioVideo.transmission;
+  const args = [];
+  pushTopLevelFlags(args, config);
+  if (shouldEmitVideo(transmission)) {
+    args.push("-t", "testcard:80:60:1:UYVY");
+    pushPostprocessor(args, config);
+    pushVideoReceive(args, config, textureReceiverName, localOs);
+  }
+  if (shouldEmitAudio(transmission)) {
+    args.push("-s", "testcard:frequency=440");
+    pushAudioReceive(args, config, indexes);
+    pushAudioMapping(args, config);
+  }
+  pushPort(args, ports, transmission);
   args.push(host);
   return args;
 }
@@ -984,20 +1023,59 @@ function buildMode4Args(input) {
   const { config, indexes, textureReceiverName, localOs } = input;
   const transmission = config.audioVideo.transmission;
   const connection = config.audioVideo.connection;
-  const args = ["--param", "log-color=no"];
+  const args = [];
+  pushTopLevelFlags(args, config);
   if (shouldEmitSend(connection)) {
-    if (shouldEmitVideo(transmission)) pushVideoCapture(args, config, indexes, localOs);
-    if (shouldEmitAudio(transmission)) pushAudioCapture(args, config, indexes);
+    if (shouldEmitVideo(transmission)) {
+      pushCaptureFilter(args, config);
+      pushVideoCapture(args, config, indexes, localOs);
+    }
+    if (shouldEmitAudio(transmission)) {
+      pushAudioCapture(args, config, indexes);
+    }
   }
   if (shouldEmitReceive(connection)) {
     if (shouldEmitVideo(transmission)) {
-      args.push("-d", `${textureDisplayPrefix(localOs)}'${textureReceiverName}'`);
+      pushPostprocessor(args, config);
+      pushVideoReceive(args, config, textureReceiverName, localOs);
     }
-    if (shouldEmitAudio(transmission) && indexes.audioReceive !== null) {
-      args.push("-r", `portaudio:${indexes.audioReceive}`);
+    if (shouldEmitAudio(transmission)) {
+      pushAudioReceive(args, config, indexes);
+      pushAudioMapping(args, config);
     }
   }
   return args;
+}
+function buildMode7Args(input) {
+  const { config, indexes, textureReceiverName, localOs } = input;
+  const args = [];
+  pushTopLevelFlags(args, config);
+  pushCaptureFilter(args, config);
+  pushVideoCapture(args, config, indexes, localOs, { emitCodec: false });
+  pushPostprocessor(args, config);
+  pushVideoReceive(args, config, textureReceiverName, localOs);
+  return args;
+}
+function pushTopLevelFlags(args, config) {
+  const params = config.audioVideo.advanced.advanced.params.params;
+  let paramValue = "log-color=no";
+  if (params && params !== NONE) paramValue += `,${params}`;
+  args.push("--param", paramValue);
+  const advancedCustom = config.audioVideo.advanced.custom.customFlags.flags;
+  if (advancedCustom && advancedCustom !== NONE) {
+    for (const tok of shellTokenize(advancedCustom)) args.push(tok);
+  }
+  const encryption = config.audioVideo.advanced.advanced.encryption.key;
+  if (encryption && encryption !== NONE) {
+    args.push("--encryption", encryption);
+  }
+}
+function pushPort(args, ports, transmission) {
+  if (transmission === "2") {
+    args.push(`-P${ports.videoPort}:${ports.videoPort}:${ports.audioPort}:${ports.audioPort}`);
+  } else {
+    args.push(`-P${ports.videoPort}`);
+  }
 }
 function textureCapturePrefix(localOs) {
   return localOs === "win" ? "spout" : "syphon";
@@ -1008,11 +1086,19 @@ function textureDisplayPrefix(localOs) {
 function textureFpsFlag(localOs) {
   return localOs === "win" ? "fps" : "override_fps";
 }
-function pushVideoCapture(args, config, indexes, localOs) {
+function pushVideoCapture(args, config, indexes, localOs, opts = {}) {
+  const emitCodec = opts.emitCodec !== false;
   const type = config.audioVideo.videoCapture.type;
+  if (type === "2") {
+    const custom = config.audioVideo.videoCapture.custom.customFlags.flags;
+    if (custom && custom !== NONE) {
+      for (const tok of shellTokenize(custom)) args.push(tok);
+    }
+    return;
+  }
   if (type === "0") {
     let flag = textureCapturePrefix(localOs);
-    if (indexes.textureCapture && indexes.textureCapture !== "-default-") {
+    if (indexes.textureCapture && indexes.textureCapture !== DEFAULT) {
       flag += `:${indexes.textureCapture}`;
     }
     const fps = config.audioVideo.videoCapture.advanced.texture.fps;
@@ -1020,25 +1106,122 @@ function pushVideoCapture(args, config, indexes, localOs) {
     args.push("-t", flag);
   } else if (type === "1") {
     let flag = "ndi";
-    if (indexes.ndiCapture && indexes.ndiCapture !== "-default-") {
+    if (indexes.ndiCapture && indexes.ndiCapture !== DEFAULT) {
       flag += `:${indexes.ndiCapture}`;
     }
     args.push("-t", flag);
   }
+  if (!emitCodec) return;
   const { codec, bitrate } = config.audioVideo.videoCapture.advanced.compress;
   if (codec !== "0") {
     args.push("-c", `libavcodec:codec=${videoCodecName(codec)}:bitrate=${bitrate}M`);
   }
 }
+function pushVideoReceive(args, config, textureReceiverName, localOs) {
+  const type = config.audioVideo.videoReciever.type;
+  if (type === "2") {
+    const custom = config.audioVideo.videoReciever.custom.customFlags.flags;
+    if (custom && custom !== NONE) {
+      for (const tok of shellTokenize(custom)) args.push(tok);
+    }
+    return;
+  }
+  if (type === "1") {
+    const ndiName = config.audioVideo.videoReciever.ndi.name;
+    args.push("-d", `ndi:name='${ndiName}'`);
+    return;
+  }
+  const name = config.audioVideo.videoReciever.texture.name || textureReceiverName;
+  args.push("-d", `${textureDisplayPrefix(localOs)}'${name}'`);
+}
 function pushAudioCapture(args, config, indexes) {
-  if (indexes.audioCapture !== null) {
-    args.push("-s", `portaudio:${indexes.audioCapture}`);
+  const type = config.audioVideo.audioCapture.type;
+  if (type === "7") {
+    const custom = config.audioVideo.audioCapture.custom.customFlags.flags;
+    if (custom && custom !== NONE) {
+      for (const tok of shellTokenize(custom)) args.push(tok);
+    }
+    return;
+  }
+  if (type === "8") {
+    const testcard = config.audioVideo.audioCapture.testcard;
+    args.push("-s", `testcard:volume=${testcard.volume}:frequency=${testcard.frequency}`);
+    return;
+  }
+  const backend = audioCaptureBackend(type);
+  if (backend) {
+    let flag = backend;
+    if (audioBackendHasMenu(type) && indexes.audioCapture !== null) {
+      flag += `:${indexes.audioCapture}`;
+    }
+    args.push("-s", flag);
   }
   const audio = config.audioVideo.audioCapture.advanced;
   if (audio.compress.codec !== "0") {
     args.push("--audio-codec", `${audioCodecName(audio.compress.codec)}:bitrate=${audio.compress.bitrate}`);
   }
   args.push("--audio-capture-format", `channels=${audio.channels.channels}`);
+}
+function pushAudioReceive(args, config, indexes) {
+  const type = config.audioVideo.audioReceiver.type;
+  if (type === "7") {
+    const custom = config.audioVideo.audioReceiver.custom.customFlags.flags;
+    if (custom && custom !== NONE) {
+      for (const tok of shellTokenize(custom)) args.push(tok);
+    }
+    return;
+  }
+  const backend = audioReceiveBackend(type);
+  if (!backend) return;
+  let flag = backend;
+  if (audioBackendHasMenu(type) && indexes.audioReceive !== null) {
+    flag += `:${indexes.audioReceive}`;
+  }
+  args.push("-r", flag);
+}
+function pushCaptureFilter(args, config) {
+  const filter = config.audioVideo.videoCapture.advanced.filter.params;
+  if (filter && filter !== NONE) {
+    args.push("--capture-filter", filter);
+  }
+}
+function pushPostprocessor(args, config) {
+  const pp = config.audioVideo.videoReciever.advanced.postprocessor.params;
+  if (pp && pp !== NONE) {
+    args.push("-p", pp);
+  }
+}
+function pushAudioMapping(args, config) {
+  const mapping = config.audioVideo.audioReceiver.advanced.channels.params;
+  if (mapping && mapping !== NONE) {
+    args.push("--audio-channel-map", mapping);
+  }
+}
+function audioReceiveBackend(type) {
+  switch (type) {
+    case "0":
+      return "portaudio";
+    case "1":
+      return "coreaudio";
+    case "2":
+      return "wasapi";
+    case "3":
+      return "jack";
+    case "4":
+      return "embedded";
+    case "5":
+      return "analog";
+    case "6":
+      return "AESEBU";
+    default:
+      return null;
+  }
+}
+function audioCaptureBackend(type) {
+  return audioReceiveBackend(type);
+}
+function audioBackendHasMenu(type) {
+  return type === "0" || type === "1" || type === "2" || type === "3";
 }
 const VIDEO_CODEC_NAMES = {
   "1": "JPEG",
@@ -1095,6 +1278,29 @@ function entryMatchesSelection(entry, selection) {
 function stripDeviceTail(s) {
   const idx = s.indexOf(" (out:");
   return idx === -1 ? s : s.slice(0, idx);
+}
+function shellTokenize(line) {
+  const tokens = [];
+  let acc = "";
+  let inSingle = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === "'") {
+      inSingle = !inSingle;
+      acc += ch;
+      continue;
+    }
+    if (!inSingle && /\s/.test(ch)) {
+      if (acc) {
+        tokens.push(acc);
+        acc = "";
+      }
+      continue;
+    }
+    acc += ch;
+  }
+  if (acc) tokens.push(acc);
+  return tokens;
 }
 class MonitorLogBuffer {
   constructor(capacity = 50) {
@@ -1322,7 +1528,7 @@ class UltraGridDevice {
       return;
     }
     const indexes = this.resolveMenuIndexes();
-    const ports = allocateUgPorts(this.roomId, this.channelIndex);
+    const ports = this.config.network.mode === "2" ? allocateUgRxPorts(this.roomId, this.channelIndex) : allocateUgPorts(this.roomId, this.channelIndex);
     let args;
     try {
       args = buildUvArgs({
