@@ -1,6 +1,11 @@
+import * as dgram from 'dgram'
+import * as dns from 'dns'
+import { promisify } from 'util'
 import { topics } from '../../shared/topics'
 import { allocateMocapLocalPorts, allocateMocapRoomPorts, type MocapPorts } from '../portAllocator'
 import type { DeviceHandler } from './types'
+
+const dnsLookup = promisify(dns.lookup)
 
 type PublishFn = (retained: 0 | 1, topic: string, value: string) => void
 type HasRetainedFn = (topic: string) => boolean
@@ -26,6 +31,7 @@ export class NatNetDevice implements DeviceHandler {
   readonly deviceType = 3
   private peerId: string
   private localIP: string
+  private brokerHost: string
   private localPorts: MocapPorts
   private roomPorts: MocapPorts
   private publishedTopics: string[] = []
@@ -40,17 +46,28 @@ export class NatNetDevice implements DeviceHandler {
   private outputIPTwo: string
   private listeningIP: string
 
+  // Receive-from-router relay state (direction = 2).
+  private socket: dgram.Socket | null = null
+  private proxyIP: string | null = null
+
+  // Indicator slot 1 ("minor") pulses on inbound proxy traffic.
+  private minorIndicatorOn = false
+  private minorIndicatorTimer: NodeJS.Timeout | null = null
+  private static readonly INDICATOR_HOLD_MS = 150
+
   constructor(
     channelIndex: number,
     peerId: string,
     localIP: string,
     roomId: number,
     publish: PublishFn,
-    hasRetained: HasRetainedFn = () => false
+    hasRetained: HasRetainedFn = () => false,
+    brokerHost: string = 'telemersion.zhdk.ch'
   ) {
     this.channelIndex = channelIndex
     this.peerId = peerId
     this.localIP = localIP
+    this.brokerHost = brokerHost
     this.localPorts = allocateMocapLocalPorts(channelIndex)
     this.roomPorts = allocateMocapRoomPorts(roomId, channelIndex)
     this.publish = publish
@@ -166,27 +183,108 @@ export class NatNetDevice implements DeviceHandler {
 
   private handleEnable(enable: boolean): void {
     if (enable === this.enabled) return
-    this.enabled = enable
     if (enable) {
-      // Stage 2 will wire the actual behavior:
-      //   - direction = ReceiveFromRouter (2) → UDP relay (no CLI needed)
-      //   - direction = SendToRouter (1) / SendToLocal (4) → spawn NatNetThree2OSC CLI
-      const mode = this.direction === Direction.ReceiveFromRouter ? 'receive-from-router'
-        : this.direction === Direction.SendToLocal ? 'send-to-local' : 'send-to-router'
+      if (this.direction === Direction.ReceiveFromRouter) {
+        this.enabled = true
+        void this.startReceiveRelay()
+        return
+      }
+      // SendToRouter (1) and SendToLocal (4) require the NatNetThree2OSC CLI — not wired yet.
+      const mode = this.direction === Direction.SendToLocal ? 'send-to-local' : 'send-to-router'
       console.log(`[NatNet ch.${this.channelIndex}] enable=1 (direction=${mode}) — handler not implemented yet`)
-      // Echo back disable until the behavior is wired — prevents a stuck "on" state with no actual relay.
       this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'enable'), '0')
-      this.enabled = false
-    } else {
-      console.log(`[NatNet ch.${this.channelIndex}] enable=0`)
+      return
+    }
+    this.enabled = false
+    this.stopReceiveRelay()
+    console.log(`[NatNet ch.${this.channelIndex}] enable=0`)
+  }
+
+  // Receive-from-router (direction=2): pure OSC/UDP relay, no CLI.
+  // Bind localPorts.inputPort, forward proxy→outputPortOne(/Two if enableTwo).
+  // Mirrors OscDevice.startRelay but indicator slot is "minor" (index 1).
+  private async startReceiveRelay(): Promise<void> {
+    try {
+      const { address } = await dnsLookup(this.brokerHost, { family: 4 })
+      this.proxyIP = address
+    } catch (err: any) {
+      console.error(`[NatNet ch.${this.channelIndex}] DNS lookup failed for ${this.brokerHost}:`, err.message)
+      this.disableOnError()
+      return
+    }
+
+    if (!this.enabled) return
+
+    try {
+      this.socket = dgram.createSocket({ type: 'udp4', reuseAddr: true })
+      this.socket.on('message', (msg, rinfo) => {
+        if (rinfo.address !== this.proxyIP) return
+        this.pulseMinorIndicator()
+        this.socket!.send(msg, 0, msg.length, this.localPorts.outputPortOne, this.outputIPOne)
+        if (this.enableTwo) {
+          this.socket!.send(msg, 0, msg.length, this.localPorts.outputPortTwo, this.outputIPTwo)
+        }
+      })
+      this.socket.on('error', (err) => {
+        console.error(`[NatNet ch.${this.channelIndex}] socket error:`, err.message)
+        this.disableOnError()
+      })
+      this.socket.bind(this.localPorts.inputPort, this.listeningIP, () => {
+        console.log(`[NatNet ch.${this.channelIndex}] receive relay up — local in:${this.localPorts.inputPort} out:${this.localPorts.outputPortOne}${this.enableTwo ? `/${this.localPorts.outputPortTwo}` : ''} ← proxy ${this.proxyIP}`)
+      })
+    } catch (err: any) {
+      console.error(`[NatNet ch.${this.channelIndex}] failed to start receive relay:`, err.message)
+      this.disableOnError()
+    }
+  }
+
+  private pulseMinorIndicator(): void {
+    if (!this.minorIndicatorOn) {
+      this.minorIndicatorOn = true
+      this.publishIndicators()
+    }
+    if (this.minorIndicatorTimer) clearTimeout(this.minorIndicatorTimer)
+    this.minorIndicatorTimer = setTimeout(() => {
+      this.minorIndicatorOn = false
+      this.minorIndicatorTimer = null
+      this.publishIndicators()
+    }, NatNetDevice.INDICATOR_HOLD_MS)
+  }
+
+  private publishIndicators(): void {
+    const minor = this.minorIndicatorOn ? '1' : '0'
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'indicators'), `0 ${minor} 0`)
+  }
+
+  private disableOnError(): void {
+    this.stopReceiveRelay()
+    this.enabled = false
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'enable'), '0')
+  }
+
+  private stopReceiveRelay(): void {
+    if (this.socket) {
+      try { this.socket.close() } catch {}
+      this.socket = null
+    }
+    this.proxyIP = null
+    if (this.minorIndicatorTimer) {
+      clearTimeout(this.minorIndicatorTimer)
+      this.minorIndicatorTimer = null
+    }
+    if (this.minorIndicatorOn) {
+      this.minorIndicatorOn = false
+      this.publishIndicators()
     }
   }
 
   teardown(): string[] {
+    this.stopReceiveRelay()
     return [...this.publishedTopics]
   }
 
   destroy(): void {
     this.enabled = false
+    this.stopReceiveRelay()
   }
 }

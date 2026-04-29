@@ -485,7 +485,7 @@ function allocateMocapRoomPorts(roomId2, channelIndex) {
     inputPort: base + 2
   };
 }
-const dnsLookup = util.promisify(dns__namespace.lookup);
+const dnsLookup$1 = util.promisify(dns__namespace.lookup);
 class OscDevice {
   channelIndex;
   deviceType;
@@ -622,7 +622,7 @@ class OscDevice {
   }
   async startRelay() {
     try {
-      const { address } = await dnsLookup(this.brokerHost, { family: 4 });
+      const { address } = await dnsLookup$1(this.brokerHost, { family: 4 });
       this.proxyIP = address;
     } catch (err) {
       console.error(`[OSC ch.${this.channelIndex}] DNS lookup failed for ${this.brokerHost}:`, err.message);
@@ -720,6 +720,7 @@ class OscDevice {
     this.stopRelay();
   }
 }
+const dnsLookup = util.promisify(dns__namespace.lookup);
 function localOsTag() {
   if (process.platform === "darwin") return "osx";
   if (process.platform === "win32") return "windows";
@@ -730,6 +731,7 @@ class NatNetDevice {
   deviceType = 3;
   peerId;
   localIP;
+  brokerHost;
   localPorts;
   roomPorts;
   publishedTopics = [];
@@ -742,10 +744,18 @@ class NatNetDevice {
   outputIPOne;
   outputIPTwo;
   listeningIP;
-  constructor(channelIndex, peerId, localIP2, roomId2, publish, hasRetained = () => false) {
+  // Receive-from-router relay state (direction = 2).
+  socket = null;
+  proxyIP = null;
+  // Indicator slot 1 ("minor") pulses on inbound proxy traffic.
+  minorIndicatorOn = false;
+  minorIndicatorTimer = null;
+  static INDICATOR_HOLD_MS = 150;
+  constructor(channelIndex, peerId, localIP2, roomId2, publish, hasRetained = () => false, brokerHost = "telemersion.zhdk.ch") {
     this.channelIndex = channelIndex;
     this.peerId = peerId;
     this.localIP = localIP2;
+    this.brokerHost = brokerHost;
     this.localPorts = allocateMocapLocalPorts(channelIndex);
     this.roomPorts = allocateMocapRoomPorts(roomId2, channelIndex);
     this.publish = publish;
@@ -850,21 +860,102 @@ class NatNetDevice {
   }
   handleEnable(enable) {
     if (enable === this.enabled) return;
-    this.enabled = enable;
     if (enable) {
-      const mode = this.direction === 2 ? "receive-from-router" : this.direction === 4 ? "send-to-local" : "send-to-router";
+      if (this.direction === 2) {
+        this.enabled = true;
+        void this.startReceiveRelay();
+        return;
+      }
+      const mode = this.direction === 4 ? "send-to-local" : "send-to-router";
       console.log(`[NatNet ch.${this.channelIndex}] enable=1 (direction=${mode}) — handler not implemented yet`);
       this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
-      this.enabled = false;
-    } else {
-      console.log(`[NatNet ch.${this.channelIndex}] enable=0`);
+      return;
+    }
+    this.enabled = false;
+    this.stopReceiveRelay();
+    console.log(`[NatNet ch.${this.channelIndex}] enable=0`);
+  }
+  // Receive-from-router (direction=2): pure OSC/UDP relay, no CLI.
+  // Bind localPorts.inputPort, forward proxy→outputPortOne(/Two if enableTwo).
+  // Mirrors OscDevice.startRelay but indicator slot is "minor" (index 1).
+  async startReceiveRelay() {
+    try {
+      const { address } = await dnsLookup(this.brokerHost, { family: 4 });
+      this.proxyIP = address;
+    } catch (err) {
+      console.error(`[NatNet ch.${this.channelIndex}] DNS lookup failed for ${this.brokerHost}:`, err.message);
+      this.disableOnError();
+      return;
+    }
+    if (!this.enabled) return;
+    try {
+      this.socket = dgram__namespace.createSocket({ type: "udp4", reuseAddr: true });
+      this.socket.on("message", (msg, rinfo) => {
+        if (rinfo.address !== this.proxyIP) return;
+        this.pulseMinorIndicator();
+        this.socket.send(msg, 0, msg.length, this.localPorts.outputPortOne, this.outputIPOne);
+        if (this.enableTwo) {
+          this.socket.send(msg, 0, msg.length, this.localPorts.outputPortTwo, this.outputIPTwo);
+        }
+      });
+      this.socket.on("error", (err) => {
+        console.error(`[NatNet ch.${this.channelIndex}] socket error:`, err.message);
+        this.disableOnError();
+      });
+      this.socket.bind(this.localPorts.inputPort, this.listeningIP, () => {
+        console.log(`[NatNet ch.${this.channelIndex}] receive relay up — local in:${this.localPorts.inputPort} out:${this.localPorts.outputPortOne}${this.enableTwo ? `/${this.localPorts.outputPortTwo}` : ""} ← proxy ${this.proxyIP}`);
+      });
+    } catch (err) {
+      console.error(`[NatNet ch.${this.channelIndex}] failed to start receive relay:`, err.message);
+      this.disableOnError();
+    }
+  }
+  pulseMinorIndicator() {
+    if (!this.minorIndicatorOn) {
+      this.minorIndicatorOn = true;
+      this.publishIndicators();
+    }
+    if (this.minorIndicatorTimer) clearTimeout(this.minorIndicatorTimer);
+    this.minorIndicatorTimer = setTimeout(() => {
+      this.minorIndicatorOn = false;
+      this.minorIndicatorTimer = null;
+      this.publishIndicators();
+    }, NatNetDevice.INDICATOR_HOLD_MS);
+  }
+  publishIndicators() {
+    const minor = this.minorIndicatorOn ? "1" : "0";
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "indicators"), `0 ${minor} 0`);
+  }
+  disableOnError() {
+    this.stopReceiveRelay();
+    this.enabled = false;
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
+  }
+  stopReceiveRelay() {
+    if (this.socket) {
+      try {
+        this.socket.close();
+      } catch {
+      }
+      this.socket = null;
+    }
+    this.proxyIP = null;
+    if (this.minorIndicatorTimer) {
+      clearTimeout(this.minorIndicatorTimer);
+      this.minorIndicatorTimer = null;
+    }
+    if (this.minorIndicatorOn) {
+      this.minorIndicatorOn = false;
+      this.publishIndicators();
     }
   }
   teardown() {
+    this.stopReceiveRelay();
     return [...this.publishedTopics];
   }
   destroy() {
     this.enabled = false;
+    this.stopReceiveRelay();
   }
 }
 const DEFAULT_SPAWN_GRACE_MS = 2e3;
@@ -2289,7 +2380,8 @@ function setupBus() {
               localIP,
               roomId,
               (retained, topic, value) => trackedPublish(retained, topic, value),
-              (topic) => retainedTopics.has(topic)
+              (topic) => retainedTopics.has(topic),
+              loadSettings().brokerUrl
             );
           }
           if (type === 2) {

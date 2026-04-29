@@ -199,7 +199,8 @@ function setupBus(): void {
               localIP,
               roomId,
               (retained, topic, value) => trackedPublish(retained, topic, value),
-              (topic: string) => retainedTopics.has(topic)
+              (topic: string) => retainedTopics.has(topic),
+              loadSettings().brokerUrl
             )
           }
           if (type === 2) {
