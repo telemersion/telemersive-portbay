@@ -6,6 +6,7 @@ import { loadRack, saveRack, buildRackSnapshot, isRackEligibleTail } from './per
 import { topics } from '../shared/topics'
 import { DeviceRouter } from './deviceRouter'
 import { OscDevice } from './devices/OscDevice'
+import { NatNetDevice } from './devices/NatNetDevice'
 import { UltraGridDevice } from './devices/ultragrid/UltraGridDevice'
 import { resolveUgPath } from './enumeration/spawnCli'
 import { performShutdown } from './shutdown'
@@ -125,7 +126,7 @@ function publishInitSequence(): void {
   trackedPublish(1, topics.settings(peerId, 'localMenus/jackReceiveRange'), '0')
 
   trackedPublish(1, topics.settings(peerId, 'localProps/ug_enable'), resolveUgPath() ? '1' : '0')
-  trackedPublish(1, topics.settings(peerId, 'localProps/natnet_enable'), '0')
+  trackedPublish(1, topics.settings(peerId, 'localProps/natnet_enable'), '1')
 
   const savedRack = loadRack()
   if (Object.keys(savedRack).length > 0) {
@@ -189,6 +190,16 @@ function setupBus(): void {
               type,
               (topic: string) => retainedTopics.has(topic),
               loadSettings().brokerUrl
+            )
+          }
+          if (type === 3) {
+            return new NatNetDevice(
+              channel,
+              localPeerId,
+              localIP,
+              roomId,
+              (retained, topic, value) => trackedPublish(retained, topic, value),
+              (topic: string) => retainedTopics.has(topic)
             )
           }
           if (type === 2) {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import OscPanel from './panels/OscPanel.vue'
 import UltraGridPanel from './panels/UltraGridPanel.vue'
+import NatNetPanel from './panels/NatNetPanel.vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -58,6 +59,16 @@ function onKeydown(e: KeyboardEvent) {
       :channel-index="channelIndex"
       :device-state="deviceState"
       :peer-settings="peerSettings"
+      :is-local="isLocal"
+      :target-locked="targetLocked"
+      @remove="emit('close')"
+    />
+
+    <NatNetPanel
+      v-else-if="loaded === '3'"
+      :peer-id="peerId"
+      :channel-index="channelIndex"
+      :device-state="deviceState"
       :is-local="isLocal"
       :target-locked="targetLocked"
       @remove="emit('close')"

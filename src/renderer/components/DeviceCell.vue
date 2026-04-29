@@ -44,6 +44,10 @@ const borderColor = computed(() => {
   if (isEmpty.value) return '#444'
   return isEnabled.value ? style.value.color : '#444'
 })
+const backgroundColor = computed(() => {
+  if (isEmpty.value) return '#333'
+  return isEnabled.value ? '#333' : '#1a1a1a'
+})
 
 const direction = computed(() => {
   switch (props.loaded) {
@@ -106,7 +110,7 @@ const sinkFill = computed(() => {
   <div
     class="device-cell"
     :class="{ empty: isEmpty, selected }"
-    :style="{ borderColor }"
+    :style="{ borderColor, background: backgroundColor }"
     @click="isEmpty ? undefined : emit('click')"
   >
     <!-- Empty cell: centered + icon -->

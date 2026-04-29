@@ -469,6 +469,22 @@ function allocateUgRxPorts(roomId2, channelIndex) {
 function allocateStageControlPort(roomId2) {
   return roomId2 * 1e3 + 902;
 }
+function allocateMocapLocalPorts(channelIndex) {
+  const base = portBase(LOCAL_PREFIX, channelIndex);
+  return {
+    outputPortOne: base + 0,
+    outputPortTwo: base + 1,
+    inputPort: base + 2
+  };
+}
+function allocateMocapRoomPorts(roomId2, channelIndex) {
+  const base = portBase(roomId2, channelIndex);
+  return {
+    outputPortOne: base + 0,
+    outputPortTwo: base + 1,
+    inputPort: base + 2
+  };
+}
 const dnsLookup = util.promisify(dns__namespace.lookup);
 class OscDevice {
   channelIndex;
@@ -702,6 +718,153 @@ class OscDevice {
   }
   destroy() {
     this.stopRelay();
+  }
+}
+function localOsTag() {
+  if (process.platform === "darwin") return "osx";
+  if (process.platform === "win32") return "windows";
+  return process.platform;
+}
+class NatNetDevice {
+  channelIndex;
+  deviceType = 3;
+  peerId;
+  localIP;
+  localPorts;
+  roomPorts;
+  publishedTopics = [];
+  publish;
+  hasRetained;
+  enabled = false;
+  enableTwo = false;
+  direction = 2;
+  enableNatNet = false;
+  outputIPOne;
+  outputIPTwo;
+  listeningIP;
+  constructor(channelIndex, peerId, localIP2, roomId2, publish, hasRetained = () => false) {
+    this.channelIndex = channelIndex;
+    this.peerId = peerId;
+    this.localIP = localIP2;
+    this.localPorts = allocateMocapLocalPorts(channelIndex);
+    this.roomPorts = allocateMocapRoomPorts(roomId2, channelIndex);
+    this.publish = publish;
+    this.hasRetained = hasRetained;
+    this.outputIPOne = localIP2;
+    this.outputIPTwo = localIP2;
+    this.listeningIP = localIP2;
+  }
+  publishDefaults() {
+    this.emitDefaults(false);
+  }
+  emitDefaults(force) {
+    const pub = (field, value) => {
+      const topic = topics.deviceGui(this.peerId, this.channelIndex, field);
+      this.publishedTopics.push(topic);
+      if (!force && this.hasRetained(topic)) return;
+      this.publish(1, topic, value);
+    };
+    pub("direction/select", String(
+      2
+      /* ReceiveFromRouter */
+    ));
+    pub("direction/enableNatNet", "0");
+    pub("localudp/inputPort", String(this.localPorts.inputPort));
+    pub("localudp/listeningIP", this.localIP);
+    pub("localudp/outputIPOne", this.localIP);
+    pub("localudp/outputIPTwo", this.localIP);
+    pub("localudp/outputPortOne", String(this.localPorts.outputPortOne));
+    pub("localudp/outputPortTwo", String(this.localPorts.outputPortTwo));
+    pub("localudp/reset", "0");
+    pub("natnet/defaultLocalIP", "0");
+    pub("natnet/autoReconnect", "0");
+    pub("natnet/bundled", "0");
+    pub("natnet/cmdPort", "1510");
+    pub("natnet/codec", "3");
+    pub("natnet/dataPort", "1511");
+    pub("natnet/frameModulo", "1");
+    pub("natnet/invmatrix", "0");
+    pub("natnet/leftHanded", "0");
+    pub("natnet/matrix", "0");
+    pub("natnet/motiveIP", this.localIP);
+    pub("natnet/multicastIP", "239.255.42.99");
+    pub("natnet/sendMarkerInfos", "0");
+    pub("natnet/sendOtherMarkerInfos", "0");
+    pub("natnet/sendSkeletons", "0");
+    pub("natnet/verbose", "0");
+    pub("natnet/yUp2zUp", "0");
+    pub("monitor/log", "0");
+    pub("monitor/monitorGate", "0");
+    pub("remoteValues/local_os", localOsTag());
+    pub("description", "MoCap");
+    pub("enable", "0");
+    pub("enableTwo", "0");
+    pub("indicators", "0 0 0");
+  }
+  onTopicChanged(subpath, value) {
+    switch (subpath) {
+      case "gui/enable":
+        this.handleEnable(value === "1");
+        break;
+      case "gui/enableTwo":
+        this.enableTwo = value === "1";
+        break;
+      case "gui/direction/select":
+        this.direction = parseInt(value, 10) || 0;
+        break;
+      case "gui/direction/enableNatNet":
+        this.enableNatNet = value === "1";
+        break;
+      case "gui/localudp/outputIPOne":
+        if (value && value !== "0") this.outputIPOne = value;
+        break;
+      case "gui/localudp/outputIPTwo":
+        if (value && value !== "0") this.outputIPTwo = value;
+        break;
+      case "gui/localudp/listeningIP":
+        if (value && value !== "0") this.listeningIP = value;
+        break;
+      case "gui/localudp/outputPortOne":
+        this.localPorts.outputPortOne = parseInt(value, 10) || this.localPorts.outputPortOne;
+        break;
+      case "gui/localudp/outputPortTwo":
+        this.localPorts.outputPortTwo = parseInt(value, 10) || this.localPorts.outputPortTwo;
+        break;
+      case "gui/localudp/inputPort":
+        this.localPorts.inputPort = parseInt(value, 10) || this.localPorts.inputPort;
+        break;
+      case "gui/localudp/reset":
+        if (value === "1" && !this.enabled) {
+          this.resetToDefaults();
+        }
+        break;
+    }
+  }
+  resetToDefaults() {
+    this.localPorts = allocateMocapLocalPorts(this.channelIndex);
+    this.outputIPOne = this.localIP;
+    this.outputIPTwo = this.localIP;
+    this.listeningIP = this.localIP;
+    this.enableTwo = false;
+    this.emitDefaults(true);
+  }
+  handleEnable(enable) {
+    if (enable === this.enabled) return;
+    this.enabled = enable;
+    if (enable) {
+      const mode = this.direction === 2 ? "receive-from-router" : this.direction === 1 ? "send-to-local" : "send-to-router";
+      console.log(`[NatNet ch.${this.channelIndex}] enable=1 (direction=${mode}) — handler not implemented yet`);
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
+      this.enabled = false;
+    } else {
+      console.log(`[NatNet ch.${this.channelIndex}] enable=0`);
+    }
+  }
+  teardown() {
+    return [...this.publishedTopics];
+  }
+  destroy() {
+    this.enabled = false;
   }
 }
 const DEFAULT_SPAWN_GRACE_MS = 2e3;
@@ -966,6 +1129,8 @@ function buildUvArgs(input) {
       return buildMode2Args(input);
     case "4":
       return buildMode4Args(input);
+    case "5":
+      return buildMode5Args(input);
     case "7":
       return buildMode7Args(input);
     default:
@@ -1045,6 +1210,51 @@ function buildMode4Args(input) {
     }
   }
   return args;
+}
+function buildMode5Args(input) {
+  const { config, indexes, textureReceiverName, localOs } = input;
+  const transmission = config.audioVideo.transmission;
+  const connection = config.audioVideo.connection;
+  const { ip: lanIp, port: lanPort } = parseCustomSending(config.network.local.customSending);
+  const args = [];
+  pushTopLevelFlags(args, config);
+  pushLanPort(args, lanPort, transmission);
+  if (shouldEmitReceive(connection)) {
+    if (shouldEmitVideo(transmission)) {
+      pushPostprocessor(args, config);
+      pushVideoReceive(args, config, textureReceiverName, localOs);
+    }
+    if (shouldEmitAudio(transmission)) {
+      pushAudioReceive(args, config, indexes);
+      pushAudioMapping(args, config);
+    }
+  }
+  if (shouldEmitSend(connection)) {
+    if (shouldEmitVideo(transmission)) {
+      pushCaptureFilter(args, config);
+      pushVideoCapture(args, config, indexes, localOs);
+    }
+    if (shouldEmitAudio(transmission)) {
+      pushAudioCapture(args, config, indexes);
+    }
+    args.push(lanIp);
+  }
+  return args;
+}
+function parseCustomSending(raw) {
+  const idx = raw.lastIndexOf(":");
+  if (idx < 0) throw new Error(`invalid customSending value: ${raw}`);
+  const ip = raw.slice(0, idx);
+  const port = parseInt(raw.slice(idx + 1), 10);
+  if (!ip || Number.isNaN(port)) throw new Error(`invalid customSending value: ${raw}`);
+  return { ip, port };
+}
+function pushLanPort(args, port, transmission) {
+  if (transmission === "2") {
+    args.push(`-P${port}:${port}:${port + 2}:${port + 2}`);
+  } else {
+    args.push(`-P${port}`);
+  }
 }
 function buildMode7Args(input) {
   const { config, indexes, textureReceiverName, localOs } = input;
@@ -1470,10 +1680,16 @@ class UltraGridDevice {
     );
   }
   publishDefaults() {
-    const defaults = applyTopicChange(
+    const txPorts = allocateUgPorts(this.roomId, this.channelIndex);
+    let defaults = applyTopicChange(
       defaultUltraGridConfig(),
       "remoteValues/local_os",
       this.localOs
+    );
+    defaults = applyTopicChange(
+      defaults,
+      "network/local/customSending",
+      `0.0.0.0:${txPorts.videoPort}`
     );
     for (const { subpath, value } of snapshotTopics(defaults)) {
       this.pubDeviceGui(subpath, value, false);
@@ -1995,7 +2211,7 @@ function publishInitSequence() {
   trackedPublish(1, topics.settings(peerId, "localMenus/wasapiReceiveRange"), "0");
   trackedPublish(1, topics.settings(peerId, "localMenus/jackReceiveRange"), "0");
   trackedPublish(1, topics.settings(peerId, "localProps/ug_enable"), resolveUgPath() ? "1" : "0");
-  trackedPublish(1, topics.settings(peerId, "localProps/natnet_enable"), "0");
+  trackedPublish(1, topics.settings(peerId, "localProps/natnet_enable"), "1");
   const savedRack = loadRack();
   if (Object.keys(savedRack).length > 0) {
     for (const [tail, value] of Object.entries(savedRack)) {
@@ -2064,6 +2280,16 @@ function setupBus() {
               type,
               (topic) => retainedTopics.has(topic),
               loadSettings().brokerUrl
+            );
+          }
+          if (type === 3) {
+            return new NatNetDevice(
+              channel,
+              localPeerId,
+              localIP,
+              roomId,
+              (retained, topic, value) => trackedPublish(retained, topic, value),
+              (topic) => retainedTopics.has(topic)
             );
           }
           if (type === 2) {
