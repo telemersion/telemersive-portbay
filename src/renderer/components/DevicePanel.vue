@@ -69,6 +69,7 @@ function onKeydown(e: KeyboardEvent) {
       :peer-id="peerId"
       :channel-index="channelIndex"
       :device-state="deviceState"
+      :peer-settings="peerSettings"
       :is-local="isLocal"
       :target-locked="targetLocked"
       @remove="emit('close')"

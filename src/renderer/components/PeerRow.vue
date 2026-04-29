@@ -42,7 +42,8 @@ function channelData(index: number) {
     indicators: typeof ch?.device?.gui?.indicators === 'string'
       ? ch.device.gui.indicators
       : '',
-    ugMode: ch?.device?.gui?.network?.mode ?? ''
+    ugMode: ch?.device?.gui?.network?.mode ?? '',
+    mocapDirectionSelect: ch?.device?.gui?.direction?.select ?? ''
   }
 }
 
@@ -117,6 +118,7 @@ const peerColors = computed(() => {
         :output-indicator="channelData(i - 1).outputIndicator"
         :indicators="channelData(i - 1).indicators"
         :ug-mode="channelData(i - 1).ugMode"
+        :mocap-direction-select="channelData(i - 1).mocapDirectionSelect"
         :is-local="isLocal"
         :is-locked="cellsLocked"
         :selected="selectedChannel === i - 1"

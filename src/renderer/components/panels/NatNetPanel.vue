@@ -8,6 +8,7 @@ const props = defineProps<{
   peerId: string
   channelIndex: number
   deviceState: any
+  peerSettings?: any
   isLocal: boolean
   targetLocked: boolean
 }>()
@@ -24,13 +25,15 @@ const isEnabled = computed(() => gui.value?.enable === '1')
 const isLocked = computed(() => isEnabled.value || (!props.isLocal && props.targetLocked))
 
 // Direction values mirror NatNetDevice.Direction enum:
-//   0 = SendToRouter, 1 = SendToLocal — both require NatNetThree2OSC CLI (Windows-only).
-//   2 = ReceiveFromRouter — pure UDP relay, cross-platform.
+//   1 = SendToRouter, 4 = SendToLocal — require NatNetThree2OSC CLI (natnet_enable=1).
+//   2 = ReceiveFromRouter — pure OSC relay, no CLI needed.
+// CLI availability is signalled by the remote peer via settings/localProps/natnet_enable=1.
 const directionValue = computed(() => direction.value?.select ?? '2')
-const showCliParams = computed(() => directionValue.value === '0' || directionValue.value === '1')
+const showCliParams = computed(() =>
+  directionValue.value === '1' || directionValue.value === '4'
+)
 
-const localOs = computed(() => gui.value?.remoteValues?.local_os ?? '')
-const cliAvailable = computed(() => localOs.value === 'windows')
+const cliAvailable = computed(() => props.peerSettings?.localProps?.natnet_enable === '1')
 
 const prefix = computed(() =>
   `/peer/${props.peerId}/rack/page_0/channel.${props.channelIndex}/device/gui`
@@ -159,13 +162,9 @@ const enableNatNetOn = computed(() => direction.value?.enableNatNet === '1')
           @change="directionBinding.set(($event.target as HTMLSelectElement).value)"
         >
           <option value="2">receive from router</option>
-          <option value="0">send to router</option>
-          <option value="1">send to local</option>
+          <option value="1" :disabled="!cliAvailable">send to router</option>
+          <option value="4" :disabled="!cliAvailable">send to local</option>
         </select>
-      </div>
-      <div v-if="showCliParams && !cliAvailable" class="cli-warning">
-        NatNetThree2OSC is required for send modes and is currently Windows-only
-        ({{ localOs || 'unknown OS' }} detected).
       </div>
     </section>
 
@@ -364,7 +363,6 @@ h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px
 .toggle-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .monitor-controls { display: flex; gap: 6px; }
 .monitor-log { max-height: 160px; overflow-y: auto; background: #0d0d0d; border: 1px solid #333; border-radius: 4px; padding: 6px 8px; color: #fc9; font-family: monospace; font-size: 10px; white-space: pre-wrap; }
-.cli-warning { padding: 6px 8px; margin: 6px 0 4px; border: 1px dashed #555; border-radius: 4px; color: #c88; font-size: 11px; }
 .advanced-row { display: flex; justify-content: flex-end; margin-top: 4px; margin-bottom: 4px; }
 .advanced-pill { padding: 3px 10px; border-radius: 10px; border: 1px solid #555; background: #2a2a2a; color: #aaa; cursor: pointer; font-size: 10px; text-transform: lowercase; }
 .advanced-pill:hover { background: #333; color: #ddd; }

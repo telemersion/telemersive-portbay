@@ -852,7 +852,7 @@ class NatNetDevice {
     if (enable === this.enabled) return;
     this.enabled = enable;
     if (enable) {
-      const mode = this.direction === 2 ? "receive-from-router" : this.direction === 1 ? "send-to-local" : "send-to-router";
+      const mode = this.direction === 2 ? "receive-from-router" : this.direction === 4 ? "send-to-local" : "send-to-router";
       console.log(`[NatNet ch.${this.channelIndex}] enable=1 (direction=${mode}) — handler not implemented yet`);
       this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
       this.enabled = false;

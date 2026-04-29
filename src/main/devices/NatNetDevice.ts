@@ -5,14 +5,14 @@ import type { DeviceHandler } from './types'
 type PublishFn = (retained: 0 | 1, topic: string, value: string) => void
 type HasRetainedFn = (topic: string) => boolean
 
-// direction/select values observed in Max dropdown:
-//   0 = send to router          (requires NatNetThree2OSC CLI — Windows only)
-//   1 = send to local           (requires NatNetThree2OSC CLI — Windows only)
-//   2 = receive from router     (pure OSC relay — cross-platform)
+// direction/select values (confirmed from Max dropdown):
+//   1 = send to router          (requires NatNetThree2OSC CLI)
+//   2 = receive from router     (pure OSC relay — no CLI needed)
+//   4 = send to local           (requires NatNetThree2OSC CLI)
 export const enum Direction {
-  SendToRouter = 0,
-  SendToLocal = 1,
-  ReceiveFromRouter = 2
+  SendToRouter = 1,
+  ReceiveFromRouter = 2,
+  SendToLocal = 4
 }
 
 function localOsTag(): string {
@@ -169,8 +169,8 @@ export class NatNetDevice implements DeviceHandler {
     this.enabled = enable
     if (enable) {
       // Stage 2 will wire the actual behavior:
-      //   - direction = ReceiveFromRouter → UDP relay (cross-platform)
-      //   - direction = SendToRouter/SendToLocal → spawn NatNetThree2OSC (Windows only)
+      //   - direction = ReceiveFromRouter (2) → UDP relay (no CLI needed)
+      //   - direction = SendToRouter (1) / SendToLocal (4) → spawn NatNetThree2OSC CLI
       const mode = this.direction === Direction.ReceiveFromRouter ? 'receive-from-router'
         : this.direction === Direction.SendToLocal ? 'send-to-local' : 'send-to-router'
       console.log(`[NatNet ch.${this.channelIndex}] enable=1 (direction=${mode}) — handler not implemented yet`)

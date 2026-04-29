@@ -23,7 +23,7 @@ const TILES: Tile[] = [
   { type: 1, label: 'OSC',          color: '#36ABFF', flag: 'osc_enable',    implemented: true  },
   { type: 4, label: 'StageControl', color: '#FE5FF5', flag: 'stagec_enable', implemented: false },
   { type: 2, label: 'UltraGrid',    color: '#F0DE01', flag: 'ug_enable',     implemented: true  },
-  { type: 3, label: 'MoCap',        color: '#FFA126', flag: 'natnet_enable', implemented: true  }
+  { type: 3, label: 'MoCap',        color: '#FFA126', flag: null,            implemented: true  }
 ]
 
 function flagValue(name: string): string | undefined {
