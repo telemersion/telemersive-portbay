@@ -37,10 +37,10 @@ const inputPort = bind('localudp/inputPort', () => udp.value?.inputPort)
 
 const oscUrl = computed(() => {
   if (roomId.value <= 0) return ''
-  const base = `http://${brokerHost.value}:${roomId.value * 1000 + 900}`
-  if (!roomName.value) return base
-  const params = new URLSearchParams({ username: roomName.value, password: roomName.value })
-  return `${base}/login?${params}`
+  const host = `${brokerHost.value}:${roomId.value * 1000 + 900}`
+  if (!roomName.value) return `http://${host}`
+  const cred = encodeURIComponent(roomName.value)
+  return `http://${cred}:${cred}@${host}`
 })
 
 const emit = defineEmits<{ remove: [] }>()
