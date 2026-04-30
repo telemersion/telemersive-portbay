@@ -198,6 +198,7 @@ const DEFAULTS = {
   brokerPwd: "telemersion2021",
   lastRoomName: "",
   lastRoomPwd: "",
+  panelRowHeight: 320,
   settingsVersion: 1
 };
 function settingsPath() {

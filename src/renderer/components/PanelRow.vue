@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import type { PanelSlot } from '../composables/usePanelRow'
 import PanelSlotHeader from './PanelSlotHeader.vue'
 import DevicePanel from './DevicePanel.vue'
@@ -13,6 +13,23 @@ const props = defineProps<{
   isLocal: (peerId: string) => boolean
   isLocked: (peerId: string) => boolean
 }>()
+
+const rowEl = ref<HTMLElement | null>(null)
+
+watch(() => props.activeId, async (id) => {
+  if (!id || !rowEl.value) return
+  await nextTick()
+  const index = props.slots.findIndex(s => s.id === id)
+  if (index === -1) return
+  const slotLeft = index * SLOT_WIDTH
+  const slotRight = slotLeft + SLOT_WIDTH
+  const { scrollLeft, clientWidth } = rowEl.value
+  if (slotRight > scrollLeft + clientWidth) {
+    rowEl.value.scrollLeft = slotRight - clientWidth
+  } else if (slotLeft < scrollLeft) {
+    rowEl.value.scrollLeft = slotLeft
+  }
+})
 
 const emit = defineEmits<{
   pin: [id: string]
@@ -59,7 +76,7 @@ function onDragEnd() {
 </script>
 
 <template>
-  <div class="panel-row">
+  <div ref="rowEl" class="panel-row">
     <div
       v-for="(slot, index) in slots"
       :key="slot.id"
