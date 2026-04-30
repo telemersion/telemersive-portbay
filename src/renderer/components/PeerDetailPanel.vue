@@ -31,6 +31,34 @@ const colorSwatch = computed(() => {
   return `rgb(${Math.round(parts[0] * 255)},${Math.round(parts[1] * 255)},${Math.round(parts[2] * 255)})`
 })
 
+const colorHex = computed(() => {
+  if (!props.peerColor) return '#ffffff'
+  const parts = props.peerColor.split(' ').map(Number)
+  if (parts.length < 3) return '#ffffff'
+  return '#' + [parts[0], parts[1], parts[2]]
+    .map(v => Math.round(v * 255).toString(16).padStart(2, '0'))
+    .join('')
+})
+
+const colorInputEl = ref<HTMLInputElement | null>(null)
+
+function openColorPicker() {
+  colorInputEl.value?.click()
+}
+
+function onColorChange(e: Event) {
+  const hex = (e.target as HTMLInputElement).value
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  const value = `${r.toFixed(4)} ${g.toFixed(4)} ${b.toFixed(4)} 1`
+  window.api.invoke('mqtt:publish', {
+    topic: `/peer/${props.peerId}/settings/background/color`,
+    value,
+    retain: true
+  })
+}
+
 interface GeoResult {
   city?: string
   regionName?: string
@@ -100,7 +128,8 @@ onUnmounted(() => {
       </div>
       <div v-if="colorSwatch" class="field">
         <span class="label">Color</span>
-        <span class="color-preview" :style="{ background: colorSwatch }" />
+        <button class="color-preview" :style="{ background: colorSwatch }" title="Click to change color" @click="openColorPicker" />
+        <input ref="colorInputEl" type="color" :value="colorHex" class="color-input-hidden" @change="onColorChange" />
       </div>
 
       <template v-if="geo">
@@ -237,6 +266,18 @@ onUnmounted(() => {
   height: 14px;
   border-radius: 3px;
   border: 1px solid #333;
+  cursor: pointer;
+  padding: 0;
+}
+.color-preview:hover {
+  border-color: #888;
+}
+.color-input-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .divider {
