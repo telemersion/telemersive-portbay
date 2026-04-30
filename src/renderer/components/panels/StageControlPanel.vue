@@ -96,6 +96,9 @@ function openOsc() {
       >
         Open Stage Control ↗
       </button>
+      <div v-if="roomName" class="osc-credentials">
+        login: <span class="cred">{{ roomName }}</span> / <span class="cred">{{ roomName }}</span>
+      </div>
     </div>
 
     <section>
@@ -174,6 +177,8 @@ function openOsc() {
 .open-osc-btn { width: 100%; padding: 7px 12px; border-radius: 6px; border: 1px solid #FE5FF5; background: none; color: #FE5FF5; cursor: pointer; font-size: 12px; font-weight: 500; transition: background 0.15s, color 0.15s; }
 .open-osc-btn:hover:not(:disabled) { background: #FE5FF5; color: #111; }
 .open-osc-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.osc-credentials { margin-top: 5px; font-size: 10px; color: #666; text-align: center; }
+.osc-credentials .cred { font-family: monospace; color: #999; }
 section { margin-bottom: 12px; }
 h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px; padding: 4px 0; border-bottom: 1px solid #333; }
 .field-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
