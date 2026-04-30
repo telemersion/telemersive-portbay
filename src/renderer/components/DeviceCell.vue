@@ -153,12 +153,12 @@ const sinkFill = computed(() => {
             <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" :fill="txFill"/>
             <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z" :fill="rxFill"/>
           </svg>
-          <!-- MoCap RX (receive from router): large down-left + small up-right minor -->
+          <!-- MoCap RX (receive from router): small up-left minor + large down-right major -->
           <svg v-else-if="direction === 'rx'" width="28" height="28" viewBox="0 0 200 200"
             stroke="none" stroke-linejoin="round" stroke-linecap="round">
             <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" :fill="sinkFill"/>
-            <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" :fill="txFill"/>
-            <path d="m 135.74171,150.16519 -0.56693,-44.85035 h -9.64464 l 14.89216,-19.933489 14.89216,19.933489 h -10.21157 l 0.56692,44.85035 z" :fill="rxFill"/>
+            <path d="m 64.332575,149.735 0.56301,-44.571838 h 9.5779 l -14.7891,-19.76692 -14.7891,19.76692 h 10.1409 l -0.563,44.571838 z" :fill="txFill"/>
+            <path d="M 119.98763,19.94015 118.84557,109.940148 H 99.416606 l 29.999994,40 30,-40 h -20.57103 l 1.14206,-90.000002 z" :fill="rxFill"/>
           </svg>
           <!-- MoCap Local (send to local): right arrow out + left down arrow in -->
           <svg v-else-if="direction === 'local'" width="28" height="28" viewBox="0 0 200 200"

@@ -472,17 +472,15 @@ function allocateStageControlPort(roomId2) {
 function allocateMocapLocalPorts(channelIndex) {
   const base = portBase(LOCAL_PREFIX, channelIndex);
   return {
-    outputPortOne: base + 0,
-    outputPortTwo: base + 1,
-    inputPort: base + 2
+    outputPort: base + 0,
+    inputPort: base + 1
   };
 }
 function allocateMocapRoomPorts(roomId2, channelIndex) {
   const base = portBase(roomId2, channelIndex);
   return {
-    outputPortOne: base + 0,
-    outputPortTwo: base + 1,
-    inputPort: base + 2
+    outputPort: base + 0,
+    inputPort: base + 1
   };
 }
 const dnsLookup$1 = util.promisify(dns__namespace.lookup);
@@ -721,6 +719,8 @@ class OscDevice {
   }
 }
 const dnsLookup = util.promisify(dns__namespace.lookup);
+const HEARTBEAT = Buffer.from([47, 104, 98, 0, 44, 0, 0, 0]);
+const HEARTBEAT_INTERVAL_MS = 5e3;
 function localOsTag() {
   if (process.platform === "darwin") return "osx";
   if (process.platform === "win32") return "windows";
@@ -740,13 +740,16 @@ class NatNetDevice {
   enabled = false;
   enableTwo = false;
   direction = 2;
-  enableNatNet = false;
+  // Local forwarding targets — where received packets are forwarded on this machine.
+  outputPortOne;
+  outputPortTwo;
   outputIPOne;
   outputIPTwo;
   listeningIP;
   // Receive-from-router relay state (direction = 2).
   socket = null;
   proxyIP = null;
+  heartbeatTimer = null;
   // Indicator slot 1 ("minor") pulses on inbound proxy traffic.
   minorIndicatorOn = false;
   minorIndicatorTimer = null;
@@ -760,6 +763,8 @@ class NatNetDevice {
     this.roomPorts = allocateMocapRoomPorts(roomId2, channelIndex);
     this.publish = publish;
     this.hasRetained = hasRetained;
+    this.outputPortOne = this.localPorts.inputPort;
+    this.outputPortTwo = this.localPorts.inputPort;
     this.outputIPOne = localIP2;
     this.outputIPTwo = localIP2;
     this.listeningIP = localIP2;
@@ -783,8 +788,8 @@ class NatNetDevice {
     pub("localudp/listeningIP", this.localIP);
     pub("localudp/outputIPOne", this.localIP);
     pub("localudp/outputIPTwo", this.localIP);
-    pub("localudp/outputPortOne", String(this.localPorts.outputPortOne));
-    pub("localudp/outputPortTwo", String(this.localPorts.outputPortTwo));
+    pub("localudp/outputPortOne", String(this.outputPortOne));
+    pub("localudp/outputPortTwo", String(this.outputPortTwo));
     pub("localudp/reset", "0");
     pub("natnet/defaultLocalIP", "0");
     pub("natnet/autoReconnect", "0");
@@ -823,7 +828,6 @@ class NatNetDevice {
         this.direction = parseInt(value, 10) || 0;
         break;
       case "gui/direction/enableNatNet":
-        this.enableNatNet = value === "1";
         break;
       case "gui/localudp/outputIPOne":
         if (value && value !== "0") this.outputIPOne = value;
@@ -835,10 +839,10 @@ class NatNetDevice {
         if (value && value !== "0") this.listeningIP = value;
         break;
       case "gui/localudp/outputPortOne":
-        this.localPorts.outputPortOne = parseInt(value, 10) || this.localPorts.outputPortOne;
+        this.outputPortOne = parseInt(value, 10) || this.outputPortOne;
         break;
       case "gui/localudp/outputPortTwo":
-        this.localPorts.outputPortTwo = parseInt(value, 10) || this.localPorts.outputPortTwo;
+        this.outputPortTwo = parseInt(value, 10) || this.outputPortTwo;
         break;
       case "gui/localudp/inputPort":
         this.localPorts.inputPort = parseInt(value, 10) || this.localPorts.inputPort;
@@ -852,6 +856,8 @@ class NatNetDevice {
   }
   resetToDefaults() {
     this.localPorts = allocateMocapLocalPorts(this.channelIndex);
+    this.outputPortOne = this.localPorts.inputPort;
+    this.outputPortTwo = this.localPorts.inputPort;
     this.outputIPOne = this.localIP;
     this.outputIPTwo = this.localIP;
     this.listeningIP = this.localIP;
@@ -875,9 +881,9 @@ class NatNetDevice {
     this.stopReceiveRelay();
     console.log(`[NatNet ch.${this.channelIndex}] enable=0`);
   }
-  // Receive-from-router (direction=2): pure OSC/UDP relay, no CLI.
-  // Bind localPorts.inputPort, forward proxy→outputPortOne(/Two if enableTwo).
-  // Mirrors OscDevice.startRelay but indicator slot is "minor" (index 1).
+  // Receive-from-router (direction=2): bind roomPorts.inputPort (proxy many_port = base+1),
+  // send periodic heartbeats to stay registered as a sink, forward received packets
+  // to outputPortOne (and outputPortTwo if enableTwo).
   async startReceiveRelay() {
     try {
       const { address } = await dnsLookup(this.brokerHost, { family: 4 });
@@ -893,22 +899,30 @@ class NatNetDevice {
       this.socket.on("message", (msg, rinfo) => {
         if (rinfo.address !== this.proxyIP) return;
         this.pulseMinorIndicator();
-        this.socket.send(msg, 0, msg.length, this.localPorts.outputPortOne, this.outputIPOne);
+        this.socket.send(msg, 0, msg.length, this.outputPortOne, this.outputIPOne);
         if (this.enableTwo) {
-          this.socket.send(msg, 0, msg.length, this.localPorts.outputPortTwo, this.outputIPTwo);
+          this.socket.send(msg, 0, msg.length, this.outputPortTwo, this.outputIPTwo);
         }
       });
       this.socket.on("error", (err) => {
         console.error(`[NatNet ch.${this.channelIndex}] socket error:`, err.message);
         this.disableOnError();
       });
-      this.socket.bind(this.localPorts.inputPort, this.listeningIP, () => {
-        console.log(`[NatNet ch.${this.channelIndex}] receive relay up — local in:${this.localPorts.inputPort} out:${this.localPorts.outputPortOne}${this.enableTwo ? `/${this.localPorts.outputPortTwo}` : ""} ← proxy ${this.proxyIP}`);
+      this.socket.bind(this.roomPorts.inputPort, this.listeningIP, () => {
+        console.log(
+          `[NatNet ch.${this.channelIndex}] receive relay up — proxy ${this.proxyIP}:${this.roomPorts.inputPort} → local ${this.outputPortOne}${this.enableTwo ? `/${this.outputPortTwo}` : ""}`
+        );
+        this.sendHeartbeat();
+        this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), HEARTBEAT_INTERVAL_MS);
       });
     } catch (err) {
       console.error(`[NatNet ch.${this.channelIndex}] failed to start receive relay:`, err.message);
       this.disableOnError();
     }
+  }
+  sendHeartbeat() {
+    if (!this.socket || !this.proxyIP) return;
+    this.socket.send(HEARTBEAT, 0, HEARTBEAT.length, this.roomPorts.inputPort, this.proxyIP);
   }
   pulseMinorIndicator() {
     if (!this.minorIndicatorOn) {
@@ -932,6 +946,10 @@ class NatNetDevice {
     this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
   }
   stopReceiveRelay() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
     if (this.socket) {
       try {
         this.socket.close();

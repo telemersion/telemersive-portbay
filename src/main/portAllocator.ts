@@ -56,29 +56,27 @@ export function allocateStageControlPort(roomId: number): number {
   return roomId * 1000 + 902
 }
 
-// MoCap/NatNet pairing from spec §8.7:
-// paired xxcc0 ↔ xxcc1 for outputs, single xxcc2 for input.
-// Confirmed against Max trace on channel.2: outputPortOne=10020, outputPortTwo=10021, inputPort=10022.
+// MoCap/NatNet uses a one2manyBi proxy:
+//   base + 0 = listen_port  — source-client sends TO the router (outputPort)
+//   base + 1 = many_port    — sink-clients receive FROM the router (inputPort);
+//              sink-clients must send periodic heartbeat packets to stay registered.
 export interface MocapPorts {
-  outputPortOne: number
-  outputPortTwo: number
+  outputPort: number
   inputPort: number
 }
 
 export function allocateMocapLocalPorts(channelIndex: number): MocapPorts {
   const base = portBase(LOCAL_PREFIX, channelIndex)
   return {
-    outputPortOne: base + 0,
-    outputPortTwo: base + 1,
-    inputPort: base + 2
+    outputPort: base + 0,
+    inputPort: base + 1
   }
 }
 
 export function allocateMocapRoomPorts(roomId: number, channelIndex: number): MocapPorts {
   const base = portBase(roomId, channelIndex)
   return {
-    outputPortOne: base + 0,
-    outputPortTwo: base + 1,
-    inputPort: base + 2
+    outputPort: base + 0,
+    inputPort: base + 1
   }
 }
