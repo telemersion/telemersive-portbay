@@ -116,7 +116,7 @@ export class UltraGridDevice implements DeviceHandler {
     const topic = topics.deviceGui(this.peerId, this.channelIndex, subpath)
     this.publishedTopics.add(topic)
     if (!force && this.hasRetained(topic)) return
-    this.publish(1, topic, value)
+    this.publish(1, topic, ...value.split(' '))
   }
 
   onTopicChanged(subpath: string, value: string): void {

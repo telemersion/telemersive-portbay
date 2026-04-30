@@ -7,7 +7,7 @@ import type { DeviceHandler } from './types'
 
 const dnsLookup = promisify(dns.lookup)
 
-type PublishFn = (retained: 0 | 1, topic: string, value: string) => void
+type PublishFn = (retained: 0 | 1, topic: string, ...values: string[]) => void
 type HasRetainedFn = (topic: string) => boolean
 
 // direction/select values (confirmed from Max dropdown):
@@ -96,7 +96,7 @@ export class NatNetDevice implements DeviceHandler {
       const topic = topics.deviceGui(this.peerId, this.channelIndex, field)
       this.publishedTopics.push(topic)
       if (!force && this.hasRetained(topic)) return
-      this.publish(1, topic, value)
+      this.publish(1, topic, ...value.split(' '))
     }
 
     pub('direction/select', String(Direction.ReceiveFromRouter))
@@ -276,7 +276,7 @@ export class NatNetDevice implements DeviceHandler {
 
   private publishIndicators(): void {
     const minor = this.minorIndicatorOn ? '1' : '0'
-    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'indicators'), `0 ${minor} 0`)
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'indicators'), '0', minor, '0')
   }
 
   private disableOnError(): void {

@@ -91,7 +91,13 @@ function trackedPublish(retained: 0 | 1, topic: string, ...values: any[]): void 
       rackMutated = true
     }
   }
-  bus!.publish(retained, topic, ...values)
+  // JSON.stringify on string tokens produces quoted values that Max treats as
+  // symbols. Coerce numeric-looking tokens to numbers so they arrive as floats.
+  const wireValues = values.map((v: any) => {
+    if (typeof v === 'string' && v !== '' && !isNaN(Number(v))) return Number(v)
+    return v
+  })
+  bus!.publish(retained, topic, ...wireValues)
   logEvent({ kind: 'pub', topic, value, retained: retained === 1 })
   if (rackMutated) scheduleRackSave()
 }
@@ -114,7 +120,7 @@ function publishInitSequence(): void {
   const settings = loadSettings()
   const colorTopic = topics.settings(peerId, 'background/color')
   const color = retainedTopics.get(colorTopic) || settings.peerColor || generateDefaultColor(peerId)
-  trackedPublish(1, colorTopic, color)
+  trackedPublish(1, colorTopic, ...color.split(' '))
 
   trackedPublish(1, topics.settings(peerId, 'localMenus/textureCaptureRange'), '-default-')
   trackedPublish(1, topics.settings(peerId, 'localMenus/ndiRange'), '-default-')
@@ -150,7 +156,7 @@ function generateDefaultColor(peerId: string): string {
   const r = hslToComponent(hue, 0.6, 0.55, 0)
   const g = hslToComponent(hue, 0.6, 0.55, 8)
   const b = hslToComponent(hue, 0.6, 0.55, 4)
-  return `${r} ${g} ${b} 1`
+  return `${r.toFixed(6)} ${g.toFixed(6)} ${b.toFixed(6)} 1`
 }
 
 function hslToComponent(h: number, s: number, l: number, n: number): number {
@@ -309,7 +315,7 @@ function setupIpcHandlers(): void {
   })
 
   ipcMain.handle('mqtt:publish', async (_event, payload: { topic: string; value: string; retain: boolean }) => {
-    trackedPublish(payload.retain ? 1 : 0, payload.topic, payload.value)
+    trackedPublish(payload.retain ? 1 : 0, payload.topic, ...payload.value.split(' '))
   })
 
   ipcMain.handle('mqtt:subscribe', async (_event, topic) => {

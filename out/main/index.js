@@ -485,6 +485,8 @@ function allocateMocapRoomPorts(roomId2, channelIndex) {
   };
 }
 const dnsLookup$1 = util.promisify(dns__namespace.lookup);
+const HEARTBEAT$1 = Buffer.from([47, 104, 98, 0, 44, 0, 0, 0]);
+const HEARTBEAT_INTERVAL_MS$1 = 5e3;
 class OscDevice {
   channelIndex;
   deviceType;
@@ -506,6 +508,7 @@ class OscDevice {
   // - Receives from proxy (after it learns our src tuple on first send) → forwards to local outputPort(s)
   socket = null;
   proxyIP = null;
+  heartbeatTimer = null;
   _isRunning = false;
   get isRunning() {
     return this._isRunning;
@@ -650,6 +653,8 @@ class OscDevice {
       this.socket.bind(this.localPorts.inputPort, this.localIP, () => {
         this._isRunning = true;
         console.log(`[OSC ch.${this.channelIndex}] relay up — local in:${this.localPorts.inputPort} out:${this.localPorts.outputPortOne} → proxy ${this.proxyIP}:${this.roomDestPort()}`);
+        this.sendHeartbeat();
+        this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), HEARTBEAT_INTERVAL_MS$1);
       });
     } catch (err) {
       console.error(`[OSC ch.${this.channelIndex}] failed to start relay:`, err.message);
@@ -684,7 +689,15 @@ class OscDevice {
     this.stopRelay();
     this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
   }
+  sendHeartbeat() {
+    if (!this.socket || !this.proxyIP) return;
+    this.socket.send(HEARTBEAT$1, 0, HEARTBEAT$1.length, this.roomDestPort(), this.proxyIP);
+  }
   stopRelay() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
     if (this.socket) {
       try {
         this.socket.close();
@@ -778,7 +791,7 @@ class NatNetDevice {
       const topic = topics.deviceGui(this.peerId, this.channelIndex, field);
       this.publishedTopics.push(topic);
       if (!force && this.hasRetained(topic)) return;
-      this.publish(1, topic, value);
+      this.publish(1, topic, ...value.split(" "));
     };
     pub("direction/select", String(
       2
@@ -939,7 +952,7 @@ class NatNetDevice {
   }
   publishIndicators() {
     const minor = this.minorIndicatorOn ? "1" : "0";
-    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "indicators"), `0 ${minor} 0`);
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "indicators"), "0", minor, "0");
   }
   disableOnError() {
     this.stopReceiveRelay();
@@ -1813,7 +1826,7 @@ class UltraGridDevice {
     const topic = topics.deviceGui(this.peerId, this.channelIndex, subpath);
     this.publishedTopics.add(topic);
     if (!force && this.hasRetained(topic)) return;
-    this.publish(1, topic, value);
+    this.publish(1, topic, ...value.split(" "));
   }
   onTopicChanged(subpath, value) {
     if (!subpath.startsWith("gui/")) return;
@@ -2293,7 +2306,11 @@ function trackedPublish(retained, topic, ...values) {
       rackMutated = true;
     }
   }
-  bus.publish(retained, topic, ...values);
+  const wireValues = values.map((v) => {
+    if (typeof v === "string" && v !== "" && !isNaN(Number(v))) return Number(v);
+    return v;
+  });
+  bus.publish(retained, topic, ...wireValues);
   logEvent({ kind: "pub", topic, value, retained: retained === 1 });
   if (rackMutated) scheduleRackSave();
 }
@@ -2309,8 +2326,9 @@ function publishInitSequence() {
   }
   trackedPublish(1, topics.settings(peerId, "lock/enable"), "0");
   const settings = loadSettings();
-  const color = settings.peerColor || generateDefaultColor(peerId);
-  trackedPublish(1, topics.settings(peerId, "background/color"), color);
+  const colorTopic = topics.settings(peerId, "background/color");
+  const color = retainedTopics.get(colorTopic) || settings.peerColor || generateDefaultColor(peerId);
+  trackedPublish(1, colorTopic, ...color.split(" "));
   trackedPublish(1, topics.settings(peerId, "localMenus/textureCaptureRange"), "-default-");
   trackedPublish(1, topics.settings(peerId, "localMenus/ndiRange"), "-default-");
   trackedPublish(1, topics.settings(peerId, "localMenus/portaudioCaptureRange"), "0");
@@ -2323,6 +2341,7 @@ function publishInitSequence() {
   trackedPublish(1, topics.settings(peerId, "localMenus/jackReceiveRange"), "0");
   trackedPublish(1, topics.settings(peerId, "localProps/ug_enable"), resolveUgPath() ? "1" : "0");
   trackedPublish(1, topics.settings(peerId, "localProps/natnet_enable"), "1");
+  trackedPublish(1, topics.settings(peerId, "localProps/stagec_enable"), "1");
   const savedRack = loadRack();
   if (Object.keys(savedRack).length > 0) {
     for (const [tail, value] of Object.entries(savedRack)) {
@@ -2341,7 +2360,7 @@ function generateDefaultColor(peerId) {
   const r = hslToComponent(hue, 0.6, 0.55, 0);
   const g = hslToComponent(hue, 0.6, 0.55, 8);
   const b = hslToComponent(hue, 0.6, 0.55, 4);
-  return `${r.toFixed(4)} ${g.toFixed(4)} ${b.toFixed(4)} 1`;
+  return `${r.toFixed(6)} ${g.toFixed(6)} ${b.toFixed(6)} 1`;
 }
 function hslToComponent(h, s, l, n) {
   const a = s * Math.min(l, 1 - l);
@@ -2443,6 +2462,12 @@ function setupBus() {
       deviceRouter.onMqttMessage(msg.topic, msg.payload);
     }
     if (localPeerId) {
+      if (msg.topic === topics.settings(localPeerId, "background/color") && msg.payload) {
+        const s = loadSettings();
+        if (s.peerColor !== msg.payload) {
+          saveSettings({ ...s, peerColor: msg.payload });
+        }
+      }
       handleRefreshTrigger(
         localPeerId,
         msg.topic,
@@ -2506,7 +2531,7 @@ function setupIpcHandlers() {
     bus.leave();
   });
   electron.ipcMain.handle("mqtt:publish", async (_event, payload) => {
-    trackedPublish(payload.retain ? 1 : 0, payload.topic, payload.value);
+    trackedPublish(payload.retain ? 1 : 0, payload.topic, ...payload.value.split(" "));
   });
   electron.ipcMain.handle("mqtt:subscribe", async (_event, topic) => {
     bus.subscribe(topic);
