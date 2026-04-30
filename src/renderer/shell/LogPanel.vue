@@ -166,6 +166,7 @@ onUnmounted(() => {
 .list {
   flex: 1;
   overflow-y: auto;
+  overflow-x: auto;
   padding: 4px 0;
   font-size: 11px;
   line-height: 1.45;
@@ -174,8 +175,6 @@ onUnmounted(() => {
 .row {
   padding: 1px 12px;
   white-space: nowrap;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
   display: flex;
   gap: 6px;
 }
@@ -184,7 +183,7 @@ onUnmounted(() => {
 
 .ts { color: #555; flex-shrink: 0; }
 .kind { flex-shrink: 0; }
-.topic { color: #ccc; overflow: hidden; text-overflow: ellipsis; }
+.topic { color: #ccc; }
 .value { color: #7ec; flex-shrink: 0; }
 
 .k-sub .kind, .k-unsub .kind { color: #9a8; }

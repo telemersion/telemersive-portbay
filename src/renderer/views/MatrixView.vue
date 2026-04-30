@@ -237,8 +237,8 @@ async function onRemoveDevice(peerId: string, channelIndex: number) {
         :local-ip="ownLocalIP"
         :public-ip="ownPublicIP"
       />
-      <div class="matrix-scroll">
-        <div class="matrix-grid">
+      <div class="matrix-scroll" @click.self="panelRow.clearSelection()">
+        <div class="matrix-grid" @click.self="panelRow.clearSelection()">
           <div class="header-label">Peer</div>
           <div class="header-cells">
             <span v-for="i in CHANNEL_COUNT" :key="i - 1" class="ch-num">{{ i - 1 }}</span>
