@@ -7,6 +7,9 @@ import type { DeviceHandler } from './types'
 
 const dnsLookup = promisify(dns.lookup)
 
+const HEARTBEAT = Buffer.from([47, 104, 98, 0, 44, 0, 0, 0]) // OSC /hb
+const HEARTBEAT_INTERVAL_MS = 5000
+
 type PublishFn = (retained: 0 | 1, topic: string, value: string) => void
 type HasRetainedFn = (topic: string) => boolean
 
@@ -33,6 +36,7 @@ export class OscDevice implements DeviceHandler {
   // - Receives from proxy (after it learns our src tuple on first send) → forwards to local outputPort(s)
   private socket: dgram.Socket | null = null
   private proxyIP: string | null = null
+  private heartbeatTimer: NodeJS.Timeout | null = null
 
   private _isRunning = false
   get isRunning(): boolean { return this._isRunning }
@@ -198,6 +202,8 @@ export class OscDevice implements DeviceHandler {
       this.socket.bind(this.localPorts.inputPort, this.localIP, () => {
         this._isRunning = true
         console.log(`[OSC ch.${this.channelIndex}] relay up — local in:${this.localPorts.inputPort} out:${this.localPorts.outputPortOne} → proxy ${this.proxyIP}:${this.roomDestPort()}`)
+        this.sendHeartbeat()
+        this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), HEARTBEAT_INTERVAL_MS)
       })
     } catch (err: any) {
       console.error(`[OSC ch.${this.channelIndex}] failed to start relay:`, err.message)
@@ -236,7 +242,16 @@ export class OscDevice implements DeviceHandler {
     this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'enable'), '0')
   }
 
+  private sendHeartbeat(): void {
+    if (!this.socket || !this.proxyIP) return
+    this.socket.send(HEARTBEAT, 0, HEARTBEAT.length, this.roomDestPort(), this.proxyIP)
+  }
+
   private stopRelay(): void {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer)
+      this.heartbeatTimer = null
+    }
     if (this.socket) {
       try { this.socket.close() } catch {}
       this.socket = null
