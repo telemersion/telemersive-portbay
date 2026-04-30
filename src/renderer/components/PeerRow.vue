@@ -17,6 +17,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   cellClick: [channelIndex: number]
   openPopup: [channelIndex: number, rect: DOMRect]
+  removeDevice: [channelIndex: number]
 }>()
 
 const cellsLocked = computed(() => props.isLocked && !props.isLocal)
@@ -126,6 +127,7 @@ const peerColors = computed(() => {
         :selected="selectedChannel === i - 1"
         @click="emit('cellClick', i - 1)"
         @open-popup="(rect) => emit('openPopup', i - 1, rect)"
+        @remove-device="emit('removeDevice', i - 1)"
       />
     </div>
   </div>

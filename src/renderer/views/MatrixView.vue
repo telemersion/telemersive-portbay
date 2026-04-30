@@ -154,6 +154,15 @@ function onPopupSelect(deviceType: number) {
 function closePopup() {
   popupOpen.value = false
 }
+
+async function onRemoveDevice(peerId: string, channelIndex: number) {
+  const confirmed = window.confirm('Remove this device? The device will be stopped and all its settings cleared.')
+  if (!confirmed) return
+  const base = `/peer/${peerId}/rack/page_0/channel.${channelIndex}`
+  // Disable first so the handler shuts down cleanly before teardown.
+  await window.api.invoke('mqtt:publish', { topic: `${base}/device/gui/enable`, value: '0', retain: true })
+  await window.api.invoke('mqtt:publish', { topic: `${base}/loaded`, value: '0', retain: true })
+}
 </script>
 
 <template>
@@ -191,6 +200,7 @@ function closePopup() {
           :selected-channel="panelOpen && panelPeerId === peerId ? panelChannel : null"
           @cell-click="(ch) => onCellClick(peerId, ch)"
           @open-popup="(ch, rect) => onOpenPopup(peerId, ch, rect)"
+          @remove-device="(ch) => onRemoveDevice(peerId, ch)"
         />
       </div>
     </div>

@@ -19,11 +19,17 @@ const props = defineProps<{
 const emit = defineEmits<{
   click: []
   openPopup: [rect: DOMRect]
+  removeDevice: []
 }>()
 
 function handleOpenPopup(e: MouseEvent) {
   const target = e.currentTarget as HTMLElement
   emit('openPopup', target.getBoundingClientRect())
+}
+
+function handleRemoveDevice(e: MouseEvent) {
+  e.stopPropagation()
+  emit('removeDevice')
 }
 
 const isEmpty = computed(() => props.loaded === '0' || props.loaded === '')
@@ -42,8 +48,6 @@ const UG_STYLES = {
   both:  { color: '#1BFEE9', dim: '#0D7F74', label: 'UltraGrid' }
 }
 
-const DISABLED_COLOR = '#1a1a1a'
-
 const style = computed(() => {
   if (props.loaded === '2') {
     if (props.ugTransmission === '1') return UG_STYLES.audio
@@ -54,15 +58,15 @@ const style = computed(() => {
 })
 const label = computed(() => props.description || style.value.label)
 
-const labelColor = computed(() => isEnabled.value ? style.value.color : DISABLED_COLOR)
+const disabledColor = computed(() => style.value.dim)
+const labelColor = computed(() => isEnabled.value ? style.value.color : disabledColor.value)
 const borderColor = computed(() => {
   if (isEmpty.value) return '#333'
   return isEnabled.value ? style.value.color : '#444'
 })
 const backgroundColor = computed(() => {
   if (isEmpty.value) return '#1a1a1a'
-  if (!isEnabled.value) return style.value.dim
-  return '#333'
+  return isEnabled.value ? '#1a1a1a' : '#333'
 })
 
 // MoCap direction comes from direction/select, passed via the mocapDirectionSelect prop.
@@ -122,10 +126,10 @@ const rxActive = computed(() => {
 const deviceColor = computed(() => style.value.color)
 const dimColor = computed(() => style.value.dim)
 
-const txFill = computed(() => !isEnabled.value ? DISABLED_COLOR : txActive.value ? deviceColor.value : dimColor.value)
-const rxFill = computed(() => !isEnabled.value ? DISABLED_COLOR : rxActive.value ? deviceColor.value : dimColor.value)
+const txFill = computed(() => !isEnabled.value ? disabledColor.value : txActive.value ? deviceColor.value : dimColor.value)
+const rxFill = computed(() => !isEnabled.value ? disabledColor.value : rxActive.value ? deviceColor.value : dimColor.value)
 const sinkFill = computed(() => {
-  if (!isEnabled.value) return DISABLED_COLOR
+  if (!isEnabled.value) return disabledColor.value
   return (txActive.value || rxActive.value) ? deviceColor.value : dimColor.value
 })
 </script>
@@ -196,8 +200,8 @@ const sinkFill = computed(() => {
       <div
         v-if="!isLocked"
         class="cell-plus"
-        @click.stop="handleOpenPopup"
-      >+</div>
+        @click.stop="handleRemoveDevice"
+      >−</div>
     </template>
   </div>
 </template>
