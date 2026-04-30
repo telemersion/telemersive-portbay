@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useMqttBinding } from '../../composables/useMqttBinding'
 import { useSessionInfo } from '../../composables/useSessionInfo'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps<{
   peerId: string
@@ -11,7 +11,7 @@ const props = defineProps<{
   targetLocked: boolean
 }>()
 
-const { brokerHost, roomId } = useSessionInfo()
+const { brokerHost, roomId, roomName } = useSessionInfo()
 
 const gui = computed(() => props.deviceState?.device?.gui ?? {})
 const udp = computed(() => gui.value?.localudp ?? {})
@@ -35,17 +35,12 @@ const outputIPTwo = bind('localudp/outputIPTwo', () => udp.value?.outputIPTwo)
 const outputPortTwo = bind('localudp/outputPortTwo', () => udp.value?.outputPortTwo)
 const inputPort = bind('localudp/inputPort', () => udp.value?.inputPort)
 
-const oscUsername = ref('')
-const oscPassword = ref('')
-
 const oscUrl = computed(() => {
   if (roomId.value <= 0) return ''
   const base = `http://${brokerHost.value}:${roomId.value * 1000 + 900}`
-  const params = new URLSearchParams()
-  if (oscUsername.value) params.set('username', oscUsername.value)
-  if (oscPassword.value) params.set('password', oscPassword.value)
-  const qs = params.toString()
-  return qs ? `${base}/login?${qs}` : base
+  if (!roomName.value) return base
+  const params = new URLSearchParams({ username: roomName.value, password: roomName.value })
+  return `${base}/login?${params}`
 })
 
 const emit = defineEmits<{ remove: [] }>()
@@ -102,27 +97,6 @@ function openOsc() {
         Open Stage Control ↗
       </button>
     </div>
-
-    <section>
-      <h4>Open Stage Control login</h4>
-      <div class="field-row">
-        <label>username</label>
-        <input
-          :value="oscUsername"
-          placeholder="optional"
-          @input="oscUsername = ($event.target as HTMLInputElement).value"
-        />
-      </div>
-      <div class="field-row">
-        <label>password</label>
-        <input
-          type="password"
-          :value="oscPassword"
-          placeholder="optional"
-          @input="oscPassword = ($event.target as HTMLInputElement).value"
-        />
-      </div>
-    </section>
 
     <section>
       <h4>Forward to</h4>
