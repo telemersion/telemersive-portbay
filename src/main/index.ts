@@ -128,6 +128,7 @@ function publishInitSequence(): void {
 
   trackedPublish(1, topics.settings(peerId, 'localProps/ug_enable'), resolveUgPath() ? '1' : '0')
   trackedPublish(1, topics.settings(peerId, 'localProps/natnet_enable'), '1')
+  trackedPublish(1, topics.settings(peerId, 'localProps/stagec_enable'), '1')
 
   const savedRack = loadRack()
   if (Object.keys(savedRack).length > 0) {
