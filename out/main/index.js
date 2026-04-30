@@ -2229,6 +2229,7 @@ let roomId = 0;
 let localIP = "";
 let brokerConnected = false;
 let peerJoined = false;
+const geoCache = /* @__PURE__ */ new Map();
 const retainedTopics = /* @__PURE__ */ new Map();
 const RACK_SAVE_DEBOUNCE_MS = 500;
 let rackSaveTimer = null;
@@ -2536,6 +2537,20 @@ function setupIpcHandlers() {
   });
   electron.ipcMain.handle("log:clear", () => {
     clearLogBuffer();
+  });
+  electron.ipcMain.handle("geo:lookup", async (_event, ip) => {
+    const key = ip || "";
+    if (geoCache.has(key)) return geoCache.get(key);
+    try {
+      const url = ip ? `http://ip-api.com/json/${ip}` : "http://ip-api.com/json/";
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      geoCache.set(key, data);
+      return data;
+    } catch {
+      return null;
+    }
   });
 }
 electron.app.whenReady().then(async () => {

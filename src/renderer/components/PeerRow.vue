@@ -12,12 +12,14 @@ const props = defineProps<{
   channels: Record<string, any>
   channelCount: number
   selectedChannel: number | null
+  peerInfoActive?: boolean
 }>()
 
 const emit = defineEmits<{
   cellClick: [channelIndex: number]
   openPopup: [channelIndex: number, rect: DOMRect]
   removeDevice: [channelIndex: number]
+  peerInfoClick: []
 }>()
 
 const cellsLocked = computed(() => props.isLocked && !props.isLocal)
@@ -84,7 +86,9 @@ const peerColors = computed(() => {
   <div class="peer-row">
     <div
       class="peer-info"
+      :class="{ 'peer-info-active': peerInfoActive }"
       :style="{ background: peerColors.bg, borderLeftColor: peerColors.border }"
+      @click="emit('peerInfoClick')"
     >
       <div class="peer-dot" :style="{ background: peerColors.dot }" />
       <div class="peer-text">
@@ -152,6 +156,16 @@ const peerColors = computed(() => {
   border-left: 3px solid transparent;
   background: #222;
   align-self: stretch;
+  cursor: pointer;
+}
+
+.peer-info:hover {
+  filter: brightness(1.25);
+}
+
+.peer-info.peer-info-active {
+  outline: 1px solid #555;
+  outline-offset: -1px;
 }
 
 .peer-dot {

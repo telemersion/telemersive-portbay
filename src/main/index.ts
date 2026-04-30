@@ -24,6 +24,7 @@ let roomId = 0
 let localIP = ''
 let brokerConnected = false
 let peerJoined = false
+const geoCache = new Map<string, Record<string, unknown>>()
 const retainedTopics = new Map<string, string>()
 
 const RACK_SAVE_DEBOUNCE_MS = 500
@@ -339,6 +340,21 @@ function setupIpcHandlers(): void {
 
   ipcMain.handle('log:clear', () => {
     clearLogBuffer()
+  })
+
+  ipcMain.handle('geo:lookup', async (_event, ip?: string) => {
+    const key = ip || ''
+    if (geoCache.has(key)) return geoCache.get(key)
+    try {
+      const url = ip ? `http://ip-api.com/json/${ip}` : 'http://ip-api.com/json/'
+      const res = await fetch(url)
+      if (!res.ok) return null
+      const data = await res.json() as Record<string, unknown>
+      geoCache.set(key, data)
+      return data
+    } catch {
+      return null
+    }
   })
 
 }

@@ -3,8 +3,10 @@ import { computed, ref, onMounted } from 'vue'
 import { createPeerState } from '../state/peerState'
 import { createRoster } from '../state/roster'
 import { usePanelRow } from '../composables/usePanelRow'
+import { usePeerDetail } from '../composables/usePeerDetail'
 import PeerRow from '../components/PeerRow.vue'
 import PanelRow from '../components/PanelRow.vue'
+import PeerDetailPanel from '../components/PeerDetailPanel.vue'
 import AddDevicePopup from '../components/AddDevicePopup.vue'
 import RoomHeader from '../components/RoomHeader.vue'
 
@@ -58,6 +60,8 @@ function onDragMouseup() {
 
 // ── Panel row state ──────────────────────────────────────────────
 const panelRow = usePanelRow()
+const peerDetail = usePeerDetail()
+const selectedPeerId = computed(() => peerDetail.selectedPeerId.value)
 const panelRowVisible = computed(() => panelRow.panelRowVisible.value)
 const panelAllSlots = computed(() => panelRow.allSlots.value)
 const panelActiveId = computed(() => panelRow.activeId.value)
@@ -150,14 +154,24 @@ function getPeerName(peerId: string) {
   return roster.entries[peerId]?.peerName ?? peerId.slice(0, 6)
 }
 
+function getPublicIP(peerId: string) {
+  return roster.entries[peerId]?.publicIP ?? ''
+}
+
 // ── Cell interaction ─────────────────────────────────────────────
 function onCellClick(peerId: string, channelIndex: number) {
+  peerDetail.close()
   const ch = peerState.peers[peerId]?.rack?.page_0?.[`channel.${channelIndex}`]
   if (ch?.loaded && ch.loaded !== '0') {
     panelRow.activateCell(peerId, channelIndex)
   } else {
     panelRow.clearSelection()
   }
+}
+
+function onPeerInfoClick(peerId: string) {
+  panelRow.clearSelection()
+  peerDetail.selectPeer(peerId)
 }
 
 // ── Panel row event handlers ─────────────────────────────────────
@@ -237,8 +251,8 @@ async function onRemoveDevice(peerId: string, channelIndex: number) {
         :local-ip="ownLocalIP"
         :public-ip="ownPublicIP"
       />
-      <div class="matrix-scroll" @click.self="panelRow.clearSelection()">
-        <div class="matrix-grid" @click.self="panelRow.clearSelection()">
+      <div class="matrix-scroll" @click.self="panelRow.clearSelection(); peerDetail.close()">
+        <div class="matrix-grid" @click.self="panelRow.clearSelection(); peerDetail.close()">
           <div class="header-label">Peer</div>
           <div class="header-cells">
             <span v-for="i in CHANNEL_COUNT" :key="i - 1" class="ch-num">{{ i - 1 }}</span>
@@ -255,9 +269,11 @@ async function onRemoveDevice(peerId: string, channelIndex: number) {
             :channels="peerChannels(peerId)"
             :channel-count="CHANNEL_COUNT"
             :selected-channel="selectedChannelForPeer(peerId)"
+            :peer-info-active="selectedPeerId === peerId"
             @cell-click="(ch) => onCellClick(peerId, ch)"
             @open-popup="(ch, rect) => onOpenPopup(peerId, ch, rect)"
             @remove-device="(ch) => onRemoveDevice(peerId, ch)"
+            @peer-info-click="onPeerInfoClick(peerId)"
           />
         </div>
       </div>
@@ -301,6 +317,20 @@ async function onRemoveDevice(peerId: string, channelIndex: number) {
       @select="onPopupSelect"
       @close="closePopup"
     />
+
+    <Transition name="slide-right">
+      <PeerDetailPanel
+        v-if="selectedPeerId"
+        :peer-id="selectedPeerId"
+        :peer-name="getPeerName(selectedPeerId)"
+        :local-i-p="peerIP(selectedPeerId)"
+        :public-i-p="getPublicIP(selectedPeerId)"
+        :peer-color="peerColor(selectedPeerId)"
+        :is-locked="isLocked(selectedPeerId)"
+        :is-local="selectedPeerId === ownPeerId"
+        @close="peerDetail.close()"
+      />
+    </Transition>
   </div>
 </template>
 
@@ -397,6 +427,15 @@ async function onRemoveDevice(peerId: string, channelIndex: number) {
 
 .drag-handle:hover {
   background: #444;
+}
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: transform 0.2s ease;
+}
+.slide-right-enter-from,
+.slide-right-leave-to {
+  transform: translateX(100%);
 }
 
 .panel-row-area {
