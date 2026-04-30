@@ -112,8 +112,9 @@ function publishInitSequence(): void {
   trackedPublish(1, topics.settings(peerId, 'lock/enable'), '0')
 
   const settings = loadSettings()
-  const color = settings.peerColor || generateDefaultColor(peerId)
-  trackedPublish(1, topics.settings(peerId, 'background/color'), color)
+  const colorTopic = topics.settings(peerId, 'background/color')
+  const color = retainedTopics.get(colorTopic) || settings.peerColor || generateDefaultColor(peerId)
+  trackedPublish(1, colorTopic, color)
 
   trackedPublish(1, topics.settings(peerId, 'localMenus/textureCaptureRange'), '-default-')
   trackedPublish(1, topics.settings(peerId, 'localMenus/ndiRange'), '-default-')
@@ -149,7 +150,7 @@ function generateDefaultColor(peerId: string): string {
   const r = hslToComponent(hue, 0.6, 0.55, 0)
   const g = hslToComponent(hue, 0.6, 0.55, 8)
   const b = hslToComponent(hue, 0.6, 0.55, 4)
-  return `${r.toFixed(4)} ${g.toFixed(4)} ${b.toFixed(4)} 1`
+  return `${r} ${g} ${b} 1`
 }
 
 function hslToComponent(h: number, s: number, l: number, n: number): number {
@@ -249,6 +250,12 @@ function setupBus(): void {
       deviceRouter.onMqttMessage(msg.topic, msg.payload)
     }
     if (localPeerId) {
+      if (msg.topic === topics.settings(localPeerId, 'background/color') && msg.payload) {
+        const s = loadSettings()
+        if (s.peerColor !== msg.payload) {
+          saveSettings({ ...s, peerColor: msg.payload })
+        }
+      }
       handleRefreshTrigger(localPeerId, msg.topic, (retained, topic, value) =>
         trackedPublish(retained, topic, value)
       ).catch((err: unknown) => {

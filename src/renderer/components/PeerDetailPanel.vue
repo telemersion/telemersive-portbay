@@ -51,7 +51,7 @@ function onColorChange(e: Event) {
   const r = parseInt(hex.slice(1, 3), 16) / 255
   const g = parseInt(hex.slice(3, 5), 16) / 255
   const b = parseInt(hex.slice(5, 7), 16) / 255
-  const value = `${r.toFixed(4)} ${g.toFixed(4)} ${b.toFixed(4)} 1`
+  const value = `${r} ${g} ${b} 1`
   window.api.invoke('mqtt:publish', {
     topic: `/peer/${props.peerId}/settings/background/color`,
     value,
