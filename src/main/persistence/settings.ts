@@ -11,6 +11,7 @@ export interface Settings {
   brokerPwd: string
   lastRoomName: string
   lastRoomPwd: string
+  panelRowHeight: number
   settingsVersion: number
 }
 
@@ -23,6 +24,7 @@ const DEFAULTS: Settings = {
   brokerPwd: 'telemersion2021',
   lastRoomName: '',
   lastRoomPwd: '',
+  panelRowHeight: 320,
   settingsVersion: 1
 }
 
