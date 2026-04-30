@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import OscPanel from './panels/OscPanel.vue'
+import StageControlPanel from './panels/StageControlPanel.vue'
 import UltraGridPanel from './panels/UltraGridPanel.vue'
 import NatNetPanel from './panels/NatNetPanel.vue'
 import { computed } from 'vue'
@@ -20,8 +21,18 @@ const loaded = computed(() => props.deviceState?.loaded ?? '0')
 
 <template>
   <div class="device-panel-body">
+    <StageControlPanel
+      v-if="loaded === '4'"
+      :peer-id="peerId"
+      :channel-index="channelIndex"
+      :device-state="deviceState"
+      :is-local="isLocal"
+      :target-locked="targetLocked"
+      @remove="emit('remove')"
+    />
+
     <OscPanel
-      v-if="loaded === '1' || loaded === '4'"
+      v-else-if="loaded === '1'"
       :peer-id="peerId"
       :channel-index="channelIndex"
       :device-state="deviceState"
