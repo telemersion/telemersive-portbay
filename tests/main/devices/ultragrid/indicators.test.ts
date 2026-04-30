@@ -43,6 +43,12 @@ describe('UltraGridIndicatorParser', () => {
     expect(published).toContainEqual({ topic: 'test/indicators', value: expect.stringMatching(/^0 1 .* -91\.38$/) })
   })
 
+  it('parses Audio TX Volume line with channel prefix "[0] dB/peak" format', (ctx) => {
+    ctx.onTestFinished(() => parser.reset())
+    parser.handleLogLine('[1664558497.525] [Audio sender] Volume: [0] -46.77/-33.98 dBFS RMS/peak')
+    expect(published).toContainEqual({ topic: 'test/indicators', value: expect.stringMatching(/^1 0 0 -46\.77/) })
+  })
+
   it('ignores lines without timestamp', (ctx) => {
     ctx.onTestFinished(() => parser.reset())
     const before = published.length

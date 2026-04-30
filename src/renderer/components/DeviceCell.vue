@@ -9,6 +9,7 @@ const props = defineProps<{
   outputIndicator: string
   indicators: string
   ugMode: string
+  ugTransmission: string
   mocapDirectionSelect: string
   isLocal: boolean
   isLocked: boolean
@@ -30,24 +31,38 @@ const isEnabled = computed(() => props.enable === '1')
 
 const DEVICE_STYLES: Record<string, { color: string; dim: string; label: string }> = {
   '1': { color: '#36ABFF', dim: '#13527F', label: 'OSC' },
-  '2': { color: '#F0DE01', dim: '#787000', label: 'UltraGrid' },
   '3': { color: '#FFA126', dim: '#7F500F', label: 'MoCap' },
   '4': { color: '#FE5FF5', dim: '#7F2F7A', label: 'StageC' }
 }
 
-const DISABLED_COLOR = '#555'
+// UG color depends on transmission mode: '0'=video only, '1'=audio only, '2'=both
+const UG_STYLES = {
+  video: { color: '#F0DE01', dim: '#787000', label: 'UltraGrid' },
+  audio: { color: '#00E411', dim: '#006B08', label: 'UltraGrid' },
+  both:  { color: '#1BFEE9', dim: '#0D7F74', label: 'UltraGrid' }
+}
 
-const style = computed(() => DEVICE_STYLES[props.loaded] ?? { color: '#888', dim: '#444', label: 'device' })
+const DISABLED_COLOR = '#1a1a1a'
+
+const style = computed(() => {
+  if (props.loaded === '2') {
+    if (props.ugTransmission === '1') return UG_STYLES.audio
+    if (props.ugTransmission === '2') return UG_STYLES.both
+    return UG_STYLES.video
+  }
+  return DEVICE_STYLES[props.loaded] ?? { color: '#888', dim: '#444', label: 'device' }
+})
 const label = computed(() => props.description || style.value.label)
 
 const labelColor = computed(() => isEnabled.value ? style.value.color : DISABLED_COLOR)
 const borderColor = computed(() => {
-  if (isEmpty.value) return '#444'
+  if (isEmpty.value) return '#333'
   return isEnabled.value ? style.value.color : '#444'
 })
 const backgroundColor = computed(() => {
-  if (isEmpty.value) return '#333'
-  return isEnabled.value ? '#333' : '#1a1a1a'
+  if (isEmpty.value) return '#1a1a1a'
+  if (!isEnabled.value) return style.value.dim
+  return '#333'
 })
 
 // MoCap direction comes from direction/select, passed via the mocapDirectionSelect prop.
@@ -193,8 +208,8 @@ const sinkFill = computed(() => {
   height: 50px;
   min-width: 50px;
   box-sizing: border-box;
-  border: 1px solid #444;
-  background: #333;
+  border: 1px solid #333;
+  background: #1a1a1a;
   display: flex;
   align-items: center;
   justify-content: center;

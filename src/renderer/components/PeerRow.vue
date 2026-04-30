@@ -43,6 +43,7 @@ function channelData(index: number) {
       ? ch.device.gui.indicators
       : '',
     ugMode: ch?.device?.gui?.network?.mode ?? '',
+    ugTransmission: ch?.device?.gui?.audioVideo?.transmission ?? '',
     mocapDirectionSelect: ch?.device?.gui?.direction?.select ?? ''
   }
 }
@@ -118,6 +119,7 @@ const peerColors = computed(() => {
         :output-indicator="channelData(i - 1).outputIndicator"
         :indicators="channelData(i - 1).indicators"
         :ug-mode="channelData(i - 1).ugMode"
+        :ug-transmission="channelData(i - 1).ugTransmission"
         :mocap-direction-select="channelData(i - 1).mocapDirectionSelect"
         :is-local="isLocal"
         :is-locked="cellsLocked"

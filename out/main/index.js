@@ -1690,7 +1690,7 @@ class UltraGridIndicatorParser {
         }
       }
     }
-    const volMatch = stripped.match(/Volume:\s*([-\d.]+)/);
+    const volMatch = stripped.match(/Volume:\s*(?:\[\d+\]\s*)?([-\d.]+)/);
     if (volMatch) {
       const vol = volMatch[1];
       if (isTx) {

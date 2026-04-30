@@ -82,8 +82,8 @@ export class UltraGridIndicatorParser {
       }
     }
 
-    // Extract Volume: "Volume: -18.5" or "Volume: -91.38"
-    const volMatch = stripped.match(/Volume:\s*([-\d.]+)/)
+    // Extract Volume: "Volume: -18.5" or "Volume: [0] -46.77/-33.98 dBFS RMS/peak"
+    const volMatch = stripped.match(/Volume:\s*(?:\[\d+\]\s*)?([-\d.]+)/)
     if (volMatch) {
       const vol = volMatch[1]
       if (isTx) {
