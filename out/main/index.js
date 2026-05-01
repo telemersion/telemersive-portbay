@@ -2,6 +2,7 @@
 const electron = require("electron");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 const events = require("events");
 const dgram = require("dgram");
 const dns = require("dns");
@@ -442,6 +443,11 @@ class DeviceRouter {
       this.unloadChannel(channel);
     }
   }
+  // Enumerate currently loaded handlers — used by MotiveDevice to check for
+  // sibling Motive instances on this peer at enable time (Q15-E port conflict).
+  loadedHandlers() {
+    return [...this.handlers.values()];
+  }
 }
 const LOCAL_PREFIX = 10;
 function portBase(prefix, channelIndex) {
@@ -494,7 +500,15 @@ function allocateMocapRoomPorts(roomId2, channelIndex) {
     inputPort: base + 1
   };
 }
-const dnsLookup$1 = util.promisify(dns__namespace.lookup);
+function allocateMotiveRoomPorts(roomId2, channelIndex) {
+  const base = portBase(roomId2, channelIndex);
+  return {
+    cmdPort: base + 0,
+    dataTxPort: base + 2,
+    dataRxPort: base + 6
+  };
+}
+const dnsLookup$2 = util.promisify(dns__namespace.lookup);
 const HEARTBEAT$1 = Buffer.from([47, 104, 98, 0, 44, 0, 0, 0]);
 const HEARTBEAT_INTERVAL_MS$1 = 5e3;
 class OscDevice {
@@ -634,7 +648,7 @@ class OscDevice {
   }
   async startRelay() {
     try {
-      const { address } = await dnsLookup$1(this.brokerHost, { family: 4 });
+      const { address } = await dnsLookup$2(this.brokerHost, { family: 4 });
       this.proxyIP = address;
     } catch (err) {
       console.error(`[OSC ch.${this.channelIndex}] DNS lookup failed for ${this.brokerHost}:`, err.message);
@@ -742,7 +756,7 @@ class OscDevice {
     this.stopRelay();
   }
 }
-const dnsLookup = util.promisify(dns__namespace.lookup);
+const dnsLookup$1 = util.promisify(dns__namespace.lookup);
 const HEARTBEAT = Buffer.from([47, 104, 98, 0, 44, 0, 0, 0]);
 const HEARTBEAT_INTERVAL_MS = 5e3;
 function localOsTag() {
@@ -910,7 +924,7 @@ class NatNetDevice {
   // to outputPortOne (and outputPortTwo if enableTwo).
   async startReceiveRelay() {
     try {
-      const { address } = await dnsLookup(this.brokerHost, { family: 4 });
+      const { address } = await dnsLookup$1(this.brokerHost, { family: 4 });
       this.proxyIP = address;
     } catch (err) {
       console.error(`[NatNet ch.${this.channelIndex}] DNS lookup failed for ${this.brokerHost}:`, err.message);
@@ -2001,6 +2015,585 @@ function sanitizedChildEnv$1() {
 function stripArgQuotes(args) {
   return args.map((a) => a.replace(/'([^']*)'/g, "$1"));
 }
+var MotiveDirection = /* @__PURE__ */ ((MotiveDirection2) => {
+  MotiveDirection2[MotiveDirection2["Source"] = 1] = "Source";
+  MotiveDirection2[MotiveDirection2["Sink"] = 2] = "Sink";
+  return MotiveDirection2;
+})(MotiveDirection || {});
+const DEFAULT_MULTICAST_IP = "239.255.42.99";
+const DEFAULT_DATA_PORT = 1511;
+const DEFAULT_CMD_PORT = 1510;
+const SOURCE_HANDSHAKE = Buffer.from([8, 8, 8]);
+const SINK_HANDSHAKE = Buffer.from([9, 9, 9]);
+const HANDSHAKE_INTERVAL_MS = 250;
+const NO_DATA_TIMEOUT_MS = 3e3;
+const HANDSHAKE_OK_WINDOW_MS = 1500;
+function findPortConflict(input) {
+  const { self, siblings } = input;
+  for (const sib of siblings) {
+    if (sib.channelIndex === self.channelIndex) continue;
+    if (!sib.enabled) continue;
+    const sameMulticastPair = sib.config.multicastIP === self.config.multicastIP && sib.config.dataPort === self.config.dataPort;
+    const sameCmdPortOnSameNic = sib.config.cmdPort === self.config.cmdPort && sib.config.interfaceName === self.config.interfaceName;
+    if (sameMulticastPair) {
+      return { conflictingChannel: sib.channelIndex, reason: "multicast_pair" };
+    }
+    if (sameCmdPortOnSameNic) {
+      return { conflictingChannel: sib.channelIndex, reason: "cmd_port" };
+    }
+  }
+  return null;
+}
+function formatPortConflict(c, self) {
+  if (c.reason === "multicast_pair") {
+    return `Cannot enable: channel ${c.conflictingChannel} is already using ${self.multicastIP}:${self.dataPort}. Change multicastIP or dataPort, or disable channel ${c.conflictingChannel} first.`;
+  }
+  return `Cannot enable: channel ${c.conflictingChannel} is already bound to cmdPort ${self.cmdPort} on ${self.interfaceName}. Change cmdPort or interfaceName, or disable channel ${c.conflictingChannel} first.`;
+}
+function deriveHealthState(input) {
+  if (!input.enabled) return "ok";
+  if (input.portConflict) return "port_conflict";
+  if (input.interfaceMissing) return "interface_missing";
+  if (input.duplicateSourceDetected) return "duplicate_source";
+  const handshakeOk = input.lastHandshakeReplyAt !== null && input.now - input.lastHandshakeReplyAt < HANDSHAKE_OK_WINDOW_MS;
+  if (!handshakeOk) return "no_proxy";
+  if (input.direction === 1) {
+    const sawData = input.lastDataPacketAt !== null && input.now - input.lastDataPacketAt < NO_DATA_TIMEOUT_MS;
+    if (!sawData) return "waiting_motive";
+    return "ok";
+  }
+  const consumerKnown = input.lastConsumerCmdAt !== null;
+  if (!consumerKnown) return "waiting_consumer";
+  return "ok";
+}
+function defaultsForDirection(direction, fallbackInterface) {
+  return {
+    direction,
+    multicastIP: DEFAULT_MULTICAST_IP,
+    dataPort: DEFAULT_DATA_PORT,
+    cmdPort: DEFAULT_CMD_PORT,
+    interfaceName: fallbackInterface
+  };
+}
+function defaultDescription(direction) {
+  return direction === 1 ? "Motive Source" : "Motive Sink";
+}
+const dnsLookup = util.promisify(dns__namespace.lookup);
+const HEALTH_TICK_MS = 500;
+const INDICATOR_HOLD_MS = 200;
+const MOTIVE_DEVICE_TYPE = 5;
+class MotiveDevice {
+  channelIndex;
+  deviceType = MOTIVE_DEVICE_TYPE;
+  peerId;
+  localIP;
+  brokerHost;
+  roomPorts;
+  publish;
+  hasRetained;
+  siblingsProvider;
+  publishedTopics = [];
+  // Wire state
+  enabled = false;
+  direction = MotiveDirection.Source;
+  multicastIP = DEFAULT_MULTICAST_IP;
+  dataPort = DEFAULT_DATA_PORT;
+  cmdPort = DEFAULT_CMD_PORT;
+  interfaceName = "";
+  motiveIP = "";
+  // Runtime state
+  proxyIP = null;
+  dataSocket = null;
+  cmdSocket = null;
+  handshakeTimer = null;
+  healthTimer = null;
+  // Sink-only: address+port of the consumer (Unity), captured the moment it
+  // sends its first cmd packet. null until first contact.
+  clientCmndAddress = null;
+  clientCmndPort = null;
+  // Observation counters (used by health-state derivation).
+  lastHandshakeReplyAt = null;
+  lastDataPacketAt = null;
+  lastCmdPacketAt = null;
+  lastConsumerCmdAt = null;
+  duplicateSourceDetected = false;
+  interfaceMissing = false;
+  portConflict = false;
+  // Indicator pulse state (slot 0=data, slot 1=cmd, slot 2=direction, slot 3=running).
+  dataPulseTimer = null;
+  cmdPulseTimer = null;
+  dataPulseOn = false;
+  cmdPulseOn = false;
+  lastPublishedHealth = null;
+  lastPublishedIndicators = "";
+  constructor(opts) {
+    this.channelIndex = opts.channelIndex;
+    this.peerId = opts.peerId;
+    this.localIP = opts.localIP;
+    this.brokerHost = opts.brokerHost ?? "telemersion.zhdk.ch";
+    this.roomPorts = allocateMotiveRoomPorts(opts.roomId, opts.channelIndex);
+    this.publish = opts.publish;
+    this.hasRetained = opts.hasRetained ?? (() => false);
+    this.siblingsProvider = opts.siblings ?? (() => []);
+  }
+  publishDefaults() {
+    const pub = (field, value) => {
+      const topic = topics.deviceGui(this.peerId, this.channelIndex, field);
+      this.publishedTopics.push(topic);
+      if (this.hasRetained(topic)) return;
+      this.publish(1, topic, ...value.split(" "));
+    };
+    pub("direction/select", String(MotiveDirection.Source));
+    pub("localudp/multicastIP", DEFAULT_MULTICAST_IP);
+    pub("localudp/dataPort", String(DEFAULT_DATA_PORT));
+    pub("localudp/cmdPort", String(DEFAULT_CMD_PORT));
+    pub("localudp/interfaceName", this.guessInterfaceName());
+    pub("localudp/motiveIP", "");
+    pub("localudp/reset", "0");
+    pub("health/state", "ok");
+    pub("indicators", "0 0 1 0");
+    pub("monitor/log", "");
+    pub("monitor/monitorGate", "0");
+    pub("description", defaultDescription(MotiveDirection.Source));
+    pub("enable", "0");
+  }
+  onTopicChanged(subpath, value) {
+    switch (subpath) {
+      case "gui/enable":
+        if (value === "1") this.handleEnable();
+        else this.handleDisable();
+        break;
+      case "gui/direction/select": {
+        const next = parseInt(value, 10) === MotiveDirection.Sink ? MotiveDirection.Sink : MotiveDirection.Source;
+        if (next !== this.direction) this.handleDirectionChange(next);
+        break;
+      }
+      case "gui/localudp/multicastIP":
+        if (value) this.multicastIP = value;
+        break;
+      case "gui/localudp/dataPort": {
+        const n = parseInt(value, 10);
+        if (n > 0) this.dataPort = n;
+        break;
+      }
+      case "gui/localudp/cmdPort": {
+        const n = parseInt(value, 10);
+        if (n > 0) this.cmdPort = n;
+        break;
+      }
+      case "gui/localudp/interfaceName":
+        this.interfaceName = value || "";
+        break;
+      case "gui/localudp/motiveIP":
+        this.motiveIP = value || "";
+        break;
+      case "gui/localudp/reset":
+        if (value === "1" && !this.enabled) {
+          this.handleReset();
+        }
+        break;
+    }
+  }
+  // ─── Enable / disable ─────────────────────────────────────────────────
+  async handleEnable() {
+    if (this.enabled) return;
+    const conflict = findPortConflict({
+      self: { channelIndex: this.channelIndex, config: this.snapshotConfig() },
+      siblings: this.siblingsProvider().filter((s) => s.channelIndex !== this.channelIndex)
+    });
+    if (conflict) {
+      this.portConflict = true;
+      this.logMonitor(formatPortConflict(conflict, this.snapshotConfig()));
+      this.publishHealth("port_conflict");
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
+      return;
+    }
+    this.portConflict = false;
+    if (!this.interfaceExists(this.interfaceName)) {
+      this.interfaceMissing = true;
+      this.logMonitor(`Interface "${this.interfaceName}" not found on this host. Pick another interface.`);
+      this.publishHealth("interface_missing");
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
+      return;
+    }
+    this.interfaceMissing = false;
+    try {
+      const { address } = await dnsLookup(this.brokerHost, { family: 4 });
+      this.proxyIP = address;
+    } catch (err) {
+      this.logMonitor(`DNS lookup failed for ${this.brokerHost}: ${err.message}`);
+      this.publishHealth("no_proxy");
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
+      return;
+    }
+    this.enabled = true;
+    this.duplicateSourceDetected = false;
+    this.lastHandshakeReplyAt = null;
+    this.lastDataPacketAt = null;
+    this.lastConsumerCmdAt = null;
+    try {
+      if (this.direction === MotiveDirection.Source) {
+        this.startSource();
+      } else {
+        this.startSink();
+      }
+    } catch (err) {
+      this.logMonitor(`Failed to start ${this.direction === 1 ? "Source" : "Sink"} relay: ${err.message}`);
+      this.disableInternal();
+      return;
+    }
+    this.startHandshakeLoop();
+    this.startHealthTick();
+  }
+  handleDisable() {
+    if (!this.enabled) return;
+    this.disableInternal();
+  }
+  disableInternal() {
+    this.enabled = false;
+    this.stopRelay();
+    this.publishHealth("ok");
+    this.publishIndicators(true);
+  }
+  handleReset() {
+    if (this.enabled) return;
+    const fallbackIface = this.guessInterfaceName();
+    const fresh = defaultsForDirection(this.direction, fallbackIface);
+    this.multicastIP = fresh.multicastIP;
+    this.dataPort = fresh.dataPort;
+    this.cmdPort = fresh.cmdPort;
+    this.interfaceName = fresh.interfaceName;
+    this.motiveIP = "";
+    const pub = (field, value) => {
+      this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, field), ...value.split(" "));
+    };
+    pub("localudp/multicastIP", fresh.multicastIP);
+    pub("localudp/dataPort", String(fresh.dataPort));
+    pub("localudp/cmdPort", String(fresh.cmdPort));
+    pub("localudp/interfaceName", fresh.interfaceName);
+    pub("localudp/motiveIP", "");
+    pub("localudp/reset", "0");
+  }
+  handleDirectionChange(next) {
+    this.stopRelay();
+    this.direction = next;
+    this.clientCmndAddress = null;
+    this.clientCmndPort = null;
+    this.motiveIP = "";
+    this.duplicateSourceDetected = false;
+    defaultDescription(next === MotiveDirection.Source ? MotiveDirection.Sink : MotiveDirection.Source);
+    const descTopic = topics.deviceGui(this.peerId, this.channelIndex, "description");
+    if (this.hasRetained(descTopic)) ;
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "localudp/motiveIP"), "");
+    this.publish(1, descTopic, ...defaultDescription(next).split(" "));
+  }
+  // ─── Source-side relay ────────────────────────────────────────────────
+  startSource() {
+    if (!this.proxyIP) return;
+    const iface = this.findInterfaceAddress(this.interfaceName);
+    if (!iface) throw new Error(`Interface "${this.interfaceName}" has no IPv4 address`);
+    const dataSock = dgram__namespace.createSocket({ type: "udp4", reuseAddr: true });
+    dataSock.on("error", (err) => {
+      this.logMonitor(`Source data socket error: ${err.message}`);
+      this.disableInternal();
+    });
+    dataSock.bind(this.dataPort, () => {
+      try {
+        dataSock.addMembership(this.multicastIP, iface);
+      } catch (err) {
+        this.logMonitor(`Failed to join multicast ${this.multicastIP} on ${this.interfaceName}: ${err.message}`);
+        this.disableInternal();
+        return;
+      }
+      dataSock.on("message", (msg) => {
+        if (!this.enabled || !this.proxyIP) return;
+        this.lastDataPacketAt = Date.now();
+        this.pulseData();
+        dataSock.send(msg, 0, msg.length, this.roomPorts.dataTxPort, this.proxyIP);
+      });
+    });
+    this.dataSocket = dataSock;
+    const cmdSock = dgram__namespace.createSocket({ type: "udp4", reuseAddr: true });
+    cmdSock.on("error", (err) => {
+      this.logMonitor(`Source cmd socket error: ${err.message}`);
+      this.disableInternal();
+    });
+    cmdSock.bind(0, iface, () => {
+      cmdSock.on("message", (msg, rinfo) => {
+        if (!this.enabled || !this.proxyIP) return;
+        if (rinfo.address === this.proxyIP && msg.length === 3 && msg[0] === 8 && msg[1] === 8 && msg[2] === 8) {
+          this.duplicateSourceDetected = true;
+          this.logMonitor("Another peer is acting as Motive Source on this channel — disabling.");
+          this.publishHealth("duplicate_source");
+          this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "enable"), "0");
+          return;
+        }
+        if (rinfo.address === this.proxyIP && msg.length === 3 && msg[0] === 9 && msg[1] === 9 && msg[2] === 9) {
+          this.lastHandshakeReplyAt = Date.now();
+          return;
+        }
+        this.lastCmdPacketAt = Date.now();
+        this.pulseCmd();
+        if (rinfo.address === this.proxyIP) {
+          if (this.motiveIP) {
+            cmdSock.send(msg, 0, msg.length, this.cmdPort, this.motiveIP);
+          }
+        } else {
+          cmdSock.send(msg, 0, msg.length, this.roomPorts.cmdPort, this.proxyIP);
+        }
+      });
+    });
+    this.cmdSocket = cmdSock;
+  }
+  // ─── Sink-side relay ──────────────────────────────────────────────────
+  startSink() {
+    if (!this.proxyIP) return;
+    const iface = this.findInterfaceAddress(this.interfaceName);
+    if (!iface) throw new Error(`Interface "${this.interfaceName}" has no IPv4 address`);
+    const cmdSock = dgram__namespace.createSocket({ type: "udp4", reuseAddr: true });
+    cmdSock.on("error", (err) => {
+      this.logMonitor(`Sink cmd socket error: ${err.message}`);
+      this.disableInternal();
+    });
+    cmdSock.bind(this.cmdPort, iface, () => {
+      cmdSock.on("message", (msg, rinfo) => {
+        if (!this.enabled || !this.proxyIP) return;
+        if (rinfo.address === this.proxyIP) {
+          if (msg.length === 3 && msg[0] === 8 && msg[1] === 8 && msg[2] === 8) {
+            this.lastHandshakeReplyAt = Date.now();
+            return;
+          }
+          if (msg.length === 3 && msg[0] === 9 && msg[1] === 9 && msg[2] === 9) {
+            this.lastHandshakeReplyAt = Date.now();
+            return;
+          }
+          if (this.clientCmndAddress && this.clientCmndPort) {
+            this.lastCmdPacketAt = Date.now();
+            this.pulseCmd();
+            cmdSock.send(msg, 0, msg.length, this.clientCmndPort, this.clientCmndAddress);
+          }
+        } else {
+          this.clientCmndAddress = rinfo.address;
+          this.clientCmndPort = rinfo.port;
+          this.lastConsumerCmdAt = Date.now();
+          this.lastCmdPacketAt = Date.now();
+          this.pulseCmd();
+          cmdSock.send(msg, 0, msg.length, this.roomPorts.cmdPort, this.proxyIP);
+        }
+      });
+    });
+    this.cmdSocket = cmdSock;
+    const dataSock = dgram__namespace.createSocket({ type: "udp4", reuseAddr: true });
+    dataSock.on("error", (err) => {
+      this.logMonitor(`Sink data socket error: ${err.message}`);
+      this.disableInternal();
+    });
+    dataSock.bind(0, iface, () => {
+      try {
+        dataSock.setMulticastInterface(iface);
+      } catch (err) {
+        this.logMonitor(`Failed to set multicast interface on ${this.interfaceName}: ${err.message}`);
+        this.disableInternal();
+        return;
+      }
+      dataSock.on("message", (msg, rinfo) => {
+        if (!this.enabled) return;
+        if (rinfo.address !== this.proxyIP) return;
+        this.lastDataPacketAt = Date.now();
+        this.pulseData();
+        dataSock.send(msg, 0, msg.length, this.dataPort, this.multicastIP);
+      });
+    });
+    this.dataSocket = dataSock;
+  }
+  // ─── Handshake & health tick ──────────────────────────────────────────
+  startHandshakeLoop() {
+    const send = () => {
+      if (!this.enabled || !this.proxyIP) return;
+      const cmdSock = this.cmdSocket;
+      if (!cmdSock) return;
+      const buf = this.direction === MotiveDirection.Source ? SOURCE_HANDSHAKE : SINK_HANDSHAKE;
+      try {
+        cmdSock.send(buf, 0, buf.length, this.roomPorts.cmdPort, this.proxyIP);
+        if (this.direction === MotiveDirection.Sink && this.dataSocket) {
+          this.dataSocket.send(buf, 0, buf.length, this.roomPorts.dataRxPort, this.proxyIP);
+        }
+      } catch {
+      }
+    };
+    send();
+    this.handshakeTimer = setInterval(send, HANDSHAKE_INTERVAL_MS);
+  }
+  startHealthTick() {
+    this.healthTimer = setInterval(() => {
+      const state = deriveHealthState({
+        enabled: this.enabled,
+        direction: this.direction,
+        lastHandshakeReplyAt: this.lastHandshakeReplyAt,
+        lastDataPacketAt: this.lastDataPacketAt,
+        lastConsumerCmdAt: this.lastConsumerCmdAt,
+        duplicateSourceDetected: this.duplicateSourceDetected,
+        interfaceMissing: this.interfaceMissing,
+        portConflict: this.portConflict,
+        now: Date.now()
+      });
+      this.publishHealth(state);
+      this.publishIndicators(false);
+    }, HEALTH_TICK_MS);
+  }
+  // ─── Indicators ───────────────────────────────────────────────────────
+  pulseData() {
+    if (!this.dataPulseOn) {
+      this.dataPulseOn = true;
+      this.publishIndicators(false);
+    }
+    if (this.dataPulseTimer) clearTimeout(this.dataPulseTimer);
+    this.dataPulseTimer = setTimeout(() => {
+      this.dataPulseOn = false;
+      this.dataPulseTimer = null;
+      this.publishIndicators(false);
+    }, INDICATOR_HOLD_MS);
+  }
+  pulseCmd() {
+    if (!this.cmdPulseOn) {
+      this.cmdPulseOn = true;
+      this.publishIndicators(false);
+    }
+    if (this.cmdPulseTimer) clearTimeout(this.cmdPulseTimer);
+    this.cmdPulseTimer = setTimeout(() => {
+      this.cmdPulseOn = false;
+      this.cmdPulseTimer = null;
+      this.publishIndicators(false);
+    }, INDICATOR_HOLD_MS);
+  }
+  publishIndicators(force) {
+    const handshakeOk = this.lastHandshakeReplyAt !== null && Date.now() - this.lastHandshakeReplyAt < HANDSHAKE_OK_WINDOW_MS;
+    const running = this.enabled && handshakeOk && !this.duplicateSourceDetected ? "1" : "0";
+    const data = this.dataPulseOn ? "1" : "0";
+    const cmd = this.cmdPulseOn ? "1" : "0";
+    const dir = String(this.direction);
+    const next = `${data} ${cmd} ${dir} ${running}`;
+    if (!force && next === this.lastPublishedIndicators) return;
+    this.lastPublishedIndicators = next;
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "indicators"), data, cmd, dir, running);
+  }
+  // ─── Health publishing ────────────────────────────────────────────────
+  publishHealth(state) {
+    if (state === this.lastPublishedHealth) return;
+    this.lastPublishedHealth = state;
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, "health/state"), state);
+  }
+  // ─── Monitor log ──────────────────────────────────────────────────────
+  logMonitor(line) {
+    const stamped = `[${(/* @__PURE__ */ new Date()).toISOString().split("T")[1].slice(0, 8)}] ${line}`;
+    this.publish(0, topics.deviceGui(this.peerId, this.channelIndex, "monitor/log"), stamped);
+    console.warn(`[Motive ch.${this.channelIndex}] ${line}`);
+  }
+  // ─── Helpers ──────────────────────────────────────────────────────────
+  snapshotConfig() {
+    return {
+      direction: this.direction,
+      multicastIP: this.multicastIP,
+      dataPort: this.dataPort,
+      cmdPort: this.cmdPort,
+      interfaceName: this.interfaceName
+    };
+  }
+  interfaceExists(name) {
+    if (!name) return false;
+    return !!this.findInterfaceAddress(name);
+  }
+  findInterfaceAddress(name) {
+    if (!name) return null;
+    const all = os.networkInterfaces();
+    const addrs = all[name];
+    if (!addrs) return null;
+    for (const a of addrs) {
+      if (a.internal) continue;
+      if (a.family !== "IPv4") continue;
+      return a.address;
+    }
+    return null;
+  }
+  guessInterfaceName() {
+    const all = os.networkInterfaces();
+    for (const [name, addrs] of Object.entries(all)) {
+      if (!addrs) continue;
+      for (const a of addrs) {
+        if (a.internal) continue;
+        if (a.family !== "IPv4") continue;
+        if (a.address === this.localIP) return name;
+      }
+    }
+    for (const [name, addrs] of Object.entries(all)) {
+      if (!addrs) continue;
+      for (const a of addrs) {
+        if (a.internal) continue;
+        if (a.family !== "IPv4") continue;
+        return name;
+      }
+    }
+    return "";
+  }
+  stopRelay() {
+    if (this.handshakeTimer) {
+      clearInterval(this.handshakeTimer);
+      this.handshakeTimer = null;
+    }
+    if (this.healthTimer) {
+      clearInterval(this.healthTimer);
+      this.healthTimer = null;
+    }
+    if (this.dataSocket) {
+      try {
+        if (this.direction === MotiveDirection.Source) {
+          const iface = this.findInterfaceAddress(this.interfaceName) ?? void 0;
+          this.dataSocket.dropMembership(this.multicastIP, iface);
+        }
+      } catch {
+      }
+      try {
+        this.dataSocket.close();
+      } catch {
+      }
+      this.dataSocket = null;
+    }
+    if (this.cmdSocket) {
+      try {
+        this.cmdSocket.close();
+      } catch {
+      }
+      this.cmdSocket = null;
+    }
+    if (this.dataPulseTimer) {
+      clearTimeout(this.dataPulseTimer);
+      this.dataPulseTimer = null;
+    }
+    if (this.cmdPulseTimer) {
+      clearTimeout(this.cmdPulseTimer);
+      this.cmdPulseTimer = null;
+    }
+    this.dataPulseOn = false;
+    this.cmdPulseOn = false;
+    this.proxyIP = null;
+  }
+  // Snapshot for sibling-conflict checks (Q15-E).
+  toSibling() {
+    return {
+      channelIndex: this.channelIndex,
+      enabled: this.enabled,
+      config: this.snapshotConfig()
+    };
+  }
+  teardown() {
+    this.stopRelay();
+    return [...this.publishedTopics];
+  }
+  destroy() {
+    this.enabled = false;
+    this.stopRelay();
+  }
+}
 class SpawnCliError extends Error {
   constructor(message, cause) {
     super(message);
@@ -2524,6 +3117,7 @@ function publishInitSequence() {
   trackedPublish(1, topics.settings(peerId, "localProps/ug_enable"), resolveUgPath() ? "1" : "0");
   trackedPublish(1, topics.settings(peerId, "localProps/natnet_enable"), "1");
   trackedPublish(1, topics.settings(peerId, "localProps/stagec_enable"), "1");
+  trackedPublish(1, topics.settings(peerId, "localProps/motive_enable"), "1");
   const savedRack = loadRack();
   if (Object.keys(savedRack).length > 0) {
     for (const [tail, value] of Object.entries(savedRack)) {
@@ -2616,6 +3210,27 @@ function setupBus() {
               getSetting: (subpath) => retainedTopics.get(topics.settings(localPeerId, subpath)) ?? null,
               host: loadSettings().brokerUrl,
               resolveBinary: resolveUgPath
+            });
+          }
+          if (type === 5) {
+            return new MotiveDevice({
+              channelIndex: channel,
+              peerId: localPeerId,
+              localIP,
+              roomId,
+              publish: (retained, topic, ...values) => trackedPublish(retained, topic, ...values),
+              hasRetained: (topic) => retainedTopics.has(topic),
+              brokerHost: loadSettings().brokerUrl,
+              siblings: () => {
+                const list = [];
+                if (!deviceRouter) return list;
+                for (const h of deviceRouter.loadedHandlers()) {
+                  if (h.deviceType !== 5) continue;
+                  const m = h;
+                  if (typeof m.toSibling === "function") list.push(m.toSibling());
+                }
+                return list;
+              }
             });
           }
           return null;
@@ -2795,6 +3410,19 @@ function setupIpcHandlers() {
     const dir = electron.app.getPath("userData");
     await electron.shell.openPath(dir);
     return dir;
+  });
+  electron.ipcMain.handle("net:interfaces", () => {
+    const all = os.networkInterfaces();
+    const out = [];
+    for (const [name, addrs] of Object.entries(all)) {
+      if (!addrs) continue;
+      for (const a of addrs) {
+        if (a.internal) continue;
+        if (a.family !== "IPv4") continue;
+        out.push({ name, address: a.address, family: a.family });
+      }
+    }
+    return out;
   });
   electron.ipcMain.handle("settings:get-path", () => {
     return path.join(electron.app.getPath("userData"), "settings.json");

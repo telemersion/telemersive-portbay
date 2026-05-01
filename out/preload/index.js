@@ -24,7 +24,8 @@ const INVOKE_CHANNELS = [
   "compat:recheck",
   "compat:locate",
   "compat:open-download",
-  "compat:reveal-tools-folder"
+  "compat:reveal-tools-folder",
+  "net:interfaces"
 ];
 const RECEIVE_CHANNELS = [
   "broker:connected",
