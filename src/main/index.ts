@@ -288,7 +288,7 @@ function setupBus(): void {
     'peer:room:uuid', 'rooms:clear', 'rooms:append', 'rooms:listing',
     'rooms:done', 'peers:remote:joined', 'peers:remote:left',
     'peers:clear', 'peers:append', 'peers:done',
-    'ready', 'chat'
+    'ready', 'chat', 'bus:error'
   ]
   for (const ch of channels) {
     forwardToRenderer(ch)

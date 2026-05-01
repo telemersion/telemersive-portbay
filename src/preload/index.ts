@@ -19,7 +19,8 @@ const RECEIVE_CHANNELS = [
   'peers:clear', 'peers:append', 'peers:done',
   'ready', 'mqtt:message', 'chat',
   'log:entry',
-  'compat:status'
+  'compat:status',
+  'bus:error'
 ] as const
 
 contextBridge.exposeInMainWorld('api', {

@@ -103,6 +103,14 @@ export class TBusClient extends EventEmitter {
 
     const c = content
 
+    if (c[0] === 'error') {
+      // ['error', scope, message] — scope is 'broker' or 'peer'.
+      const scope = String(c[1] ?? 'unknown')
+      const message = typeof c[2] === 'string' ? c[2] : JSON.stringify(c[2])
+      this.emit('bus:error', { scope, message })
+      return
+    }
+
     if (c[0] === 'broker' && c[1] === 'connected') {
       this.emit('broker:connected', c[2] === 1)
       return

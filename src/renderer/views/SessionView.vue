@@ -70,6 +70,12 @@ window.api.on('peer:joined', (joined: boolean) => {
   if (joined) router.push('/matrix')
 })
 
+window.api.on('bus:error', (info: { scope: string; message: string }) => {
+  joining.value = false
+  connecting.value = false
+  error.value = info.message
+})
+
 async function connect() {
   error.value = ''
   connecting.value = true
