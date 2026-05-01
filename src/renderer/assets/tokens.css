@@ -1,0 +1,111 @@
+/* ============================================================
+   SURFACE COLORS
+   ============================================================ */
+:root {
+  --color-bg-monitor:   #0d0d0d;
+  --color-bg-panel:     #161616;
+  --color-bg-page:      #1a1a1a;
+  --color-bg-row-hover: #1e1e1e;
+  --color-bg-peer-info: #222222;
+  --color-bg-tag:       #252525;
+  --color-bg-chip:      #262626;
+  --color-border:       #2a2a2a;
+  --color-bg-cell:      #333333;
+  --color-border-cell:  #444444;
+
+/* ============================================================
+   TEXT COLORS
+   ============================================================ */
+  --color-text-title:     #eeeeee;
+  --color-text-primary:   #dddddd;
+  --color-text-default:   #cccccc;
+  --color-text-secondary: #aaaaaa;
+  --color-text-muted:     #888888;
+  --color-text-label:     #666666;
+  --color-text-dim:       #555555;
+
+/* ============================================================
+   BORDER / SCROLLBAR
+   ============================================================ */
+  --color-border-input:      #555555;
+  --color-scrollbar:         #555555;
+  --color-scrollbar-hover:   #777777;
+
+/* ============================================================
+   UI ACCENT COLORS
+   ============================================================ */
+  --color-enable-on:     #1d9e75;
+  --color-accent-select: #36abff;
+  --color-panel-active:  #1bfee9;
+  --color-lock:          #e6b800;
+  --color-lock-border:   #8a6d00;
+  --color-unlocked:      #55aa55;
+  --color-danger:        #aa3333;
+
+/* ============================================================
+   DEVICE TYPE COLORS (active state)
+   ============================================================ */
+  --color-device-osc:   #36abff;
+  --color-device-mocap: #ffa126;
+  --color-device-ugv:   #f0de01;
+  --color-device-uga:   #00e411;
+  --color-device-ugva:  #1bfee9;
+  --color-device-stagec:#fe5ff5;
+
+/* ============================================================
+   DEVICE TYPE COLORS (disabled / dim state)
+   ============================================================ */
+  --color-device-osc-dim:    #13527f;
+  --color-device-mocap-dim:  #7f500f;
+  --color-device-ugv-dim:    #787000;
+  --color-device-uga-dim:    #006b08;
+  --color-device-ugva-dim:   #0d7f74;
+  --color-device-stagec-dim: #7f2f7a;
+
+/* ============================================================
+   LOG PANEL EVENT COLORS
+   ============================================================ */
+  --color-log-sub:       #99aa88;
+  --color-log-pub:       #ff9900;
+  --color-log-recv:      #3399ff;
+  --color-log-value:     #77eecc;
+  --color-log-timestamp: #555555;
+
+/* ============================================================
+   PEER COLOR FALLBACKS (used by peerColors() for invalid input)
+   ============================================================ */
+  --color-peer-fallback-dot:    #666666;
+  --color-peer-fallback-bg:     #222222;
+  --color-peer-fallback-name:   #cccccc;
+  --color-peer-fallback-ip:     #888888;
+
+/* ============================================================
+   ZOOM-AWARE CELL / MATRIX GEOMETRY
+   Set --zoom on the matrix container to scale the grid.
+   Default 1 = no scaling.
+   ============================================================ */
+  --zoom: 1;
+
+  --zoom-cell-size:          calc(var(--zoom) * 50px);
+  --zoom-cell-radius:        calc(var(--zoom) * 3px);
+  --zoom-cell-icon:          calc(var(--zoom) * 28px);
+  --zoom-cell-font:          calc(var(--zoom) * 9px);
+  --zoom-matrix-col-gap:     calc(var(--zoom) * 4px);
+  --zoom-matrix-row-gap:     calc(var(--zoom) * 6px);
+  --zoom-peer-col-width:     calc(var(--zoom) * 150px);
+  --zoom-peer-font:          calc(var(--zoom) * 12px);
+  --zoom-panel-row-height:   calc(var(--zoom) * 22px);
+
+/* ============================================================
+   FIXED PANEL CHROME SPACING (never zoom-scaled)
+   ============================================================ */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 16px;
+  --space-8: 20px;
+  --space-9: 24px;
+}

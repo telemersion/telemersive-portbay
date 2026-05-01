@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Telemersive Gateway NG — Color Scheme</title>
+<title>Telemersive Gateway NG — Design Reference</title>
+<link rel="stylesheet" href="../../src/renderer/assets/tokens.css">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #1a1a1a; color: #ddd; font-family: system-ui, -apple-system, sans-serif; padding: 24px; }
@@ -43,7 +44,77 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
 </head>
 <body>
 
-<h1>Telemersive Gateway NG — Color Scheme</h1>
+<h1>Telemersive Gateway NG — Design Reference</h1>
+
+<!-- ==================== ICON INVENTORY ==================== -->
+<h2>Icon Inventory</h2>
+<p style="font-size:11px; color:#888; margin-bottom:12px">Path data mirrors <code>src/renderer/assets/icons.ts</code> — keep in sync when paths change.</p>
+<div class="row" id="icon-inventory" style="gap:16px"></div>
+<script>
+const ICON_PATHS = {
+  Sink:            'm 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z',
+  UpStream:        'm 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z',
+  DownStream:      'M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z',
+  DownStreamRight: 'M 119.98763,19.94015 118.84557,109.940148 H 99.416606 l 29.999994,40 30,-40 h -20.57103 l 1.14206,-90.000002 z',
+  UpStreamMinor:   'm 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z',
+  DownStreamMinor: 'm 64.332575,149.735 0.56301,-44.571838 h 9.5779 l -14.7891,-19.76692 -14.7891,19.76692 h 10.1409 l -0.563,44.571838 z',
+  UpLocal:         'm 110,60 40,0.254882 V 40 l 40,30 -40,30 V 80.254881 L 130,80 v 69.93036 l -20,0.13928 z',
+  DownLocal:       'm 69.326146,92.99619 v 31.94097 H 82.098857 L 62.93979,150.4517 43.780725,124.93716 h 12.77271 V 105.77258 H 31.05249 L 30.96354,92.996191 Z',
+  FromLocal:       'm 144.15955,60.595724 v 49.999996 h 20 l -30,39.94015 -30,-39.94015 h 20 V 80.595724 l -51.997483,0.393303 0.0838,70.085463 -22.350659,0.20395 0.09425,-90.602178 z',
+}
+const ICON_COMPOSITES = {
+  bidi:  [ {path: ICON_PATHS.Sink, role:'sink'}, {path: ICON_PATHS.DownStream, role:'tx'}, {path: ICON_PATHS.UpStream, role:'rx'} ],
+  tx:    [ {path: ICON_PATHS.Sink, role:'sink'}, {path: ICON_PATHS.DownStream, role:'tx'}, {path: ICON_PATHS.UpStreamMinor, role:'rx'} ],
+  rx:    [ {path: ICON_PATHS.Sink, role:'sink'}, {path: ICON_PATHS.DownStreamMinor, role:'tx'}, {path: ICON_PATHS.DownStreamRight, role:'rx'} ],
+  local: [ {path: ICON_PATHS.Sink, role:'sink'}, {path: ICON_PATHS.UpLocal, role:'tx'}, {path: ICON_PATHS.DownLocal, role:'rx'} ],
+  loop:  [ {path: ICON_PATHS.Sink, role:'sink'}, {path: ICON_PATHS.FromLocal, role:'sink'} ],
+}
+
+const container = document.getElementById('icon-inventory')
+const DIM = '#444'
+const ACTIVE = '#aaa'
+const SIZE = 40
+
+function renderIcon(paths, label) {
+  const wrap = document.createElement('div')
+  wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px'
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('width', SIZE)
+  svg.setAttribute('height', SIZE)
+  svg.setAttribute('viewBox', '0 0 200 200')
+  for (const d of paths) {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    path.setAttribute('d', d)
+    path.setAttribute('fill', ACTIVE)
+    svg.appendChild(path)
+  }
+  const lbl = document.createElement('div')
+  lbl.style.cssText = 'font-size:9px;color:#888;text-align:center;font-family:monospace'
+  lbl.textContent = label
+  wrap.appendChild(svg)
+  wrap.appendChild(lbl)
+  return wrap
+}
+
+// Individual named paths
+for (const [name, d] of Object.entries(ICON_PATHS)) {
+  container.appendChild(renderIcon([d], name))
+}
+
+// Composite icons
+const divider = document.createElement('div')
+divider.style.cssText = 'width:100%;border-top:1px solid #333;margin:8px 0;flex-basis:100%'
+container.appendChild(divider)
+
+const compositeLabel = document.createElement('div')
+compositeLabel.style.cssText = 'font-size:11px;color:#666;flex-basis:100%;margin-bottom:4px'
+compositeLabel.textContent = 'Composites'
+container.appendChild(compositeLabel)
+
+for (const [name, layers] of Object.entries(ICON_COMPOSITES)) {
+  container.appendChild(renderIcon(layers.map(l => l.path), name))
+}
+</script>
 
 <!-- ==================== SURFACE COLORS ==================== -->
 <h2>Surface Colors</h2>
@@ -904,80 +975,6 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
       <div class="cell-label" style="color:#F0DE01">ultragrid</div>
     </div>
     <div class="cell-caption">Flowing<br>Arrow filled yellow</div>
-  </div>
-</div>
-
-<!-- ==================== UG V+A BIDI CELLS ==================== -->
-<h2>UG Video+Audio (Send+Receive via Router) — States</h2>
-<div class="row" style="gap:16px">
-  <div class="cell-wrap">
-    <div class="cell" style="background:#333; border:1px solid #444">
-      <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#0D7F74" stroke="none"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#0D7F74" stroke="none"/>
-          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#0D7F74" stroke="none"/>
-        </svg>
-      </div>
-      <div class="cell-label" style="color:#0D7F74">ultragrid</div>
-    </div>
-    <div class="cell-caption">Disabled</div>
-  </div>
-
-  <div class="cell-wrap">
-    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
-      <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#0D7F74" stroke="none"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#0D7F74" stroke="none"/>
-          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#0D7F74" stroke="none"/>
-        </svg>
-      </div>
-      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
-    </div>
-    <div class="cell-caption">Enabled, no data<br>All arrows dark cyan</div>
-  </div>
-
-  <div class="cell-wrap">
-    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
-      <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#1BFEE9" stroke="none"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#1BFEE9" stroke="#1BFEE9"/>
-          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#0D7F74" stroke="none"/>
-        </svg>
-      </div>
-      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
-    </div>
-    <div class="cell-caption">TX flowing<br>UpStream filled cyan</div>
-  </div>
-
-  <div class="cell-wrap">
-    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
-      <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#1BFEE9" stroke="none"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#0D7F74" stroke="none"/>
-          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#1BFEE9" stroke="#1BFEE9"/>
-        </svg>
-      </div>
-      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
-    </div>
-    <div class="cell-caption">RX flowing<br>DownStream filled cyan</div>
-  </div>
-
-  <div class="cell-wrap">
-    <div class="cell" style="background:#333; border:1px solid #1BFEE9">
-      <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#1BFEE9" stroke="none"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#1BFEE9" stroke="#1BFEE9"/>
-          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#1BFEE9" stroke="#1BFEE9"/>
-        </svg>
-      </div>
-      <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
-    </div>
-    <div class="cell-caption">Both flowing<br>Both arrows + sink filled</div>
   </div>
 </div>
 

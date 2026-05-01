@@ -2,9 +2,9 @@
 
 This document maps each device type and its connection modes to the SVG icon displayed in the matrix cell.
 
-## SVG Icon Inventory (from context.md §4.5)
+## Icon Inventory
 
-All icons share the same `viewBox="0 0 200 200"` and include the **Ground** base path.
+All icons share `viewBox="0 0 200 200"` and are rendered as inline SVG paths. Ground truth is `src/renderer/assets/icons.js` — the icon inventory in `docs/design/design_reference.html` renders directly from that file.
 
 **Composite icon design:** Device cell icons are composites of multiple SVG paths. Each path represents an independent data flow direction and can indicate whether data is currently flowing through it. When data flows, the corresponding arrow path highlights independently — e.g., an OSC device can show its `UpStream` arrow lit while `DownStream` is dim, or both lit simultaneously. This gives per-direction, per-source flow indication within a single icon.
 
@@ -25,29 +25,30 @@ All icons share the same `viewBox="0 0 200 200"` and include the **Ground** base
 
   | Position | Value | Arrow mapping |
   |---|---|---|
-  | 1 | Major direction active (`0`/`1`) | Lights up main arrow (`ToServer` for TX, `FromServer` for RX) |
-  | 2 | Minor direction active (`0`/`1`) | Lights up feedback arrow (`DownStreamMinor` for TX, `UpStreamMinor` for RX) |
+  | 1 | Major direction active (`0`/`1`) | Lights up main arrow (`DownStream` for TX, `DownStreamRight` for RX) |
+  | 2 | Minor direction active (`0`/`1`) | Lights up feedback arrow (`UpStreamMinor` for TX, `DownStreamMinor` for RX) |
   | 3 | FPS | Displayed as label/tooltip |
   | 4 | Sink active (`0`/`1`) | Lights up `Sink` (ground platform) |
 
   Example: `indicators 1 0 116 1` = major active at 116 FPS, no minor feedback, sink active.
 
-| Icon                                          | Name              | Visual Description                                   |
-| --------------------------------------------- | ----------------- | ---------------------------------------------------- |
-| ![ToServer](icons/ToServer.svg)               | `ToServer`        | Single arrow **up** (to router/server)               |
-| ![FromServer](icons/FromServer.svg)           | `FromServer`      | Single arrow **down** (from router/server)           |
-| ![UpStream](icons/UpStream.svg)               | `UpStream`        | Single arrow **up** (shifted right)                  |
-| ![DownStream](icons/DownStream.svg)           | `DownStream`      | Single arrow **down** (shifted left)                 |
-| ![ToPeerTX](icons/ToPeerTX.svg)               | `ToPeerTX`        | Arrow **right** + arrow **up** (send to peer)        |
-| ![ToPeerRX](icons/ToPeerRX.svg)               | `ToPeerRX`        | Arrow **down** + arrow **right** (receive from peer) |
-| ![ToPeerRXTX](icons/ToPeerRXTX.svg)           | `ToPeerRXTX`      | Bidirectional peer arrows                            |
-| ![ToLocal](icons/ToLocal.svg)                 | `ToLocal`         | Arrow **right** (to local app)                       |
-| ![FromLocal](icons/FromLocal.svg)             | `FromLocal`       | Arrow **up** from below + arrow **right**            |
-| ![UpLocal](icons/UpLocal.svg)                 | `UpLocal`         | Arrow **right** (capture to local, shifted)          |
-| ![DownLocal](icons/DownLocal.svg)             | `DownLocal`       | Small arrow **down** + platform                      |
-| ![UpStreamMinor](icons/UpStreamMinor.svg)     | `UpStreamMinor`   | Small arrow **up** (minor stream)                    |
-| ![DownStreamMinor](icons/DownStreamMinor.svg) | `DownStreamMinor` | Small arrow **down** (minor stream)                  |
-| ![Sink](icons/Sink.svg)                       | `Sink`            | Ground only (no arrow)                               |
+| Name              | In `icons.js`      | Visual Description                                          |
+| ----------------- | ------------------ | ----------------------------------------------------------- |
+| `Sink`            | yes                | Ground platform (no arrow)                                  |
+| `UpStream`        | yes                | Single arrow **up** (shifted right)                         |
+| `DownStream`      | yes                | Single arrow **down** (shifted left)                        |
+| `DownStreamRight` | yes                | Single arrow **down** (shifted right — MoCap RX major)      |
+| `UpStreamMinor`   | yes                | Small arrow **up** (MoCap TX feedback)                      |
+| `DownStreamMinor` | yes                | Small arrow **down** (MoCap RX feedback)                    |
+| `UpLocal`         | yes                | Arrow **right** (MoCap send-to-local TX)                    |
+| `DownLocal`       | yes                | Arrow **left-down** (MoCap send-to-local RX)                |
+| `FromLocal`       | yes                | Right-turn loopback (UG capture-to-local)                   |
+| `ToServer`        | not yet            | Single arrow **up** (UG send to router — future)            |
+| `FromServer`      | not yet            | Single arrow **down** (UG receive from router — future)     |
+| `ToPeerTX`        | not yet            | Arrow right+up (UG p2p TX — future)                         |
+| `ToPeerRX`        | not yet            | Arrow down+right (UG p2p RX — future)                       |
+| `ToPeerRXTX`      | not yet            | Bidirectional peer arrows (UG p2p bidi — future)            |
+| `ToLocal`         | not yet            | Arrow **right** (UG capture-to-local display — future)      |
 
 ---
 
@@ -57,7 +58,7 @@ All icons share the same `viewBox="0 0 200 200"` and include the **Ground** base
 
 | Connection Mode                         | Icon                                                            | Color     | Fill    |
 | --------------------------------------- | --------------------------------------------------------------- | --------- | ------- |
-| Always bidirectional (no mode selector) | ![UpStream](icons/UpStream.svg) ![DownStream](icons/DownStream.svg) ![Sink](icons/Sink.svg)  `UpStream` `DownStream` `Sink` | `#36ABFF` | `white` |
+| Always bidirectional (no mode selector) | `UpStream` `DownStream` `Sink` | `#36ABFF` | `white` |
 
 OSC is always bidirectional: it receives from local apps and forwards to the room proxy, and receives from the room proxy and forwards to local apps. The icon is a composite of three paths: `UpStream` (arrow up, shifted right), `DownStream` (arrow down, shifted left), and `Sink` (ground platform).
 
@@ -75,11 +76,11 @@ UltraGrid has three axes that determine the icon:
 
 **Color depends on `transmission`:**
 
-| `transmission`    | Subtype  | Color (on) | Color (off) | Icon Fill |
-| ----------------- | -------- | ---------- | ----------- | --------- |
-| `0` (video)       | UG video | `#F0DE01`  | `#826B1A`   | `#665800` |
-| `1` (audio)       | UG audio | `#00E411`  | `#006B0A`   | `#003308` |
-| `2` (video+audio) | UG v+a   | `#1BFEE9`  | `#668700`   | `#006655` |
+| `transmission`    | Subtype  | Color (on) | Color (off / dim) |
+| ----------------- | -------- | ---------- | ----------------- |
+| `0` (video)       | UG video | `#F0DE01`  | `#787000`         |
+| `1` (audio)       | UG audio | `#00E411`  | `#006B08`         |
+| `2` (video+audio) | UG v+a   | `#1BFEE9`  | `#0D7F74`         |
 
 **Mode-locking rules:**
 
@@ -92,15 +93,15 @@ UltraGrid has three axes that determine the icon:
 
 | `connection` | `network/mode`            | Icon                                                                                                         | Description                            |
 | ------------ | ------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
-| `0` (TX)     | `1` (send to router)      | ![ToServer](icons/ToServer.svg) `ToServer`                                                                   | Up arrow — sending to router           |
-| `0` (TX)     | `4` (p2p auto)            | ![ToPeerTX](icons/ToPeerTX.svg) `ToPeerTX`                                                                  | Right+up — sending to peer             |
-| `0` (TX)     | `5` (p2p manual)          | ![ToPeerTX](icons/ToPeerTX.svg) `ToPeerTX`                                                                  | Right+up — sending to peer             |
-| `0` (TX)     | `7` (capture to local)    | ![ToLocal](icons/ToLocal.svg) `ToLocal`                                                                      | Right arrow — capture to local display |
-| `1` (RX)     | `2` (receive from router) | ![FromServer](icons/FromServer.svg) `FromServer`                                                             | Down arrow — receiving from router     |
-| `1` (RX)     | `4` (p2p auto)            | ![ToPeerRX](icons/ToPeerRX.svg) `ToPeerRX`                                                                  | Down+right — receiving from peer       |
-| `1` (RX)     | `5` (p2p manual)          | ![ToPeerRX](icons/ToPeerRX.svg) `ToPeerRX`                                                                  | Down+right — receiving from peer       |
-| `2` (both)   | `4` (p2p auto)            | ![ToPeerRXTX](icons/ToPeerRXTX.svg) `ToPeerRXTX`                                                            | Bidirectional peer arrows              |
-| `2` (both)   | `5` (p2p manual)          | ![ToPeerRXTX](icons/ToPeerRXTX.svg) `ToPeerRXTX`                                                            | Bidirectional peer arrows              |
+| `0` (TX)     | `1` (send to router)      | `ToServer`                                                                   | Up arrow — sending to router           |
+| `0` (TX)     | `4` (p2p auto)            | `ToPeerTX`                                                                  | Right+up — sending to peer             |
+| `0` (TX)     | `5` (p2p manual)          | `ToPeerTX`                                                                  | Right+up — sending to peer             |
+| `0` (TX)     | `7` (capture to local)    | `ToLocal`                                                                      | Right arrow — capture to local display |
+| `1` (RX)     | `2` (receive from router) | `FromServer`                                                             | Down arrow — receiving from router     |
+| `1` (RX)     | `4` (p2p auto)            | `ToPeerRX`                                                                  | Down+right — receiving from peer       |
+| `1` (RX)     | `5` (p2p manual)          | `ToPeerRX`                                                                  | Down+right — receiving from peer       |
+| `2` (both)   | `4` (p2p auto)            | `ToPeerRXTX`                                                            | Bidirectional peer arrows              |
+| `2` (both)   | `5` (p2p manual)          | `ToPeerRXTX`                                                            | Bidirectional peer arrows              |
 
 UltraGrid does **not** use `UpStreamMinor`/`DownStreamMinor` — those are MoCap-specific (see §3 below).
 
@@ -110,13 +111,19 @@ UltraGrid does **not** use `UpStreamMinor`/`DownStreamMinor` — those are MoCap
 
 MoCap has a `direction/select` field. Unlike UltraGrid, MoCap uses `UpStreamMinor`/`DownStreamMinor` to indicate a feedback channel — the protocol allows receivers to send control commands back to Motive (the MoCap server).
 
-| `direction/select`           | Icon                                                                                                                                                          | Color     | Fill    | Description                                                      |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ------- | ---------------------------------------------------------------- |
-| `0` (TX — send to room)      | ![UpStream](icons/UpStream.svg) ![DownStreamMinor](icons/DownStreamMinor.svg) ![Sink](icons/Sink.svg) `UpStream` + `DownStreamMinor` + `Sink`                | `#FFA126` | `white` | Major arrow up (sending), minor arrow down (feedback from RX)    |
-| `1` (RX — receive from room) | ![DownStream](icons/DownStream.svg) ![UpStreamMinor](icons/UpStreamMinor.svg) ![Sink](icons/Sink.svg) `DownStream` + `UpStreamMinor` + `Sink`                | `#FFA126` | `white` | Major arrow down (receiving), minor arrow up (feedback to TX)    |
-| `2` (both)                   | ![UpStream](icons/UpStream.svg) ![DownStream](icons/DownStream.svg) ![Sink](icons/Sink.svg) `UpStream` + `DownStream` + `Sink`                               | `#FFA126` | `white` | Bidirectional — same composite as OSC                            |
+| `direction/select`              | Icon                                                                                                                                                         | Color     | Fill    | Description                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- | ------- | ------------------------------------------------------------- |
+| `1` (TX - send to router)       | `UpStream` + `DownStreamMinor` + `Sink`                | `#FFA126` | `white` | Major arrow up (sending), minor arrow down (feedback from RX) |
+| `2` (RX - receive from router)  | `DownStream` + `UpStreamMinor` + `Sink`                | `#FFA126` | `white` | Major arrow down (receiving), minor arrow up (feedback to TX) |
+| `0` (default / unset)           | same as TX (`1`)                                                                                                                                             | `#FFA126` | `white` | Falls through to TX in DeviceCell                             |
 
 MoCap indicators (4 values: `major minor fps sink`) map to the composite paths: position 1 lights the major arrow, position 2 lights the minor arrow, position 3 is FPS, position 4 lights the sink/ground.
+
+**Send-to-Local (`direction/select=4`)** — local loopback, MoCap data captured and displayed on the same machine. Uses `UpLocal + DownLocal` composite icon (no network arrows).
+
+| `direction/select`        | Icon                          | Color     | Description                        |
+| ------------------------- | ----------------------------- | --------- | ---------------------------------- |
+| `4` (send to local)       | `UpLocal` + `DownLocal`       | `#FFA126` | Local loopback — no network arrows |
 
 ---
 
@@ -124,7 +131,7 @@ MoCap indicators (4 values: `major minor fps sink`) map to the composite paths: 
 
 | Connection Mode                         | Icon                                                                                                                         | Color     | Fill    |
 | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------- | ------- |
-| Always bidirectional (no mode selector) | ![UpStream](icons/UpStream.svg) ![DownStream](icons/DownStream.svg) ![Sink](icons/Sink.svg) `UpStream` + `DownStream` + `Sink` | `#FE5FF5` | `white` |
+| Always bidirectional (no mode selector) | `UpStream` + `DownStream` + `Sink` | `#FE5FF5` | `white` |
 
 StageControl is a glorified OSC device — it shares the OSC handler and uses the same bidirectional icon. The difference is that instead of connecting to a channel's UDP proxy, it connects to OpenStageControl. It is channel-independent (doesn't matter which channel slot it occupies).
 
@@ -188,17 +195,3 @@ The Max patcher parses UltraGrid's stdout to produce the 6 indicator values and 
 2. **UltraGrid peer-to-peer bidirectional:** `ToPeerRXTX` renders at the same size as other icons (the `scale` transform in the raw path data is just an SVG artifact).
 3. **MoCap direction/select:** TX (`0`) = major arrow up + minor arrow down. RX (`1`) = major arrow down + minor arrow up. Both (`2`) = same as OSC (`UpStream` + `DownStream` + `Sink`).
 4. **"Off" colors:** Implementation choice — use whatever is easy but distinguishable from the active state. Opacity reduction (`0.28`) is the current approach and is sufficient.
-
----
-
-## Current Implementation Status
-
-The current `DeviceCell.vue` needs updating to match this mapping:
-
-- OSC/StageControl icon should be composite `UpStream` + `DownStream` + `Sink` (currently uses `ToPeerRX`)
-- StageControl color should be `#FE5FF5` (currently uses UG v+a color `#1BFEE9`)
-- UltraGrid needs `connection`, `transmission`, `network/mode` fields to select icon and color
-- MoCap needs `direction/select` field to select icon, plus minor arrow composites
-- Stopped state with correct opacity values (already implemented)
-
-To complete the implementation, `DeviceCell` needs access to additional MQTT fields beyond `loaded`, `description`, and `enable` — specifically `connection`, `transmission`, `network/mode` for UG and `direction/select` for MoCap.

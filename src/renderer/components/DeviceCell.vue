@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ICON_COMPOSITES } from '../assets/icons'
+import { DEVICE_STYLES, UG_STYLES } from '../assets/design'
 
 const props = defineProps<{
   loaded: string
@@ -10,6 +12,7 @@ const props = defineProps<{
   indicators: string
   ugMode: string
   ugTransmission: string
+  ugConnection: string
   mocapDirectionSelect: string
   isLocal: boolean
   isLocked: boolean
@@ -35,18 +38,6 @@ function handleRemoveDevice(e: MouseEvent) {
 const isEmpty = computed(() => props.loaded === '0' || props.loaded === '')
 const isEnabled = computed(() => props.enable === '1')
 
-const DEVICE_STYLES: Record<string, { color: string; dim: string; label: string }> = {
-  '1': { color: '#36ABFF', dim: '#13527F', label: 'OSC' },
-  '3': { color: '#FFA126', dim: '#7F500F', label: 'MoCap' },
-  '4': { color: '#FE5FF5', dim: '#7F2F7A', label: 'StageC' }
-}
-
-// UG color depends on transmission mode: '0'=video only, '1'=audio only, '2'=both
-const UG_STYLES = {
-  video: { color: '#F0DE01', dim: '#787000', label: 'UltraGrid' },
-  audio: { color: '#00E411', dim: '#006B08', label: 'UltraGrid' },
-  both:  { color: '#1BFEE9', dim: '#0D7F74', label: 'UltraGrid' }
-}
 
 const style = computed(() => {
   if (props.loaded === '2') {
@@ -85,19 +76,24 @@ const direction = computed(() => {
   }
 })
 
-// UG icon direction tracks the active network mode:
-//   1 (send-to-router)      → tx   (up arrow into sink)
-//   2 (receive-from-router) → rx   (down arrow out of sink)
-//   4 (p2p-auto)            → bidi (up + down arrows)
-//   5 (p2p-manual)          → bidi (up + down arrows)
-//   7 (capture-to-local)    → loop (FromLocal: right-turn loopback, see color_scheme.html)
-// Unknown/missing mode defaults to tx to match pre-mode-2 behavior.
-const ugDirection = computed<'tx' | 'rx' | 'bidi' | 'loop'>(() => {
+// UG icon direction is determined by network/mode × audioVideo/connection
+// (see docs/device-icon-mapping.md §2):
+//   mode=1 (send-to-router)      → ug-tx       (forces connection=0)
+//   mode=2 (receive-from-router) → ug-rx       (forces connection=1)
+//   mode=4|5 (p2p auto/manual)   → ug-p2p-tx | ug-p2p-rx | ug-p2p-bidi (per connection)
+//   mode=7 (capture-to-local)    → loop
+// Unknown/missing mode defaults to ug-tx.
+const ugDirection = computed<'ug-tx' | 'ug-rx' | 'ug-p2p-tx' | 'ug-p2p-rx' | 'ug-p2p-bidi' | 'loop'>(() => {
   switch (props.ugMode) {
-    case '2': return 'rx'
-    case '4': case '5': return 'bidi'
+    case '2': return 'ug-rx'
+    case '4': case '5':
+      switch (props.ugConnection) {
+        case '1': return 'ug-p2p-rx'
+        case '2': return 'ug-p2p-bidi'
+        default: return 'ug-p2p-tx'
+      }
     case '7': return 'loop'
-    default: return 'tx'
+    default: return 'ug-tx'
   }
 })
 
@@ -158,39 +154,13 @@ const sinkFill = computed(() => {
     <template v-else>
       <div class="cell-inner">
         <div class="dev-icon">
-          <!-- Bidirectional: UpStream + DownStream + Sink -->
-          <svg v-if="direction === 'bidi'" width="28" height="28" viewBox="0 0 200 200"
-            stroke="none" stroke-linejoin="round" stroke-linecap="round">
-            <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" :fill="sinkFill"/>
-            <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" :fill="txFill"/>
-            <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" :fill="rxFill"/>
-          </svg>
-          <!-- MoCap TX (send to router): large up-right + small up-left minor -->
-          <svg v-else-if="direction === 'tx'" width="28" height="28" viewBox="0 0 200 200"
-            stroke="none" stroke-linejoin="round" stroke-linecap="round">
-            <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" :fill="sinkFill"/>
-            <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" :fill="txFill"/>
-            <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z" :fill="rxFill"/>
-          </svg>
-          <!-- MoCap RX (receive from router): small up-left minor + large down-right major -->
-          <svg v-else-if="direction === 'rx'" width="28" height="28" viewBox="0 0 200 200"
-            stroke="none" stroke-linejoin="round" stroke-linecap="round">
-            <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" :fill="sinkFill"/>
-            <path d="m 64.332575,149.735 0.56301,-44.571838 h 9.5779 l -14.7891,-19.76692 -14.7891,19.76692 h 10.1409 l -0.563,44.571838 z" :fill="txFill"/>
-            <path d="M 119.98763,19.94015 118.84557,109.940148 H 99.416606 l 29.999994,40 30,-40 h -20.57103 l 1.14206,-90.000002 z" :fill="rxFill"/>
-          </svg>
-          <!-- MoCap Local (send to local): right arrow out + left down arrow in -->
-          <svg v-else-if="direction === 'local'" width="28" height="28" viewBox="0 0 200 200"
-            stroke="none" stroke-linejoin="round" stroke-linecap="round">
-            <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" :fill="sinkFill"/>
-            <path d="m 110,60 40,0.254882 V 40 l 40,30 -40,30 V 80.254881 L 130,80 v 69.93036 l -20,0.13928 z" :fill="txFill"/>
-            <path d="m 69.326146,92.99619 v 31.94097 H 82.098857 L 62.93979,150.4517 43.780725,124.93716 h 12.77271 V 105.77258 H 31.05249 L 30.96354,92.996191 Z" :fill="rxFill"/>
-          </svg>
-          <!-- Loop: FromLocal (UG capture-to-local loopback, see color_scheme.html) -->
-          <svg v-else-if="direction === 'loop'" width="28" height="28" viewBox="0 0 200 200"
-            stroke="none" stroke-linejoin="round" stroke-linecap="round">
-            <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" :fill="sinkFill"/>
-            <path d="m 144.15955,60.595724 v 49.999996 h 20 l -30,39.94015 -30,-39.94015 h 20 V 80.595724 l -51.997483,0.393303 0.0838,70.085463 -22.350659,0.20395 0.09425,-90.602178 z" :fill="sinkFill"/>
+          <svg width="28" height="28" viewBox="0 0 200 200" stroke="none" stroke-linejoin="round" stroke-linecap="round">
+            <path
+              v-for="(layer, i) in ICON_COMPOSITES[direction]"
+              :key="i"
+              :d="layer.path"
+              :fill="layer.role === 'tx' ? txFill : layer.role === 'rx' ? rxFill : sinkFill"
+            />
           </svg>
         </div>
         <div class="dev-label" :style="{ color: labelColor }">
