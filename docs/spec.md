@@ -256,13 +256,16 @@ Per channel, per peer, in main:
 - `2` = ultragrid
 - `3` = MoCap (NatNet)
 - `4` = StageC (StageControl — shares OSC handler per §5.4)
+- `5` = Motive bridge (NG-only; raw NatNet UDP relay across the telemersive-bus — see §5.5)
+
+`loaded=5` is **NG-specific** with no Max counterpart. A Max peer in a mixed room sees `loaded=5` and treats it as an unknown channel (no UI, no relay). NG's renderer handles unknown values via the `peerState` fallback (§4.6); the channel renders empty in Max but works fully between NG peers.
 
 `description` is a **user-editable label**, not the type. It defaults to the device-type name (`OSC`, `ultragrid`, `MoCap`, `StageC`) but users commonly override it with performer names or channel labels (e.g., `Olivia`, `Flowers`, `Roman` observed in the multi-peer trace). NG's device router **must dispatch on `loaded`, not `description`**. `description` feeds the matrix-cell label and breadcrumb only.
 
 State machine:
 
 1. **Idle.** `loaded=0`. No handler. Router buffers the channel's incoming topics until `loaded` arrives with a non-zero value.
-2. **Loading.** `loaded ∈ {1,2,3,4}` arrived → router instantiates the handler for that type. Handler absorbs buffered topics into its state. No CLI action yet. **Device-subtree authorship is owner-driven** (see §5.2.1 below).
+2. **Loading.** `loaded ∈ {1,2,3,4,5}` arrived → router instantiates the handler for that type. Handler absorbs buffered topics into its state. No CLI action yet. **Device-subtree authorship is owner-driven** (see §5.2.1 below).
 3. **Live.** Buffered topics drained. Handler listens for triggers:
    - `enable: 0 → 1` → spawn CLI with current state.
    - `enable: 1 → 0` → kill CLI.
@@ -353,6 +356,97 @@ NG implications:
 - The lock toggle button is rendered only on the local peer's row (`peerId === ownPeerId`).
 - Main-process handlers do **no** lock enforcement. A `/peer/{ownId}/rack/.../enable 1` echo triggers CLI spawn regardless of the local lock state, because the local peer's own UI wouldn't have locked the local peer out in the first place.
 - Pre-release consideration: a malicious or buggy Max/NG peer in the same room can trivially bypass another peer's lock by crafting publishes. This is an accepted limitation of the Q4=A protocol-frozen stance; escalating to handler-side enforcement would diverge from Max and break cross-client compatibility.
+
+### 5.6 Motive Bridge (`loaded=5`) — NG-only
+
+Raw NatNet UDP relay between an Optitrack Motive instance and remote NatNet consumers (Unity, Unreal, MotionBuilder…) via the existing telemersive-bus proxy infrastructure. **NG-only**: the Max gateway has no equivalent. Mixed Max/NG rooms see Motive channels as opaque from Max's side.
+
+#### Roles
+
+A single device type with a `direction/select` selector picking one of two roles:
+
+- **Source (`direction/select=1`)** — runs on the LAN where Motive is multicasting. Joins Motive's multicast data group, opens a unicast cmd socket toward Motive, forwards both directions through the proxy. Sends `[8,8,8]` handshake every ~250ms to the proxy cmd port to keep the bidi return path open.
+- **Sink (`direction/select=2`)** — runs on the LAN where the consumer (Unity/Unreal) lives. Pretends to *be* Motive by re-multicasting received NatNet data on the local LAN, listens on Motive's cmd port for client commands, forwards both directions through the proxy. Sends `[9,9,9]` handshake.
+
+Both ends are pure UDP relays — no NatNet protocol parsing beyond the 3-byte handshake. Multiple Sinks can fan out from one Source (the proxy `xxcc2`/`xxcc6` data slot is one2manyMo).
+
+#### Proxy slot reuse
+
+Motive bridge uses **the same proxy slots as MoCap (NatNet) and UltraGrid video** on its channel:
+
+- `xxcc0` (one2manyBi) — cmd, shared with MoCap NatNet.
+- `xxcc2` → `xxcc6` (one2manyMo) — data, shared with UltraGrid video TX/RX pair.
+
+This means:
+
+- **Same-peer collision (hard-fail):** loading Motive on a channel that already holds NatNet (loaded=3) or UltraGrid (loaded=2) on this peer is blocked at AddDevicePopup time. The reverse is also blocked. Surfaced via `bus:error` and a UI hint.
+- **Cross-peer UG collision (soft-warn):** if any other peer in the room holds `loaded=2` on the same channel index, NG shows a non-blocking yellow banner in the Motive panel header. The proxy serves whichever peer enables first; the slow-second-enabler will fail to receive data. Documented behavior, not enforced.
+- **Cross-peer Motive collision (auto-resolve):** two peers running as Motive Source on the same channel detect each other via the handshake byte: each Source's CmndFromTelematicThread observes incoming `[8,8,8]` (its own handshake echoed via the bidi proxy from another Source) and auto-flips `enable=0` with `health/state="duplicate_source"`.
+
+#### Per-peer constraint: one role per peer
+
+A single NG instance cannot run Source and Sink simultaneously when the multicast group + port pair collides on the same NIC — the Sink's outbound multicast would feed back into the Source's group-join listener and create a packet storm. Enforcement:
+
+- AddDevicePopup imposes no restriction (user can load Source on ch5 and Sink on ch8).
+- At enable time, the handler scans sibling Motive devices on this peer that are currently enabled. If any has the same `(multicastIP, dataPort)` pair OR the same `cmdPort` on the same `interfaceName`, refuse to enable, auto-flip `enable=0`, publish a meaningful error to `monitor/log` and `health/state="port_conflict"`.
+
+#### Topic schema (per channel under `/peer/{id}/rack/page_0/channel.N/device/`)
+
+```text
+gui/enable                       0 / 1
+gui/description                  string (default "Motive Source" or "Motive Sink")
+gui/direction/select             1 (Source) | 2 (Sink)
+gui/localudp/multicastIP         default 239.255.42.99
+gui/localudp/dataPort            default 1511
+gui/localudp/cmdPort             default 1510
+gui/localudp/interfaceName       e.g. "en0" — chosen from net:interfaces
+gui/localudp/motiveIP            Source-only; default empty (must be set by user)
+gui/localudp/reset               0 / 1 — restore defaults except direction/select
+gui/indicators                   "{data} {cmd} {direction} {running}" (4-slot, MoCap-style)
+gui/health/state                 "ok" | "waiting_motive" | "waiting_consumer"
+                                 | "no_proxy" | "duplicate_source"
+                                 | "interface_missing" | "port_conflict"
+gui/monitor/log                  line-buffered diagnostics
+gui/monitor/monitorGate          0 / 1 — UI-only, gates log capture
+```
+
+Per peer (capability flag, parallel to `ug_enable`/`natnet_enable`):
+
+```text
+settings/localProps/motive_enable    "1" (always; future kill switch)
+```
+
+#### Reset semantics
+
+`localudp/reset 0→1` while `enable=0` restores all user-edited fields to defaults **except `direction/select`** (which is the channel's role assignment, not a tweakable setting). Mirrors NatNet/OSC reset semantics per §5 item 3.
+
+#### Description default
+
+The default `description` is role-dependent:
+
+- `direction/select=1` → `"Motive Source"`
+- `direction/select=2` → `"Motive Sink"`
+
+When the user changes `direction/select` while `enable=0` and the current description is still the prior default, the handler updates the default to match the new role. If the user has customized the description (`description !== priorDefault`), the customization is preserved.
+
+#### Direction change while loaded
+
+Changing `direction/select` while `enable=0` triggers a partial teardown: the handler closes any open sockets, clears the handshake interval, nulls per-role state (`motiveServer` for Source, `clientCmndAddress`/`clientCmndPort` for Sink). User-shared fields (`multicastIP`, ports, `interfaceName`) are preserved. The next `enable=0→1` reconstructs the relay in the new role.
+
+#### Indicator semantics
+
+4-slot indicators string `{data} {cmd} {direction} {running}`, matching MoCap convention (loaded=3) for cell-render reuse:
+
+- `data` (slot 0): pulses when a data packet was received in the last ~200ms (Source: from Motive multicast; Sink: from proxy).
+- `cmd` (slot 1): pulses when a cmd packet was forwarded in either direction in the last ~200ms.
+- `direction` (slot 2): role hint (`1`=Source, `2`=Sink) — same numeric value as `direction/select`, lifted to the indicator string for cell-render code.
+- `running` (slot 3): handshake reply received from the proxy in the last ~1s AND no fatal `health/state`.
+
+The fine-grained "why is running off?" diagnostic lives in `health/state`, surfaced in the panel.
+
+#### Persistence
+
+Motive bridge state participates in the standard rack persistence (§6.4): topics under `/peer/{ownId}/rack/page_0/channel.N/...` are saved to `rack.json` and republished on rejoin. The `interfaceName` field is name-based, so a saved interface that no longer exists at restore time triggers `health/state="interface_missing"` and the handler refuses to enable. `enable=1` is republished as-is per the rack-restore convention; the runtime check happens in the handler.
 
 ---
 
@@ -575,6 +669,7 @@ The abstract grammar describes which slots *can* be paired; the per-device-type 
 - **OSC / StageC:** triple at slots `7, 8, 9` → `outputPortTwo`, `outputPortOne`, `inputPort`. Verified from trace; see "Ports on the wire" subsection below.
 - **UltraGrid video/audio:** two ports at slots `xxcc2` (video) and `xxcc4` (audio). Verified from Max capture ([m2b-max-capture-notes.md §165-192](logs/m2b-max-capture-notes.md)): `-P11052:11052:11054:11054` for roomId=11, channel.5 → slots 2 and 4. The `-P{p}:{p}:{p+2}:{p+2}` formula in [tg.ultragrid.js:623](javascript/tg.ultragrid.js#L623) uses a single base port `p` with rx=tx and audio at `p+2`; Max sets `p = xxcc2`. Earlier speculation that UG used the `0↔1` and `4↔8` pairs was wrong — UG needs only two distinct ports.
 - **NatNet2OSC / NatNetBridge (MoCap):** paired `xxcc0↔xxcc1` for outputs, single `xxcc2` for input. Verified: channel.1 MoCap → outputPortOne=10010, outputPortTwo=10011, inputPort=10012.
+- **Motive bridge (NG-only, `loaded=5`):** reuses MoCap and UltraGrid slots — `xxcc0` (one2manyBi cmd, shared with MoCap) and `xxcc2`/`xxcc6` (one2manyMo data, shared with UltraGrid video TX/RX). No new proxy slots are required. Same-channel collisions with NatNet (loaded=3) or UltraGrid (loaded=2) on the same peer are blocked at AddDevicePopup time; cross-peer UG collisions surface as a soft warning. See §5.6.
 
 **Reserved channels** (not in the 00..19 matrix):
 
