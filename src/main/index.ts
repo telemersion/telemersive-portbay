@@ -430,6 +430,27 @@ function setupIpcHandlers(): void {
     return dir
   })
 
+  ipcMain.handle('settings:get-path', () => {
+    return join(app.getPath('userData'), 'settings.json')
+  })
+
+  ipcMain.handle('settings:reveal', () => {
+    const path = join(app.getPath('userData'), 'settings.json')
+    if (existsSync(path)) {
+      shell.showItemInFolder(path)
+    } else {
+      shell.openPath(app.getPath('userData'))
+    }
+    return path
+  })
+
+  ipcMain.handle('settings:open-in-editor', async () => {
+    const path = join(app.getPath('userData'), 'settings.json')
+    if (!existsSync(path)) return null
+    const err = await shell.openPath(path)
+    return err ? { error: err } : { ok: true }
+  })
+
   ipcMain.handle('geo:lookup', async (_event, ip?: string) => {
     const key = ip || ''
     if (geoCache.has(key)) return geoCache.get(key)

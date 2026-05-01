@@ -5,6 +5,7 @@ const INVOKE_CHANNELS = [
   'bus:init', 'bus:connect', 'bus:disconnect', 'bus:join', 'bus:leave', 'bus:localPeer', 'bus:state',
   'mqtt:publish', 'mqtt:subscribe', 'mqtt:unsubscribe',
   'settings:load', 'settings:save',
+  'settings:get-path', 'settings:reveal', 'settings:open-in-editor',
   'log:get', 'log:clear',
   'geo:lookup',
   'compat:get-status', 'compat:recheck', 'compat:locate',

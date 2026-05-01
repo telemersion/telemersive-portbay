@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
   compatState,
   initCompat,
@@ -10,7 +10,26 @@ import {
 } from '../state/compat'
 import type { ToolStatus } from '../../shared/toolRequirements'
 
-onMounted(() => initCompat())
+const settingsPath = ref('')
+const revealLabel = computed(() => {
+  const p = navigator.platform.toLowerCase()
+  if (p.includes('mac')) return 'Finder'
+  if (p.includes('win')) return 'Explorer'
+  return 'file manager'
+})
+
+onMounted(async () => {
+  initCompat()
+  settingsPath.value = await window.api.invoke('settings:get-path')
+})
+
+function revealSettings(): void {
+  window.api.invoke('settings:reveal')
+}
+
+function openSettingsInEditor(): void {
+  window.api.invoke('settings:open-in-editor')
+}
 
 const lastCheckedLabel = computed(() => {
   const t = compatState.status?.lastCheckedAt
@@ -47,6 +66,26 @@ function canLocate(s: ToolStatus): boolean {
     <header class="page-header">
       <h1>Settings</h1>
     </header>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Configuration File</h2>
+      </div>
+      <dl class="tool-fields">
+        <div>
+          <dt>Path</dt>
+          <dd :title="settingsPath">{{ settingsPath || '—' }}</dd>
+        </div>
+      </dl>
+      <div class="tool-actions">
+        <button class="btn" :disabled="!settingsPath" @click="revealSettings()">
+          Reveal in {{ revealLabel }}
+        </button>
+        <button class="btn" :disabled="!settingsPath" @click="openSettingsInEditor()">
+          Open in default editor
+        </button>
+      </div>
+    </section>
 
     <section class="card">
       <div class="card-header">
@@ -118,6 +157,9 @@ function canLocate(s: ToolStatus): boolean {
   border: 1px solid #2a2a2a;
   border-radius: 8px;
   padding: 16px;
+}
+.card + .card {
+  margin-top: 16px;
 }
 .card-header {
   display: flex;
