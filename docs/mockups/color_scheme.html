@@ -23,7 +23,7 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
 .cell-caption { font-size: 9px; color: #666; text-align: center; margin-top: 4px; max-width: 72px; }
 .cell-wrap { display: flex; flex-direction: column; align-items: center; }
 
-.cell.selected { box-shadow: 0 0 0 3px #36ABFF; }
+.cell.selected { box-shadow: 0 0 0 2px #36ABFF; }
 .plus { opacity: 0.35; color: #666; }
 
 /* Peer rows */
@@ -175,12 +175,37 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   </div>
 </div>
 
-<h3>Disabled state: #999 (uniform gray for all device types)</h3>
+<h3>Disabled state: per-device dim color (icon fills when enable=0)</h3>
 <div class="row">
   <div class="swatch">
-    <div class="swatch-box" style="background:#999"></div>
-    <div class="swatch-label">Disabled</div>
-    <div class="swatch-hex">#999</div>
+    <div class="swatch-box" style="background:#13527F"></div>
+    <div class="swatch-label">OSC disabled</div>
+    <div class="swatch-hex">#13527F</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#7F500F"></div>
+    <div class="swatch-label">MoCap disabled</div>
+    <div class="swatch-hex">#7F500F</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#787000"></div>
+    <div class="swatch-label">UG Video disabled</div>
+    <div class="swatch-hex">#787000</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#006B08"></div>
+    <div class="swatch-label">UG Audio disabled</div>
+    <div class="swatch-hex">#006B08</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#0D7F74"></div>
+    <div class="swatch-label">UG V+A disabled</div>
+    <div class="swatch-hex">#0D7F74</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-box" style="background:#7F2F7A"></div>
+    <div class="swatch-label">StageC disabled</div>
+    <div class="swatch-hex">#7F2F7A</div>
   </div>
 </div>
 
@@ -371,15 +396,15 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
-          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#13527F" stroke="none"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#13527F" stroke="none"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#13527F" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">OSC</div>
+      <div class="cell-label" style="color:#13527F">OSC</div>
     </div>
-    <div class="cell-caption">Disabled<br>Gray icon + label</div>
+    <div class="cell-caption">Disabled<br>Dim blue icon + label</div>
   </div>
 
   <div class="cell-wrap">
@@ -459,13 +484,13 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
-          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#7F500F" stroke="none"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#7F500F" stroke="none"/>
+          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z" fill="#7F500F" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">MoCap</div>
+      <div class="cell-label" style="color:#7F500F">MoCap</div>
     </div>
     <div class="cell-caption">Disabled</div>
   </div>
@@ -519,13 +544,13 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="m 64.332575,149.735 0.56301,-44.571838 h 9.5779 l -14.7891,-19.76692 -14.7891,19.76692 h 10.1409 l -0.563,44.571838 z"/>
-          <path d="M 119.98763,19.94015 118.84557,109.940148 H 99.416606 l 29.999994,40 30,-40 h -20.57103 l 1.14206,-90.000002 z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#7F500F" stroke="none"/>
+          <path d="m 64.332575,149.735 0.56301,-44.571838 h 9.5779 l -14.7891,-19.76692 -14.7891,19.76692 h 10.1409 l -0.563,44.571838 z" fill="#7F500F" stroke="none"/>
+          <path d="M 119.98763,19.94015 118.84557,109.940148 H 99.416606 l 29.999994,40 30,-40 h -20.57103 l 1.14206,-90.000002 z" fill="#7F500F" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">MoCap</div>
+      <div class="cell-label" style="color:#7F500F">MoCap</div>
     </div>
     <div class="cell-caption">Disabled</div>
   </div>
@@ -580,13 +605,13 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="m 110,60 40,0.254882 V 40 l 40,30 -40,30 V 80.254881 L 130,80 v 69.93036 l -20,0.13928 z"/>
-          <path d="m 69.326146,92.99619 v 31.94097 H 82.098857 L 62.93979,150.4517 43.780725,124.93716 h 12.77271 V 105.77258 H 31.05249 L 30.96354,92.996191 Z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#7F500F" stroke="none"/>
+          <path d="m 110,60 40,0.254882 V 40 l 40,30 -40,30 V 80.254881 L 130,80 v 69.93036 l -20,0.13928 z" fill="#7F500F" stroke="none"/>
+          <path d="m 69.326146,92.99619 v 31.94097 H 82.098857 L 62.93979,150.4517 43.780725,124.93716 h 12.77271 V 105.77258 H 31.05249 L 30.96354,92.996191 Z" fill="#7F500F" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">MoCap</div>
+      <div class="cell-label" style="color:#7F500F">MoCap</div>
     </div>
     <div class="cell-caption">Disabled</div>
   </div>
@@ -626,12 +651,12 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#787000" stroke="none"/>
+          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z" fill="#787000" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">ultragrid</div>
+      <div class="cell-label" style="color:#787000">ultragrid</div>
     </div>
     <div class="cell-caption">Disabled</div>
   </div>
@@ -669,12 +694,12 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 109.42897,19.940146 110.57103,110 H 130 L 99.999999,149.94015 70,110 h 20.571029 l -1.14206,-90.059854 z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#006B08" stroke="none"/>
+          <path d="M 109.42897,19.940146 110.57103,110 H 130 L 99.999999,149.94015 70,110 h 20.571029 l -1.14206,-90.059854 z" fill="#006B08" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">ultragrid</div>
+      <div class="cell-label" style="color:#006B08">ultragrid</div>
     </div>
     <div class="cell-caption">Disabled</div>
   </div>
@@ -713,12 +738,12 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 89.470833,51.467598 149.47083,51.72248 V 31.467598 l 40,30 -40,30 V 71.722479 l -40,-0.254881 v 69.930342 l -19.999997,0.13928 z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#787000" stroke="none"/>
+          <path d="M 89.470833,51.467598 149.47083,51.72248 V 31.467598 l 40,30 -40,30 V 71.722479 l -40,-0.254881 v 69.930342 l -19.999997,0.13928 z" fill="#787000" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">ultragrid</div>
+      <div class="cell-label" style="color:#787000">ultragrid</div>
     </div>
     <div class="cell-caption">Disabled</div>
   </div>
@@ -757,12 +782,12 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="m 90.045214,51.309795 0.25488,59.999995 H 70.045216 l 29.999984,40 30,-40 H 110.30008 L 110.0452,71.309795 h 69.93036 l 0.13928,-20 z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#787000" stroke="none"/>
+          <path d="m 90.045214,51.309795 0.25488,59.999995 H 70.045216 l 29.999984,40 30,-40 H 110.30008 L 110.0452,71.309795 h 69.93036 l 0.13928,-20 z" fill="#787000" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">ultragrid</div>
+      <div class="cell-label" style="color:#787000">ultragrid</div>
     </div>
     <div class="cell-caption">Disabled</div>
   </div>
@@ -801,12 +826,12 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="m 564.92969,118.93359 v 76.55274 L 338.1582,194.52344 v 226.53515 l 75.58985,-0.52539 V 270.11328 l 151.18164,0.96289 v 74.62891 L 716.10938,232.31836 Z M 338.1582,421.05859 H 261.60352 L 374.99023,572.24023 488.375,421.05859 h -74.62695 z" transform="scale(0.26458333)"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#0D7F74" stroke="none"/>
+          <path d="m 564.92969,118.93359 v 76.55274 L 338.1582,194.52344 v 226.53515 l 75.58985,-0.52539 V 270.11328 l 151.18164,0.96289 v 74.62891 L 716.10938,232.31836 Z M 338.1582,421.05859 H 261.60352 L 374.99023,572.24023 488.375,421.05859 h -74.62695 z" transform="scale(0.26458333)" fill="#0D7F74" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">ultragrid</div>
+      <div class="cell-label" style="color:#0D7F74">ultragrid</div>
     </div>
     <div class="cell-caption">Disabled</div>
   </div>
@@ -845,12 +870,12 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="m 144.15955,60.595724 v 49.999996 h 20 l -30,39.94015 -30,-39.94015 h 20 V 80.595724 l -51.997483,0.393303 0.0838,70.085463 -22.350659,0.20395 0.09425,-90.602178 z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#787000" stroke="none"/>
+          <path d="m 144.15955,60.595724 v 49.999996 h 20 l -30,39.94015 -30,-39.94015 h 20 V 80.595724 l -51.997483,0.393303 0.0838,70.085463 -22.350659,0.20395 0.09425,-90.602178 z" fill="#787000" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">ultragrid</div>
+      <div class="cell-label" style="color:#787000">ultragrid</div>
     </div>
     <div class="cell-caption">Disabled</div>
   </div>
@@ -888,13 +913,13 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
-          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#0D7F74" stroke="none"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#0D7F74" stroke="none"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#0D7F74" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">ultragrid</div>
+      <div class="cell-label" style="color:#0D7F74">ultragrid</div>
     </div>
     <div class="cell-caption">Disabled</div>
   </div>
@@ -962,13 +987,13 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
-          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#7F2F7A" stroke="none"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#7F2F7A" stroke="none"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#7F2F7A" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">StageC</div>
+      <div class="cell-label" style="color:#7F2F7A">StageC</div>
     </div>
     <div class="cell-caption">Disabled</div>
   </div>
@@ -1142,51 +1167,51 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
-          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#13527F" stroke="none"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#13527F" stroke="none"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#13527F" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">OSC</div>
+      <div class="cell-label" style="color:#13527F">OSC</div>
     </div>
     <div class="cell-caption">OSC disabled</div>
   </div>
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#787000" stroke="none"/>
+          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z" fill="#787000" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">ultragrid</div>
+      <div class="cell-label" style="color:#787000">ultragrid</div>
     </div>
-    <div class="cell-caption">UG disabled</div>
+    <div class="cell-caption">UG disabled (video)</div>
   </div>
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
-          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#7F500F" stroke="none"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#7F500F" stroke="none"/>
+          <path d="m 64.332575,85.396692 0.56301,44.571838 h 9.5779 l -14.7891,19.76692 -14.7891,-19.76692 h 10.1409 l -0.563,-44.571838 z" fill="#7F500F" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">MoCap</div>
+      <div class="cell-label" style="color:#7F500F">MoCap</div>
     </div>
     <div class="cell-caption">MoCap disabled</div>
   </div>
   <div class="cell-wrap">
     <div class="cell" style="background:#333; border:1px solid #444">
       <div class="cell-icon">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z"/>
-          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z"/>
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#7F2F7A" stroke="none"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#7F2F7A" stroke="none"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#7F2F7A" stroke="none"/>
         </svg>
       </div>
-      <div class="cell-label" style="color:#1a1a1a">StageC</div>
+      <div class="cell-label" style="color:#7F2F7A">StageC</div>
     </div>
     <div class="cell-caption">StageC disabled</div>
   </div>
@@ -1229,28 +1254,30 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
 
 <!-- ==================== FULL MATRIX DEMO ==================== -->
 <h2>Matrix Row Demo</h2>
+<p style="font-size:11px; color:#888; margin-bottom:12px">Cells are 50×50px. Empty cells: background #1a1a1a, border #444. Loaded cells: background #1a1a1a (enabled) or #333 (disabled).</p>
 <div class="matrix-section">
-  <div style="display:flex; align-items:center; gap:8px">
-    <div style="min-width:160px">
+  <!-- Local peer row -->
+  <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px">
+    <div style="min-width:150px; max-width:150px">
       <div class="peer-row" style="background:#0a1f18; border-left:3px solid #1D9E75; padding:8px 10px">
         <div class="peer-dot" style="background:#1D9E75"></div>
         <div>
-          <div class="peer-name" style="color:#9FE1CB">TutorialMac <span class="peer-tag" style="background:#1a1a1a; color:#666">(you)</span></div>
+          <div class="peer-name" style="color:#9FE1CB">TutorialMac <span class="peer-tag" style="background:#252525; color:#888">(you)</span></div>
           <div class="peer-ip" style="color:#5aaa80">10.128.140.117</div>
         </div>
       </div>
     </div>
     <div class="matrix-demo">
-      <!-- empty -->
-      <div class="cell" style="background:#333; border:1px solid #444; width:64px; height:58px">
+      <!-- empty unlocked -->
+      <div class="cell" style="background:#1a1a1a; border:1px solid #444; width:50px; height:50px">
         <svg class="plus" width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </div>
-      <!-- empty -->
-      <div class="cell" style="background:#333; border:1px solid #444; width:64px; height:58px">
+      <!-- empty unlocked -->
+      <div class="cell" style="background:#1a1a1a; border:1px solid #444; width:50px; height:50px">
         <svg class="plus" width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </div>
       <!-- OSC enabled, both flowing -->
-      <div class="cell" style="background:#333; border:1px solid #36ABFF; width:64px; height:58px">
+      <div class="cell" style="background:#1a1a1a; border:1px solid #36ABFF; width:50px; height:50px">
         <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
           <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#36ABFF" stroke="none"/>
           <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#36ABFF" stroke="#36ABFF"/>
@@ -1258,8 +1285,8 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
         </svg>
         <div class="cell-label" style="color:#36ABFF">OSC</div>
       </div>
-      <!-- MoCap TX, major flowing -->
-      <div class="cell" style="background:#333; border:1px solid #FFA126; width:64px; height:58px">
+      <!-- MoCap TX, major flowing, minor idle -->
+      <div class="cell" style="background:#1a1a1a; border:1px solid #FFA126; width:50px; height:50px">
         <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
           <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#FFA126" stroke="none"/>
           <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#FFA126" stroke="#FFA126"/>
@@ -1267,17 +1294,70 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
         </svg>
         <div class="cell-label" style="color:#FFA126">MoCap</div>
       </div>
-      <!-- empty -->
-      <div class="cell" style="background:#333; border:1px solid #444; width:64px; height:58px">
+      <!-- empty unlocked -->
+      <div class="cell" style="background:#1a1a1a; border:1px solid #444; width:50px; height:50px">
         <svg class="plus" width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </div>
-      <!-- UG V+A TX disabled -->
-      <div class="cell" style="background:#333; border:1px solid #444; width:64px; height:58px">
-        <svg width="28" height="28" viewBox="0 0 200 200" fill="#1a1a1a" stroke="none" stroke-linejoin="round" stroke-linecap="round">
-          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z"/>
-          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z"/>
+      <!-- UG Video TX disabled -->
+      <div class="cell" style="background:#333; border:1px solid #444; width:50px; height:50px">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#787000" stroke="none"/>
+          <path d="M 90.571033,150 89.428967,60 H 70 l 30,-40 30,40 h -20.57103 l 1.14206,90 z" fill="#787000" stroke="none"/>
         </svg>
-        <div class="cell-label" style="color:#1a1a1a">ultragrid</div>
+        <div class="cell-label" style="color:#787000">ultragrid</div>
+      </div>
+    </div>
+  </div>
+  <!-- Remote peer row (blue tint example) -->
+  <div style="display:flex; align-items:center; gap:8px">
+    <div style="min-width:150px; max-width:150px">
+      <div class="peer-row" style="background:#080e1f; border-left:3px solid #1565C0; padding:8px 10px">
+        <div class="peer-dot" style="background:#1565C0"></div>
+        <div>
+          <div class="peer-name" style="color:#90CAF9">Projection_IAS</div>
+          <div class="peer-ip" style="color:#5a8ac0">10.128.140.22</div>
+        </div>
+      </div>
+    </div>
+    <div class="matrix-demo">
+      <!-- OSC enabled, no data -->
+      <div class="cell" style="background:#1a1a1a; border:1px solid #36ABFF; width:50px; height:50px">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#13527F" stroke="none"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#13527F" stroke="none"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#13527F" stroke="none"/>
+        </svg>
+        <div class="cell-label" style="color:#36ABFF">OSC</div>
+      </div>
+      <!-- UG V+A, RX flowing -->
+      <div class="cell" style="background:#1a1a1a; border:1px solid #1BFEE9; width:50px; height:50px">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#1BFEE9" stroke="none"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#0D7F74" stroke="none"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#1BFEE9" stroke="#1BFEE9"/>
+        </svg>
+        <div class="cell-label" style="color:#1BFEE9">ultragrid</div>
+      </div>
+      <!-- empty -->
+      <div class="cell" style="background:#1a1a1a; border:1px solid #444; width:50px; height:50px">
+        <svg class="plus" width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <!-- empty -->
+      <div class="cell" style="background:#1a1a1a; border:1px solid #444; width:50px; height:50px">
+        <svg class="plus" width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <!-- empty -->
+      <div class="cell" style="background:#1a1a1a; border:1px solid #444; width:50px; height:50px">
+        <svg class="plus" width="16" height="16" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <!-- StageC enabled, TX flowing -->
+      <div class="cell" style="background:#1a1a1a; border:1px solid #FE5FF5; width:50px; height:50px">
+        <svg width="28" height="28" viewBox="0 0 200 200" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z" fill="#FE5FF5" stroke="none"/>
+          <path d="M 119.98763,149.94015 118.84557,59.940148 H 99.416606 l 29.999994,-40 30,40 h -20.57103 l 1.14206,90.000002 z" fill="#FE5FF5" stroke="#FE5FF5"/>
+          <path d="m 80.01231,19.999998 1.14206,90.059852 h 19.42897 l -30,39.94015 -30,-39.94015 H 61.15437 L 60.01231,19.999998 Z" fill="#7F2F7A" stroke="none"/>
+        </svg>
+        <div class="cell-label" style="color:#FE5FF5">StageC</div>
       </div>
     </div>
   </div>
@@ -1292,10 +1372,10 @@ h3 { font-size: 11px; color: #666; margin: 16px 0 8px; }
   <th style="text-align:left; padding:4px 12px 4px 0; color:#888">Label Color</th>
   <th style="text-align:left; padding:4px 12px 4px 0; color:#888">Cell Border</th>
 </tr>
-<tr><td style="padding:3px 12px 3px 0">Disabled</td><td style="padding:3px 12px 3px 0"><span style="color:#555">#999</span> stroke only</td><td style="padding:3px 12px 3px 0"><span style="color:#555">#999</span></td><td style="padding:3px 12px 3px 0">#444</td></tr>
-<tr><td style="padding:3px 12px 3px 0">Enabled, no data flow</td><td style="padding:3px 12px 3px 0"><span style="color:#fff">#fff</span> stroke only (idle)</td><td style="padding:3px 12px 3px 0">Device color</td><td style="padding:3px 12px 3px 0">Device color</td></tr>
+<tr><td style="padding:3px 12px 3px 0">Disabled</td><td style="padding:3px 12px 3px 0">Dim device color <b>filled</b> (per-type)</td><td style="padding:3px 12px 3px 0">Dim device color</td><td style="padding:3px 12px 3px 0">#444</td></tr>
+<tr><td style="padding:3px 12px 3px 0">Enabled, no data flow</td><td style="padding:3px 12px 3px 0">Dim device color <b>filled</b> (idle)</td><td style="padding:3px 12px 3px 0">Device color</td><td style="padding:3px 12px 3px 0">Device color</td></tr>
 <tr><td style="padding:3px 12px 3px 0">Enabled, arrow active</td><td style="padding:3px 12px 3px 0">Device color <b>filled</b></td><td style="padding:3px 12px 3px 0">Device color</td><td style="padding:3px 12px 3px 0">Device color</td></tr>
-<tr><td style="padding:3px 12px 3px 0">Enabled, arrow idle</td><td style="padding:3px 12px 3px 0"><span style="color:#fff">#fff</span> stroke only</td><td style="padding:3px 12px 3px 0">Device color</td><td style="padding:3px 12px 3px 0">Device color</td></tr>
+<tr><td style="padding:3px 12px 3px 0">Enabled, arrow idle</td><td style="padding:3px 12px 3px 0">Dim device color <b>filled</b></td><td style="padding:3px 12px 3px 0">Device color</td><td style="padding:3px 12px 3px 0">Device color</td></tr>
 <tr><td style="padding:3px 12px 3px 0">Enabled, sink (ground)</td><td style="padding:3px 12px 3px 0">Device color <b>filled</b> when any arrow active, otherwise dim device color</td><td style="padding:3px 12px 3px 0">—</td><td style="padding:3px 12px 3px 0">—</td></tr>
 </table>
 
