@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'
+import { networkInterfaces } from 'os'
 import { TBusClient } from './busClient'
 import { loadSettings, saveSettings } from './persistence/settings'
 import { loadRack, saveRack, buildRackSnapshot, isRackEligibleTail } from './persistence/rack'
@@ -9,6 +10,8 @@ import { DeviceRouter } from './deviceRouter'
 import { OscDevice } from './devices/OscDevice'
 import { NatNetDevice } from './devices/NatNetDevice'
 import { UltraGridDevice } from './devices/ultragrid/UltraGridDevice'
+import { MotiveDevice } from './devices/motive/MotiveDevice'
+import type { MotiveSibling } from './devices/motive/motiveLogic'
 import { resolveUgPath } from './enumeration/spawnCli'
 import { performShutdown } from './shutdown'
 import { logEvent, setLogSink, getLogBuffer, clearLogBuffer } from './logBus'
@@ -152,6 +155,7 @@ function publishInitSequence(): void {
   trackedPublish(1, topics.settings(peerId, 'localProps/ug_enable'), resolveUgPath() ? '1' : '0')
   trackedPublish(1, topics.settings(peerId, 'localProps/natnet_enable'), '1')
   trackedPublish(1, topics.settings(peerId, 'localProps/stagec_enable'), '1')
+  trackedPublish(1, topics.settings(peerId, 'localProps/motive_enable'), '1')
 
   const savedRack = loadRack()
   if (Object.keys(savedRack).length > 0) {
@@ -240,6 +244,27 @@ function setupBus(): void {
                 retainedTopics.get(topics.settings(localPeerId, subpath)) ?? null,
               host: loadSettings().brokerUrl,
               resolveBinary: resolveUgPath
+            })
+          }
+          if (type === 5) {
+            return new MotiveDevice({
+              channelIndex: channel,
+              peerId: localPeerId,
+              localIP,
+              roomId,
+              publish: (retained, topic, ...values) => trackedPublish(retained, topic, ...values),
+              hasRetained: (topic: string) => retainedTopics.has(topic),
+              brokerHost: loadSettings().brokerUrl,
+              siblings: (): MotiveSibling[] => {
+                const list: MotiveSibling[] = []
+                if (!deviceRouter) return list
+                for (const h of deviceRouter.loadedHandlers()) {
+                  if (h.deviceType !== 5) continue
+                  const m = h as unknown as { toSibling: () => MotiveSibling }
+                  if (typeof m.toSibling === 'function') list.push(m.toSibling())
+                }
+                return list
+              }
             })
           }
           return null
@@ -441,6 +466,20 @@ function setupIpcHandlers(): void {
     const dir = app.getPath('userData')
     await shell.openPath(dir)
     return dir
+  })
+
+  ipcMain.handle('net:interfaces', () => {
+    const all = networkInterfaces()
+    const out: Array<{ name: string; address: string; family: string }> = []
+    for (const [name, addrs] of Object.entries(all)) {
+      if (!addrs) continue
+      for (const a of addrs) {
+        if (a.internal) continue
+        if (a.family !== 'IPv4') continue
+        out.push({ name, address: a.address, family: a.family })
+      }
+    }
+    return out
   })
 
   ipcMain.handle('settings:get-path', () => {

@@ -80,3 +80,23 @@ export function allocateMocapRoomPorts(roomId: number, channelIndex: number): Mo
     inputPort: base + 1
   }
 }
+
+// Motive bridge (NG-only, loaded=5) reuses MoCap cmd slot xxcc0 and UltraGrid
+// video data slots xxcc2 (TX) / xxcc6 (RX) — see spec.md §5.6 / §8.7.
+//   cmdPort  = xxcc0  one2manyBi   — bidirectional NatNet command channel
+//   dataTx   = xxcc2  one2manyMo   — Source pushes Motive multicast data here
+//   dataRx   = xxcc6  one2manyMo   — Sink pulls re-multicast data from here
+export interface MotivePorts {
+  cmdPort: number
+  dataTxPort: number
+  dataRxPort: number
+}
+
+export function allocateMotiveRoomPorts(roomId: number, channelIndex: number): MotivePorts {
+  const base = portBase(roomId, channelIndex)
+  return {
+    cmdPort: base + 0,
+    dataTxPort: base + 2,
+    dataRxPort: base + 6
+  }
+}

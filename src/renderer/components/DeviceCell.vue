@@ -67,11 +67,19 @@ const mocapDirection = computed<'tx' | 'rx' | 'local'>(() => {
   return 'tx'
 })
 
+// Motive bridge (loaded=5) — same direction/select prop as MoCap (1=Source/tx,
+// 2=Sink/rx). Reuses the MoCap composite as a placeholder; cell is
+// distinguished by color (#e84e4e). TODO: dedicated icon composite.
+const motiveDirection = computed<'tx' | 'rx'>(() => {
+  return props.mocapDirectionSelect === '2' ? 'rx' : 'tx'
+})
+
 const direction = computed(() => {
   switch (props.loaded) {
     case '1': case '4': return 'bidi'
     case '2': return ugDirection.value
     case '3': return mocapDirection.value
+    case '5': return motiveDirection.value
     default: return 'tx'
   }
 })
@@ -101,11 +109,19 @@ const ugDirection = computed<'ug-tx' | 'ug-rx' | 'ug-p2p-tx' | 'ug-p2p-rx' | 'ug
 // OSC/StageC (loaded=1|4): separate inputIndicator/outputIndicator topics.
 // UG (loaded=2): single `indicators` topic, space-separated, positions 0=TX active, 1=RX active.
 // MoCap (loaded=3): `indicators` topic: positions 0=major active, 1=minor active, 2=direction, 3=running.
+// Motive (loaded=5): `indicators` topic: positions 0=data, 1=cmd, 2=direction, 3=running.
+//   Motive's primary flow follows the role: Source emits data (tx), Sink receives data (rx).
+//   Map slot 0 to the role-appropriate arrow so the cell visually reflects "data is moving."
 const indicatorTokens = computed(() => props.indicators.trim().split(/\s+/).filter(Boolean))
 const txActive = computed(() => {
   if (!isEnabled.value) return false
   if (props.loaded === '2' || props.loaded === '3') {
     return indicatorTokens.value[0] === '1'
+  }
+  if (props.loaded === '5') {
+    const dataActive = indicatorTokens.value[0] === '1'
+    const cmdActive = indicatorTokens.value[1] === '1'
+    return motiveDirection.value === 'tx' ? dataActive : cmdActive
   }
   return Number(props.inputIndicator) > 0
 })
@@ -113,6 +129,11 @@ const rxActive = computed(() => {
   if (!isEnabled.value) return false
   if (props.loaded === '2' || props.loaded === '3') {
     return indicatorTokens.value[1] === '1'
+  }
+  if (props.loaded === '5') {
+    const dataActive = indicatorTokens.value[0] === '1'
+    const cmdActive = indicatorTokens.value[1] === '1'
+    return motiveDirection.value === 'rx' ? dataActive : cmdActive
   }
   return Number(props.outputIndicator) > 0
 })

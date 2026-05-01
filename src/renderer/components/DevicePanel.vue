@@ -3,6 +3,7 @@ import OscPanel from './panels/OscPanel.vue'
 import StageControlPanel from './panels/StageControlPanel.vue'
 import UltraGridPanel from './panels/UltraGridPanel.vue'
 import NatNetPanel from './panels/NatNetPanel.vue'
+import MotivePanel from './panels/MotivePanel.vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -54,6 +55,17 @@ const loaded = computed(() => props.deviceState?.loaded ?? '0')
 
     <NatNetPanel
       v-else-if="loaded === '3'"
+      :peer-id="peerId"
+      :channel-index="channelIndex"
+      :device-state="deviceState"
+      :peer-settings="peerSettings"
+      :is-local="isLocal"
+      :target-locked="targetLocked"
+      @remove="emit('remove')"
+    />
+
+    <MotivePanel
+      v-else-if="loaded === '5'"
       :peer-id="peerId"
       :channel-index="channelIndex"
       :device-state="deviceState"

@@ -7,12 +7,13 @@ export interface DeviceStyle {
 }
 
 // Keyed by the `loaded` discriminator value published on MQTT.
-// '1' = OSC, '3' = MoCap, '4' = StageC.
+// '1' = OSC, '3' = MoCap, '4' = StageC, '5' = Motive bridge.
 // UltraGrid (loaded=2) has sub-variants — use UG_STYLES keyed by stream type.
 export const DEVICE_STYLES: Record<string, DeviceStyle> = {
   '1': { color: '#36abff', dim: '#13527f', label: 'OSC' },
   '3': { color: '#ffa126', dim: '#7f500f', label: 'MoCap' },
   '4': { color: '#fe5ff5', dim: '#7f2f7a', label: 'StageC' },
+  '5': { color: '#e84e4e', dim: '#742727', label: 'Motive' },
 }
 
 export type UgStreamType = 'video' | 'audio' | 'both'

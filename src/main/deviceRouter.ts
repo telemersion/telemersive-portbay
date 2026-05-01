@@ -79,4 +79,10 @@ export class DeviceRouter {
       this.unloadChannel(channel)
     }
   }
+
+  // Enumerate currently loaded handlers — used by MotiveDevice to check for
+  // sibling Motive instances on this peer at enable time (Q15-E port conflict).
+  loadedHandlers(): DeviceHandler[] {
+    return [...this.handlers.values()]
+  }
 }

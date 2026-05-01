@@ -20,10 +20,11 @@ interface Tile {
 }
 
 const TILES: Tile[] = [
-  { type: 1, label: 'OSC',          color: '#36ABFF', flag: 'osc_enable',    implemented: true  },
-  { type: 4, label: 'StageControl', color: '#FE5FF5', flag: 'stagec_enable', implemented: true },
-  { type: 2, label: 'UltraGrid',    color: '#F0DE01', flag: 'ug_enable',     implemented: true  },
-  { type: 3, label: 'MoCap',        color: '#FFA126', flag: null,            implemented: true  }
+  { type: 1, label: 'OSC',           color: '#36ABFF', flag: 'osc_enable',    implemented: true },
+  { type: 4, label: 'StageControl',  color: '#FE5FF5', flag: 'stagec_enable', implemented: true },
+  { type: 2, label: 'UltraGrid',     color: '#F0DE01', flag: 'ug_enable',     implemented: true },
+  { type: 3, label: 'MoCap',         color: '#FFA126', flag: null,            implemented: true },
+  { type: 5, label: 'Motive bridge', color: '#E84E4E', flag: 'motive_enable', implemented: true }
 ]
 
 function flagValue(name: string): string | undefined {
@@ -44,7 +45,7 @@ const tiles = computed(() =>
 )
 
 const POPUP_WIDTH = 180
-const POPUP_HEIGHT = 188
+const POPUP_HEIGHT = 56 + TILES.length * 32
 
 const style = computePosition()
 
@@ -88,7 +89,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="add-device-popup" :style="style">
     <div class="popup-title">Add device</div>
-    <div class="tile-grid">
+    <div class="tile-list">
       <button
         v-for="tile in tiles"
         :key="tile.type"
@@ -123,25 +124,25 @@ onBeforeUnmount(() => {
   letter-spacing: 0.5px;
   padding: 2px 4px 6px;
 }
-.tile-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
+.tile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .tile {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 4px;
+  gap: 8px;
+  padding: 6px 10px;
   background: #2a2a2a;
   border: 1px solid #3a3a3a;
   border-radius: 4px;
   cursor: pointer;
   color: #ddd;
-  font-size: 11px;
+  font-size: 12px;
   transition: filter 0.1s, border-color 0.15s;
+  text-align: left;
 }
 .tile:hover:not(.disabled) {
   filter: brightness(1.2);

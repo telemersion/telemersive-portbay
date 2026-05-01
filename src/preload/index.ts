@@ -9,7 +9,8 @@ const INVOKE_CHANNELS = [
   'log:get', 'log:clear',
   'geo:lookup',
   'compat:get-status', 'compat:recheck', 'compat:locate',
-  'compat:open-download', 'compat:reveal-tools-folder'
+  'compat:open-download', 'compat:reveal-tools-folder',
+  'net:interfaces'
 ] as const
 const RECEIVE_CHANNELS = [
   'broker:connected', 'peer:joined', 'peer:id', 'peer:name',
