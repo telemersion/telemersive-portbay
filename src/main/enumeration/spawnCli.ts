@@ -23,6 +23,8 @@ export class SpawnCliError extends Error {
 
 const DEFAULT_TIMEOUT_MS = 5000
 
+const SKIP_VENDORED = process.env.NG_SKIP_VENDORED_UG === '1'
+
 export function resolveUgPath(): string | null {
   try {
     const userPath = loadSettings().ugPath
@@ -32,8 +34,10 @@ export function resolveUgPath(): string | null {
     return existsSync(process.env.UG_PATH) ? process.env.UG_PATH : null
   }
   if (process.platform === 'darwin') {
-    const vendored = resolve(process.cwd(), 'vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv')
-    if (existsSync(vendored)) return vendored
+    if (!SKIP_VENDORED) {
+      const vendored = resolve(process.cwd(), 'vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv')
+      if (existsSync(vendored)) return vendored
+    }
     const system = '/Applications/uv-qt.app/Contents/MacOS/uv'
     return existsSync(system) ? system : null
   }
