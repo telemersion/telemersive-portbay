@@ -1,13 +1,19 @@
 # Telemersive Gateway NG — v1 Specification (Draft)
 
 Status: working draft, derived from inquisition session against `context.md`,
-revised against primary sources in `docs/wiki/`, `docs/mockups/`, `docs/logs/`,
-and `docs/javascript/`. Companion to `context.md` — that document captures
-protocol/UI details from the prior design conversation; this document captures
-the **decisions** made on top of it. Where the two conflict, this document wins.
+revised against primary sources in `docs/wiki/` and `docs/javascript/` (and
+historically against `docs/mockups/` and `docs/logs/` — those directories
+have been pruned but their evidence is preserved inline through verbatim
+quotes and decision provenance). Companion to `context.md` — that document
+captures protocol/UI details from the prior design conversation; this
+document captures the **decisions** made on top of it. Where the two
+conflict, this document wins. **Where this document and the codebase
+conflict, the codebase wins** — see CLAUDE.md for the canonical pointers.
 
 Outstanding items are listed in §13 as TBDs with proposed defaults. Items
 confirmed against primary sources are marked **[verified]** with citation.
+Citations to `docs/logs/*.log` and `docs/mockups/*.html` are historical and
+may not resolve in the current tree; the cited *content* is what matters.
 
 ---
 
@@ -27,18 +33,19 @@ NG addresses three goals, in priority order when they conflict:
 
 ### 2.1 In Scope for v1.0
 
-**Milestone scope note [2026-04-21]:** v1.0 covers all four device types below, but
-**M2b ships only OSC + UltraGrid**. NatNet/MoCap and StageControl handlers are
-deferred to a later milestone — their absence is *expected scope*, not a spec
-gap. Until those handlers land, `natnet_enable` and `stagec_enable` are
-published as `0` unconditionally, and `loaded=3` (MoCap) / `loaded=4` (StageC)
-values from remote peers are rendered read-only in the matrix without local
-spawn behavior.
+**Milestone scope note [updated 2026-05-01]:** v1.0's original Max-protocol-frozen device set (OSC, UltraGrid, NatNet/MoCap, StageControl) is **all shipped**. The earlier "M2b ships only OSC + UltraGrid" deferral is superseded — NatNet (`loaded=3`) and StageControl (`loaded=4`, sharing the OSC handler per §5.4) are live, with all four `_enable` capability flags published unconditionally as `1` (the flag exists for future kill-switch use; see §7).
 
-- All four device types: **OSC**, **UltraGrid**, **NatNet/MoCap**, **StageControl**.
+NG-only additions on top of the Max-protocol surface:
+
+- **Motive bridge (`loaded=5`)** — NG-only NatNet UDP relay over the existing telemersive-bus proxies. See §5.6. Max peers in mixed rooms see `loaded=5` channels as opaque.
+- **Tool compatibility check** — version-pinned UltraGrid (1.10.3) and NatNetFour2OSC (10.0.0) with locate/download flow in the Settings view. See §11.
+
+Surface area:
+
+- Five device types: **OSC**, **UltraGrid**, **NatNet/MoCap**, **StageControl**, **Motive bridge**.
 - Full remote control of other peers' channels (matrix-wide editing, subject to lock state).
 - Login flow against telemersive-router (mirroring telemersive-bus's `configure → connect → join` sequence).
-- Cross-platform: **macOS and Windows** only.
+- Cross-platform: **macOS and Windows** primary; Linux untested but likely works for non-UG/NatNet roles.
 - Single-room operation per app instance.
 - Channel count uncapped; floor of 20 (see §6.4).
 
@@ -81,7 +88,7 @@ The telemersive-bus npm package owns the control plane (room creation/destructio
 - A peer may load `channel.42` and publish state under it. Max peers ignore high-numbered channels (no UI column for them); NG peers render them.
 - **Pre-release blocker:** test in a mixed room that NG publishing `channel.20+` does not destabilize a Max peer (best case: silently ignored).
 
-**Operational ceiling — switchboard port pre-allocation [verified 2026-04-16]:** the broker-side switchboard opens ports only for channels 00..19 per room (§8.7). CLI spawns on channel ≥20 will have no switchboard-opened ports available. For v1.0, NG may *display* channels ≥20 in the matrix (and other NG peers may publish state under them), but **enabling a device on channel ≥20 will not produce working media traffic** until the switchboard is extended (up to ~100 channels in theory; not planned for v1.0). NG does not block channel ≥20 creation in the UI — it's a silent operational limit, documented, not enforced. Add a warning in the matrix header if any peer has `loaded>0` on channel ≥20.
+**Operational ceiling — switchboard port pre-allocation [verified 2026-04-16]:** the broker-side switchboard opens ports only for channels 00..19 per room (§8.7). CLI spawns on channel ≥20 will have no switchboard-opened ports available. For v1.0, NG may *display* channels ≥20 in the matrix (and other NG peers may publish state under them), but **enabling a device on channel ≥20 will not produce working media traffic** until the switchboard is extended (up to ~100 channels in theory; not planned for v1.0). NG does not block channel ≥20 creation in the UI — it's a silent operational limit, documented, not enforced. **TODO:** Add a warning in the matrix header if any peer has `loaded>0` on channel ≥20 — currently NG renders 20 columns fixed and does not warn on ≥20.
 
 ### 3.5 NG-only Features in Mixed Rooms
 
@@ -176,11 +183,27 @@ Electron app
 
 ### 4.3 IPC Bridge — Thin
 
-The IPC bridge between main and renderer carries **raw MQTT traffic only**:
+The IPC bridge between main and renderer carries **raw MQTT traffic plus bus control events**. The complete whitelist lives in [src/preload/index.ts](../src/preload/index.ts); load-bearing channels:
 
-- `ipc.send('mqtt:message', {topic, value})` — main forwards every received MQTT message to renderer.
-- `ipc.invoke('mqtt:publish', {topic, value, retain})` — renderer requests publishes.
-- `ipc.send('roster:add', {peerId, peerName, ...})` and `roster:remove` — main forwards bus-level peer events. **peerName arrives on this channel only**, never via MQTT (§6.2). On `roster:remove`, the renderer drops the peer from both `roster` and `peerState` in a single handler — no separate subtree-delete IPC is needed since the renderer owns the state tree and `roster:remove` fires at exactly the right moment (§4.6 step 5).
+- **MQTT data plane**
+  - `mqtt:message` (main → renderer) — main forwards every received MQTT message.
+  - `mqtt:publish` (invoke) — renderer requests publishes.
+  - `mqtt:subscribe`, `mqtt:unsubscribe` (invoke) — renderer requests subscription changes (rare; main owns most subscriptions per §4.6).
+- **Bus control plane**
+  - `bus:configure` (send), `bus:init`, `bus:connect`, `bus:disconnect`, `bus:join`, `bus:leave`, `bus:localPeer`, `bus:state` (invoke).
+  - `peers:remote:joined` / `peers:remote:left` (main → renderer) — bus-level peer events. **peerName arrives on this channel only**, never via MQTT (§6.2). The renderer drops the peer from both `roster` and `peerState` in the `peers:remote:left` handler — no separate subtree-delete IPC needed (§4.6 step 5). Also `peers:clear`, `peers:append`, `peers:done`, `rooms:*`, `peer:id`, `peer:name`, `peer:localIP`, `peer:publicIP`, `peer:room:*`, `peer:joined`, `broker:connected`, `ready`, `chat`, `bus:error`.
+- **Settings + persistence**
+  - `settings:load`, `settings:save` (invoke).
+  - `settings:get-path`, `settings:reveal`, `settings:open-in-editor` (invoke) — surface settings.json in Finder/Explorer for inspection.
+- **Compatibility / tool resolution**
+  - `compat:get-status`, `compat:recheck`, `compat:locate`, `compat:open-download`, `compat:reveal-tools-folder` (invoke); `compat:status` (broadcast). See §11 for the tool-compat feature.
+  - `net:interfaces` (invoke) — returns the host's UP IPv4 non-loopback interfaces; used by Motive bridge panel for NIC selection (§5.6).
+- **Logging**
+  - `log:get`, `log:clear` (invoke); `log:entry` (broadcast) — main-side ring buffer + live stream for the activity log panel.
+- **Misc**
+  - `geo:lookup` (invoke) — IP geolocation for the peer-detail panel.
+
+(Spec previously named the peer events `roster:add` / `roster:remove`; the wire names are `peers:remote:joined` / `peers:remote:left`. Semantics unchanged.)
 
 The renderer reconstructs the entire peer state tree from the raw MQTT stream. The main process owns no parsed view of the room state. Device handlers in main parse the subset of topics they need (see §4.5).
 
@@ -195,7 +218,7 @@ This shape preserves a future web client at zero cost: a web client would receiv
   UI components join the two by peerId when rendering (e.g., matrix row header reads `roster[peerId].peerName` while device cells read from `peerState.peer[peerId].rack...`). A peer is "visible" when it exists in `roster`; `peerState` entries without a matching roster entry are treated as in-flight and not rendered until the roster entry arrives (or discarded after a short grace period if it never does).
 - TypeScript types model the known protocol topics (Section 5 of `context.md` enumerates them; archaeology fills gaps).
 - Unknown topics are stored under a `Record<string, string>` fallback at the appropriate node. Nothing breaks if a Max peer publishes an unfamiliar topic; nothing breaks if a future protocol addition arrives.
-- Topic strings live in a central `src/renderer/topics.ts` as template-literal types and builder functions. Never concatenate topic strings inline.
+- Topic strings live in a central [src/shared/topics.ts](../src/shared/topics.ts) as template-literal types and builder functions, shared between main and renderer. Never concatenate topic strings inline.
 - Enum values (e.g. `network/mode`, `connection`, `transmission`, device `type` fields) are named TS types backed by Q4=A archaeology.
 - Values on the wire are strings. The state tree stores strings. Typed accessors (`useMqttBinding<T>(topic)`) parse at the read boundary, not the write boundary, so malformed values from a buggy peer remain faithfully representable.
 - Reactivity: `reactive()` deep proxy. Tree is up to ~20 peers × ~20 channels × ~30 leaves ≈ 12k values; flag for benchmarking but expected fine.
@@ -531,14 +554,18 @@ NG persists the **local peer's rack state** on quit and restores it on next laun
 
 ## 7. Initial Publish Sequence (on join)
 
-After `bus peer joined 1`, NG publishes (matching observed Max trace **[verified]** against [creating_4_devices_locally.log](docs/logs/creating_4_devices_locally.log)):
+After `bus peer joined 1`, NG publishes (matching observed Max trace **[verified]** against `creating_4_devices_locally.log`):
 
 1. `/peer/{id}/rack/page_0/channel.{0..19}/loaded 0` (retain=1) — 20 channel slots initialized.
 2. `/peer/{id}/settings/lock/enable 0` (retain=1).
 3. `/peer/{id}/settings/background/color {R G B A}` (retain=1) — persisted color, four space-separated normalized floats.
 4. `/peer/{id}/settings/localMenus/{rangeName}` — for each enumerated backend, see §8.
-5. `/peer/{id}/settings/localProps/ug_enable {0|1}` (retain=1) — based on `externals/ultragrid/uv` presence.
-6. `/peer/{id}/settings/localProps/natnet_enable {0|1}` (retain=1) — based on `externals/natnet/...` presence.
+5. `/peer/{id}/settings/localProps/ug_enable {0|1}` (retain=1) — `1` iff `resolveUgPath()` returns a path; `0` otherwise. Drives the AddDevicePopup's per-tile availability for UG on the target peer (§9.3).
+6. `/peer/{id}/settings/localProps/natnet_enable 1` (retain=1) — always `1`; placeholder for future NatNetThree2OSC presence check.
+7. `/peer/{id}/settings/localProps/stagec_enable 1` (retain=1) — always `1`. Used by AddDevicePopup to gate the StageControl tile per the same convention as `ug_enable`/`natnet_enable`. (Earlier spec drafts asserted that OSC and StageControl had no `_enable` flag in the observed Max trace and that NG should not introduce one — superseded by the actual implementation, which uses the flag uniformly across types so the popup-availability code stays generic.)
+8. `/peer/{id}/settings/localProps/motive_enable 1` (retain=1) — always `1`. Capability flag for the NG-only Motive bridge (§5.6); future kill-switch path.
+
+See [src/main/index.ts publishInitSequence](../src/main/index.ts) for the canonical sequence.
 
 Peer-identity values observed in the trace (not published as separate topics but delivered via bus events — see §7.2).
 
@@ -561,9 +588,7 @@ telemersive-bus emits these events (`bubbledUp` in [maxBusClient.js](docs/javasc
 - `bus peers remote left {peerName} {peerId}` — **verified**: leave sends both name and id. Trigger for subtree-delete.
 - `bus ready` — post-init signal.
 
-NG's `busClient.ts` wrapper normalizes these into typed events surfaced to main and forwarded to renderer via the IPC bridge (§4.3).
-
-OSC and StageControl have no `_enable` capability flag in the observed trace; NG does not introduce one.
+NG's `busClient.ts` wrapper normalizes these into typed events surfaced to main and forwarded to renderer via the IPC bridge (§4.3). Errors raised by the bus library (e.g. join timeout, room access declined, broker auth refused) arrive on a generic `bus:error` event with `{scope, message}` and are surfaced in the SessionView.
 
 ---
 
@@ -601,14 +626,16 @@ Empty result → publish `0`. Pre-enumeration default → publish `-default-`.
 
 ### 8.3 Per-backend Parsers
 
-Modular parsers in `src/main/enumeration/menuParsers/`:
+Modular parsers in [src/main/enumeration/parsers/](../src/main/enumeration/parsers/):
+
 - `portaudio.ts` — strips `portaudio:` prefix, removes `(*...*)` default markers, separates output/input channel info.
 - `coreaudio.ts` — strips `coreaudio:` prefix, routes Audio block.
-- `jack.ts` — strips `jack:` prefix, routes Audio block.
-- `wasapi.ts` — strips backslash-escape sequences, captures `(ID:\s{...})` IDs.
+- `genericAudio.ts` — shared parser for jack and wasapi (strips backslash-escape sequences, captures `(ID:\s{...})` IDs where present).
+- `ndi.ts` — NDI source list.
+- `textureSender.ts` — Syphon (macOS) / Spout (Windows) texture senders.
 - All terminate on `UltraGrid Exit` line in CLI output.
 
-Each parser is fixture-driven testable. Fixtures in `tests/fixtures/uv-output/{platform}/{backend}-{capture|receive}.txt` captured from a real `uv` invocation per platform. Parser tests assert output matches the captured wire format.
+Each parser is fixture-driven testable. Fixtures in [tests/fixtures/ultragrid/{version}/](../tests/fixtures/ultragrid/) captured from a real `uv` invocation per platform/version. Parser tests assert output matches the captured wire format. Parsers are version-coupled to the active UG bundle — see CLAUDE.md "UltraGrid parsers are version-coupled."
 
 ### 8.4 `updateMenu` (Max-legacy, not implemented in NG) **[revised 2026-04-21]**
 
@@ -630,19 +657,25 @@ UltraGrid is vendored at `vendor/ultragrid/active/` as the CESNET-distributed `u
 - **Windows path:** `vendor/ultragrid/active/uv.exe` (CLI) once Windows is vendored. Update this section when the Windows bundle layout is confirmed.
 - **Binary version pinned in spec; parsers are version-coupled.** Upgrading UV requires recapturing fixtures and re-verifying parsers.
 
-### 8.6 Child-Process Spawn and Kill **[revised 2026-04-21]**
+### 8.6 Child-Process Spawn and Kill **[revised 2026-05-01]**
 
-**Historical context (Max).** On Windows, Max copied `uv.exe` to `uv_tb{index}.exe` for each active channel (observed in [shellHelper.js](docs/javascript/shellHelper.js) and FAQ). The rationale was kill-targeting: Max issued `taskkill /IM uv_tb{index}.exe /F` to terminate a single channel's UV process, and `taskkill /IM` matches by image name — without the per-channel rename, the kill would have terminated *all* UV processes in the room. This was a workaround for Max's toolchain, not a mechanical requirement of Windows.
+**Historical context (Max).** On Windows, Max copied `uv.exe` to `uv_tb{index}.exe` for each active channel (observed in [shellHelper.js](javascript/shellHelper.js) and FAQ). The rationale was kill-targeting: Max issued `taskkill /IM uv_tb{index}.exe /F` to terminate a single channel's UV process, and `taskkill /IM` matches by image name — without the per-channel rename, the kill would have terminated *all* UV processes in the room. This was a workaround for Max's toolchain, not a mechanical requirement of Windows.
 
-**NG approach.** NG spawns the stock `externals/ultragrid/uv.exe` / `externals/ultragrid/uv` on both platforms and kills by PID via Node's `child_process` (`child.kill('SIGTERM')` → `SIGKILL` grace). On Windows, Node's `child.kill()` maps to `TerminateProcess` on the specific PID, so there is no need for per-channel renames or `taskkill /IM`. The per-channel copy is *not* carried forward.
+**NG approach.** NG spawns from the path resolved by `resolveUgPath()` (§8.5) on both platforms and kills by PID via Node's `child_process`, using a process-group SIGKILL ([ChildProcessLifecycle.ts:77-96](../src/main/devices/ChildProcessLifecycle.ts#L77-L96)).
 
-- macOS: spawn `externals/ultragrid/uv`, kill by PID (SIGTERM → SIGKILL).
-- Windows: spawn `externals/ultragrid/uv.exe`, kill by PID (same pipeline).
+- macOS / Linux: spawn detached (own process group), kill `process.kill(-pid, 'SIGKILL')` so all of UV's helper processes die together.
+- Windows: spawn detached, kill by PID (Node maps `child.kill()` to `TerminateProcess`).
 - Same applies to NatNetThree2OSC.
+
+**SIGKILL-only, no graceful SIGTERM grace.** Earlier drafts described a `SIGTERM → SIGKILL` two-stage kill. The implementation skips SIGTERM entirely:
+
+> SIGTERM would trigger UV's graceful teardown, which calls `vidcap_syphon_done` and deadlocks against Syphon's dispatch queue — leaving uninterruptible-wait zombies the kernel can never reap. We don't need graceful socket close (UDP media is broker-independent), so skipping user-space cleanup avoids the race entirely.
+
+A `zombieEscapeMs` timer (default 2000ms) covers the residual case where even SIGKILL cannot interrupt a process already stuck in kernel-wait — NG advances its own state forward so the app isn't blocked waiting on a zombie.
 
 **Windows firewall note.** Users who previously approved `uv_tb{N}.exe` entries in Windows Firewall under Max may see a one-time prompt for `uv.exe` when NG first spawns UV. Acceptable — one prompt per install, not per channel.
 
-**Argument quoting.** NG spawns children with `child_process.spawn(binary, args, …)` — no shell, no word-splitting. Each argv element is passed to the child verbatim, so values containing whitespace (e.g. `syphon:name=Simple Server`) work without wrapping. Retained topic values inherited from Max's schema sometimes arrive wrapped in single-quotes (e.g. `app='Simple Server'` in `*Range` menus); NG strips those at the CLI-build boundary in a single pass — see [cliBuilder.ts:22-34](../src/main/devices/ultragrid/cliBuilder.ts#L22-L34). Verified against live `uv` with a regression test — see [uvArgvParsing.integration.test.ts](../tests/main/devices/ultragrid/uvArgvParsing.integration.test.ts). Max's Windows single-→double-quote substitution (from [shellHelper.js](docs/javascript/shellHelper.js)) existed because Max built shell command strings for `cmd.exe`; NG does not, so no substitution is applied.
+**Argument quoting.** NG spawns children with `child_process.spawn(binary, args, …)` — no shell, no word-splitting. Each argv element is passed to the child verbatim, so values containing whitespace (e.g. `syphon:name=Simple Server`) work without wrapping. Retained topic values inherited from Max's schema sometimes arrive wrapped in single-quotes (e.g. `app='Simple Server'` in `*Range` menus); NG strips those at the CLI-build boundary in a single pass — see [cliBuilder.ts:22-34](../src/main/devices/ultragrid/cliBuilder.ts#L22-L34). Verified against live `uv` with a regression test — see [uvArgvParsing.integration.test.ts](../tests/main/devices/ultragrid/uvArgvParsing.integration.test.ts). Max's Windows single-→double-quote substitution (from [shellHelper.js](javascript/shellHelper.js)) existed because Max built shell command strings for `cmd.exe`; NG does not, so no substitution is applied.
 
 ### 8.7 Port Allocation ("PortRanges V5") **[verified 2026-04-16]**
 
@@ -740,10 +773,15 @@ Governs `uv.exe` / `uv_tb{N}.exe` (UltraGrid) and `NatNetThree2OSC` child proces
 
 ## 9. UI
 
-### 9.1 Two-View Structure
+### 9.1 View Structure
 
-- **Matrix view** (always visible): header row + peer rows × channel columns.
-- **Device panel** (drawer from right, ~60% width): opens on cell click; matrix remains visible as context on the left. Closes on Esc / explicit close. One panel open at a time.
+Three top-level routes in [src/renderer/router.ts](../src/renderer/router.ts), accessed via the left icon-bar:
+
+- **Session view** (`/`) — login + room picker + join form. Pre-fills last credentials; user clicks Connect → Join.
+- **Matrix view** (`/matrix`) — header row + peer rows × channel columns. The device panel opens at the bottom (PanelRow), pinning multiple device cells side by side; matrix stays above as context. Closes on cell click on empty area.
+- **Settings view** (`/settings`) — tool compatibility (UG / NatNetFour2OSC version probe + locate flow), settings.json reveal/open. See §11 for compatibility check details.
+
+Nav-gating: until tool compatibility is OK, only the Settings icon is visible and routes other than `/settings` redirect to it. Once compat is green, Session and Activity log appear; Matrix unlocks only after the local peer joins a room. See [src/renderer/shell/IconBar.vue](../src/renderer/shell/IconBar.vue) and [src/renderer/router.ts](../src/renderer/router.ts).
 
 ### 9.2 Matrix Layout
 
@@ -757,7 +795,17 @@ Per `context.md` §4.1, with these clarifications:
 
 ### 9.3 Add-Device Popup
 
-Per `context.md` §4.6. Available from any peer to any unlocked peer. The popup filters offered device types based on the target peer's `localProps/{device}_enable` flags — e.g., a peer with `ug_enable=0` does not appear as an UltraGrid target.
+Vertical list of device tiles ([src/renderer/components/AddDevicePopup.vue](../src/renderer/components/AddDevicePopup.vue)). Available from any peer to any unlocked peer. The popup filters offered device types based on the target peer's `localProps/{device}_enable` flags — e.g., a peer with `ug_enable=0` does not appear as an UltraGrid target. Current entries:
+
+| `loaded` | Label         | Color     | Capability flag                  |
+|----------|---------------|-----------|----------------------------------|
+| 1        | OSC           | `#36ABFF` | `osc_enable` *(unused — see §7)* |
+| 4        | StageControl  | `#FE5FF5` | `stagec_enable`                  |
+| 2        | UltraGrid     | `#F0DE01` | `ug_enable`                      |
+| 3        | MoCap         | `#FFA126` | (none)                           |
+| 5        | Motive bridge | `#E84E4E` | `motive_enable`                  |
+
+Order matches the file. The popup was originally a 2×2 grid; converted to a single-column list when Motive bridge added a 5th type that didn't fit.
 
 ### 9.4 Device Panel Breadcrumb
 
@@ -799,33 +847,43 @@ Conditional rendering driven by these three axes plus the audio codec / video co
 
 ## 10. Build Order
 
-(Refines `context.md` §8.)
+Steps 1–14 are **shipped**. The original ordering is preserved for provenance; current focus is steps 15–17.
 
-1. Scaffold with `electron-vite` (Vue + TS template).
-2. `busClient.ts` wrapper around telemersive-bus; emit roster events.
-3. `mqttBridge.ts` + thin IPC bridge.
-4. Connection / room-picker / join screens (validates the bus integration end-to-end).
-5. `peerState` typed tree + `useMqttBinding<T>`.
-6. `PeerMatrix` + `DeviceCell` (display only, no panels).
-7. Device enumeration (`enumerate.ts` + parsers + fixtures + tests).
-8. OSC device panel — simplest, validates the full publish/echo loop end-to-end.
-9. `OscDevice.ts` execution layer.
-10. UltraGrid device panel — most complex UI.
-11. `UltraGridDevice.ts` execution layer (`child_process` spawn, stdout → log topic).
-12. NatNet device panel + `NatNetDevice.ts`.
-13. Lock state, peer color publishing, settings persistence wiring.
-14. StageControl: routing `description=StageC` through the OSC handler, matrix-cell color/icon, breadcrumb label. No new device handler (§5.4).
-15. Cross-client compatibility test pass with a Max peer.
-16. Packaging (electron-builder vs forge — TBD-1) and signing/notarization.
+1. ~~Scaffold with `electron-vite` (Vue + TS template).~~ ✅
+2. ~~`busClient.ts` wrapper around telemersive-bus; emit roster events.~~ ✅
+3. ~~`mqttBridge.ts` + thin IPC bridge.~~ ✅ (the bridge ended up living directly in [src/main/index.ts](../src/main/index.ts) + [src/preload/index.ts](../src/preload/index.ts); no separate `mqttBridge.ts` file).
+4. ~~Connection / room-picker / join screens.~~ ✅ ([SessionView.vue](../src/renderer/views/SessionView.vue))
+5. ~~`peerState` typed tree + `useMqttBinding<T>`.~~ ✅
+6. ~~`PeerMatrix` + `DeviceCell` (display only, no panels).~~ ✅
+7. ~~Device enumeration (`enumerate.ts` + parsers + fixtures + tests).~~ ✅
+8. ~~OSC device panel.~~ ✅
+9. ~~`OscDevice.ts` execution layer.~~ ✅ (also handles `loaded=4` StageControl per §5.4)
+10. ~~UltraGrid device panel.~~ ✅
+11. ~~`UltraGridDevice.ts` execution layer.~~ ✅
+12. ~~NatNet device panel + `NatNetDevice.ts`.~~ ✅
+13. ~~Lock state, peer color publishing, settings persistence wiring.~~ ✅
+14. ~~StageControl: shared OSC handler, matrix-cell color/icon, breadcrumb label.~~ ✅
+15. **Tool compatibility check** — version-pinning of UltraGrid and NatNetFour2OSC, locate-or-download flow, settings.json reveal. ✅ (see §11) Shipped 2026-04-30.
+16. **Motive bridge** (`loaded=5`, NG-only) — Source/Sink relay reusing MoCap and UG proxy slots; new device, new panel, port-conflict check. ✅ See §5.6. Shipped 2026-05-01.
+17. Cross-client compatibility test pass with a Max peer — pending (see §11).
+18. Packaging (electron-builder; signing/notarization) — pending.
 
 ---
 
 ## 11. Pre-release Blockers
 
-- **Cross-client compatibility test:** for each device type, verify Max ↔ NG works in both directions. Subtle data-plane divergence is the highest-risk class of bug because the APPVERSION match claims compatibility we must actually deliver.
-- **Channel.20+ test:** verify NG publishing high-numbered channels does not destabilize a Max peer in the same room.
-- **Device enumeration parsers verified against real CLI output** on both macOS and Windows.
-- **UltraGrid + NatNet smoke launch** on both macOS and Windows (CLI spawns, stdout streams to log topic, kill on disable works).
+**Resolved:**
+
+- ~~**Tool compatibility check:**~~ ✅ Pinned `REQUIRED_UG_VERSION` (1.10.3) and `REQUIRED_NATNET_OSC_VERSION` (10.0.0) in [src/shared/toolRequirements.ts](../src/shared/toolRequirements.ts). Boot-time probe (`uv --version` etc) compares against pin and surfaces status in the Settings view (§9.1). User can locate an installed binary via native picker (validates by re-probing version) or open the official download page. See [src/main/compat/](../src/main/compat/) and [src/renderer/views/SettingsView.vue](../src/renderer/views/SettingsView.vue).
+- ~~**Settings file inspection:**~~ ✅ Settings view exposes the `settings.json` path with Reveal in Finder/Explorer + Open in default editor.
+
+**Pending:**
+
+- **Cross-client compatibility test:** for each device type, verify Max ↔ NG works in both directions. Subtle data-plane divergence is the highest-risk class of bug because the APPVERSION match claims compatibility we must actually deliver. Motive bridge (`loaded=5`) is NG-only and excluded from this test.
+- **Channel.20+ test:** verify NG publishing high-numbered channels does not destabilize a Max peer in the same room. NG currently renders 20 fixed columns (§13 TBD-17) — high-channel publish path is unexercised.
+- **Device enumeration parsers verified against real CLI output on Windows.** macOS coverage exists via the live-binary integration tests; Windows coverage requires a vendored UG bundle on Windows.
+- **UltraGrid + NatNet smoke launch on Windows** (CLI spawns, stdout streams to log topic, kill on disable works). macOS verified.
+- **Broker-disconnect banner.** `bus:error` events from telemersive-bus now surface to the renderer ([src/renderer/views/SessionView.vue](../src/renderer/views/SessionView.vue)), but a persistent "broker disconnected" banner during an active session is not yet shown — stale state stays on screen until reconnect.
 
 ---
 
@@ -843,12 +901,17 @@ Conditional rendering driven by these three axes plus the audio codec / video co
 
 Resolved TBDs have been removed — their decisions are documented inline in the referenced spec sections, and the decision trail lives in §14 and git history. TBD numbering is preserved (non-contiguous) so prior references remain resolvable.
 
-- **TBD-1:** Packaging tool. Default: defer to release milestone. `electron-vite` defaults to `electron-builder`; switch to `electron-forge` only if notarization/auto-update pain emerges.
-- **TBD-11:** Log streaming UX — `monitor/log` volume, history retention in renderer, panel presentation. Inquisition continued.
-- **TBD-12:** Error surfacing — broker disconnect, CLI crash, bad config. UI presentation TBD.
+- **TBD-1:** Packaging tool. Default: `electron-builder`, configured in [electron-builder.yml](../electron-builder.yml) for macOS DMG (x64 + arm64). Windows/Linux targets and signing/notarization still pending. Switch to `electron-forge` only if pain emerges.
+- **TBD-11:** Log streaming UX — `monitor/log` volume, history retention in renderer, panel presentation. Activity log panel exists ([src/renderer/shell/LogPanel.vue](../src/renderer/shell/LogPanel.vue)) backed by a 500-entry ring buffer in main ([src/main/logBus.ts](../src/main/logBus.ts)). Per-device monitor panes (UG, NatNet, Motive) buffer 200 lines locally. Sufficient for current needs; revisit if volume becomes a problem.
+- **TBD-12:** Error surfacing — partially resolved. `bus:error` events from telemersive-bus now surface to SessionView and reset the connecting/joining flags. Broker-disconnect banner during an active session is still pending (see §11). CLI crashes surface via `monitor/log` and a dark `running` indicator on the device cell.
 - **TBD-13:** Per-OS audio device enumeration on Linux — moot for v1 (Linux out of scope), revisit if Linux added.
-- **TBD-14:** Switchboard/proxy interaction — `maxBusClient.js` has a `restartProxy` HTTP hack against `:3591/proxies/` **[verified]**. Whether NG needs this is unclear; defer until a UltraGrid network mode forces the question. Hack is described in [maxBusClient.js:132-163](docs/javascript/maxBusClient.js#L132-L163) as a workaround "until switchboard works fine again."
+- **TBD-14:** Switchboard/proxy interaction — `maxBusClient.js` has a `restartProxy` HTTP hack against `:3591/proxies/` **[verified]**. Whether NG needs this is unclear; defer until a UltraGrid network mode forces the question. Hack is described in [maxBusClient.js:132-163](javascript/maxBusClient.js#L132-L163) as a workaround "until switchboard works fine again."
 - **TBD-17:** Channel≥20 UI behaviour. Proposed default: implement dynamic column expansion (§3.4 `max(20, highest+1, +2 trailing)`) and the ≥20 warning badge when switchboard-side support for channel≥20 ports lands. Until then, v1.0 ships with fixed 20-column rendering — any peer publishing under `channel.20+` is **not** rendered by NG (and won't produce media traffic anyway per §8.7 ceiling). Revisit jointly with the switchboard extension.
+
+**Resolved (kept here briefly for searchability):**
+
+- **Settings.json schema** — defined in [src/main/persistence/settings.ts](../src/main/persistence/settings.ts). Adds `appVersion`, `ugPath`, `natnetOscPath`, `lastCompatCheckAt`, `panelRowHeight` over the original spec list. Settings handler now merges partial saves to avoid stomping unset fields.
+- **`NG_SKIP_VENDORED_UG` dev flag** — implemented in [spawnCli.ts](../src/main/enumeration/spawnCli.ts). Setting `NG_SKIP_VENDORED_UG=1 npm run dev` simulates packaged-app UG resolution (no vendored fallback), letting developers exercise the missing/locate flow without packaging.
 
 ---
 
@@ -869,8 +932,10 @@ All other decisions are reasonably reversible at moderate cost.
 
 ## 15. Open Questions for the User
 
-Remaining gaps that cannot be closed by further reading — they need your decision, a trace capture, or domain knowledge. Resolved questions (Q-A through Q-H) have been removed; their decisions are documented in the referenced spec sections.
+Remaining gaps that cannot be closed by further reading — they need your decision, a trace capture, or domain knowledge. Resolved questions (Q-A through Q-H, plus Q-D') have been removed; their decisions are documented in the referenced spec sections.
 
-### Q-D'. Port topic shape for enabled devices
+**No outstanding open questions at this time.** When new ones surface during ongoing work they will be captured here.
 
-Sub-question carried from the original Q-D. Which exact MQTT topic(s) carry the allocated port value(s)? Best guess: `/channel.N/device/gui/port` (single-port) and `/channel.N/device/gui/portIn` + `/portOut` (paired). An OSC or StageC trace with an enabled device would confirm.
+### ~~Q-D'. Port topic shape for enabled devices~~ — resolved
+
+Topic shape is `/channel.N/device/gui/localudp/{outputPortOne, outputPortTwo, inputPort}` for OSC/StageC (verified, see §8.7). Motive bridge uses `localudp/{multicastIP, dataPort, cmdPort}` (§5.6). NatNet adds `localudp/{outputIPOne, outputIPTwo, listeningIP}` companion fields. The earlier `/port`, `/portIn`, `/portOut` guess was wrong.
