@@ -1,5 +1,9 @@
 export type NavKind = 'route' | 'panel'
 export type NavPosition = 'top' | 'bottom'
+// 'always' = visible regardless of state.
+// 'compat-ok' = visible only when tool compatibility check passes.
+// 'joined'   = visible only after the local peer has joined a room.
+export type NavGate = 'always' | 'compat-ok' | 'joined'
 
 export interface NavItem {
   id: string
@@ -8,13 +12,14 @@ export interface NavItem {
   kind: NavKind
   target: string
   position: NavPosition
+  gate: NavGate
 }
 
 export const navItems: NavItem[] = [
-  { id: 'session',  label: 'Session', icon: 'plug',   kind: 'route', target: '/',         position: 'top' },
-  { id: 'matrix',   label: 'Matrix',  icon: 'grid',   kind: 'route', target: '/matrix',   position: 'top' },
-  { id: 'log',      label: 'Activity log', icon: 'list', kind: 'panel', target: 'log',    position: 'top' },
-  { id: 'settings', label: 'Settings', icon: 'gear',  kind: 'route', target: '/settings', position: 'bottom' }
+  { id: 'session',  label: 'Session', icon: 'plug',   kind: 'route', target: '/',         position: 'top',    gate: 'compat-ok' },
+  { id: 'matrix',   label: 'Matrix',  icon: 'grid',   kind: 'route', target: '/matrix',   position: 'top',    gate: 'joined' },
+  { id: 'log',      label: 'Activity log', icon: 'list', kind: 'panel', target: 'log',    position: 'top',    gate: 'compat-ok' },
+  { id: 'settings', label: 'Settings', icon: 'gear',  kind: 'route', target: '/settings', position: 'bottom', gate: 'always' }
 ]
 
 export const ICONS: Record<string, string> = {

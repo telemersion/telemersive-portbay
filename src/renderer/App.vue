@@ -3,6 +3,11 @@ import { computed } from 'vue'
 import IconBar from './shell/IconBar.vue'
 import LogPanel from './shell/LogPanel.vue'
 import { panelState } from './shell/panelState'
+import { initCompat } from './state/compat'
+import { initSession } from './state/session'
+
+initCompat()
+initSession()
 
 const ICON_BAR_WIDTH = 48
 const LOG_PANEL_WIDTH = 400

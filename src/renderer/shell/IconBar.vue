@@ -1,21 +1,71 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { navItems, ICONS, type NavItem } from './navigation'
-import { panelState, togglePanel } from './panelState'
-import { initCompat, hasCompatIssues } from '../state/compat'
+import { navItems, ICONS, type NavItem, type NavGate } from './navigation'
+import { panelState, togglePanel, closePanel } from './panelState'
+import { initCompat, hasCompatIssues, compatState } from '../state/compat'
+import { initSession, sessionState } from '../state/session'
 
 const route = useRoute()
 const router = useRouter()
 
-const topItems = computed(() => navItems.filter(i => i.position === 'top'))
-const bottomItems = computed(() => navItems.filter(i => i.position === 'bottom'))
+onMounted(() => {
+  initCompat()
+  initSession()
+})
 
-onMounted(() => initCompat())
+function gateMet(gate: NavGate): boolean {
+  if (gate === 'always') return true
+  if (!compatState.status) return false
+  if (hasCompatIssues.value) return false
+  if (gate === 'compat-ok') return true
+  if (gate === 'joined') return sessionState.joined
+  return true
+}
+
+const visibleItems = computed(() => navItems.filter(i => gateMet(i.gate)))
+const topItems = computed(() => visibleItems.value.filter(i => i.position === 'top'))
+const bottomItems = computed(() => visibleItems.value.filter(i => i.position === 'bottom'))
 
 function hasBadge(item: NavItem): boolean {
   return item.id === 'settings' && hasCompatIssues.value
 }
+
+// If the user is on a route that becomes ungated (compat issue appears, or they
+// leave a room), bounce them to the most appropriate visible route.
+let bouncedToSettings = false
+watch(
+  () => visibleItems.value.map(i => i.id).join(','),
+  () => {
+    const current = navItems.find(i => i.kind === 'route' && i.target === route.path)
+    // First-time release: user was forced to /settings before compat resolved;
+    // once it goes green, send them to /.
+    if (
+      bouncedToSettings &&
+      route.path === '/settings' &&
+      compatState.status &&
+      !hasCompatIssues.value
+    ) {
+      bouncedToSettings = false
+      router.replace('/')
+      return
+    }
+    if (!current) return
+    if (gateMet(current.gate)) return
+    if (hasCompatIssues.value || !compatState.status) {
+      bouncedToSettings = true
+      router.replace('/settings')
+    } else if (current.gate === 'joined' && !sessionState.joined) {
+      router.replace('/')
+    }
+    // Close any panel whose item is no longer visible.
+    if (panelState.openPanelId) {
+      const panelItem = navItems.find(i => i.kind === 'panel' && i.target === panelState.openPanelId)
+      if (panelItem && !gateMet(panelItem.gate)) closePanel()
+    }
+  },
+  { immediate: true }
+)
 
 function activate(item: NavItem): void {
   if (item.kind === 'route') {
