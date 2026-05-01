@@ -6,7 +6,9 @@ const INVOKE_CHANNELS = [
   'mqtt:publish', 'mqtt:subscribe', 'mqtt:unsubscribe',
   'settings:load', 'settings:save',
   'log:get', 'log:clear',
-  'geo:lookup'
+  'geo:lookup',
+  'compat:get-status', 'compat:recheck', 'compat:locate',
+  'compat:open-download', 'compat:reveal-tools-folder'
 ] as const
 const RECEIVE_CHANNELS = [
   'broker:connected', 'peer:joined', 'peer:id', 'peer:name',
@@ -15,7 +17,8 @@ const RECEIVE_CHANNELS = [
   'rooms:done', 'peers:remote:joined', 'peers:remote:left',
   'peers:clear', 'peers:append', 'peers:done',
   'ready', 'mqtt:message', 'chat',
-  'log:entry'
+  'log:entry',
+  'compat:status'
 ] as const
 
 contextBridge.exposeInMainWorld('api', {

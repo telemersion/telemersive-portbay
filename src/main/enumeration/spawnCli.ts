@@ -1,6 +1,7 @@
 import { spawn, type SpawnOptions } from 'child_process'
 import { existsSync } from 'fs'
 import { resolve } from 'path'
+import { loadSettings } from '../persistence/settings'
 
 export interface SpawnCliResult {
   stdout: string
@@ -23,6 +24,10 @@ export class SpawnCliError extends Error {
 const DEFAULT_TIMEOUT_MS = 5000
 
 export function resolveUgPath(): string | null {
+  try {
+    const userPath = loadSettings().ugPath
+    if (userPath && existsSync(userPath)) return userPath
+  } catch {}
   if (process.env.UG_PATH) {
     return existsSync(process.env.UG_PATH) ? process.env.UG_PATH : null
   }

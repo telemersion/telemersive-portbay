@@ -1,5 +1,6 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron'
 import { join } from 'path'
+import { existsSync } from 'fs'
 import { TBusClient } from './busClient'
 import { loadSettings, saveSettings } from './persistence/settings'
 import { loadRack, saveRack, buildRackSnapshot, isRackEligibleTail } from './persistence/rack'
@@ -13,6 +14,8 @@ import { performShutdown } from './shutdown'
 import { logEvent, setLogSink, getLogBuffer, clearLogBuffer } from './logBus'
 import { enumerate, handleRefreshTrigger } from './enumeration'
 import { registerDefaultBackends } from './enumeration/parsers'
+import { runCompatCheck, validateToolPath } from './compat'
+import { TOOL_REQUIREMENTS, type CompatStatus } from '../shared/toolRequirements'
 
 let mainWindow: BrowserWindow | null = null
 let bus: TBusClient | null = null
@@ -30,6 +33,14 @@ const retainedTopics = new Map<string, string>()
 const RACK_SAVE_DEBOUNCE_MS = 500
 let rackSaveTimer: NodeJS.Timeout | null = null
 let rackSaveSuppressed = false
+
+let compatStatus: CompatStatus | null = null
+
+function broadcastCompat(): void {
+  if (compatStatus) {
+    mainWindow?.webContents.send('compat:status', compatStatus)
+  }
+}
 
 function currentRackSnapshot(): Record<string, string> {
   return buildRackSnapshot(retainedTopics, localPeerId)
@@ -356,6 +367,69 @@ function setupIpcHandlers(): void {
     clearLogBuffer()
   })
 
+  ipcMain.handle('compat:get-status', async () => {
+    if (!compatStatus) compatStatus = await runCompatCheck()
+    return compatStatus
+  })
+
+  ipcMain.handle('compat:recheck', async () => {
+    compatStatus = await runCompatCheck()
+    broadcastCompat()
+    return compatStatus
+  })
+
+  ipcMain.handle('compat:locate', async (_event, toolId: 'ultragrid' | 'natnetOsc') => {
+    if (!mainWindow) return null
+    const isUg = toolId === 'ultragrid'
+    const filters =
+      process.platform === 'darwin' && isUg
+        ? [{ name: 'UltraGrid app', extensions: ['app'] }]
+        : process.platform === 'win32'
+          ? [{ name: 'Executable', extensions: ['exe'] }]
+          : [{ name: 'All files', extensions: ['*'] }]
+    const defaultPath =
+      process.platform === 'darwin' ? '/Applications'
+        : process.platform === 'win32' ? process.env['ProgramFiles'] || 'C:\\Program Files'
+          : '/usr/local/bin'
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: `Locate ${isUg ? 'UltraGrid' : 'NatNetFour2OSC'}`,
+      defaultPath,
+      properties: ['openFile'],
+      filters
+    })
+    if (result.canceled || result.filePaths.length === 0) return null
+    let picked = result.filePaths[0]
+    // macOS .app bundles: resolve to inner uv binary.
+    if (process.platform === 'darwin' && isUg && picked.endsWith('.app')) {
+      const inner = join(picked, 'Contents', 'MacOS', 'uv')
+      if (existsSync(inner)) picked = inner
+    }
+    const validated = await validateToolPath(toolId, picked)
+    if (validated.status === 'ok' || validated.status === 'version-mismatch') {
+      const s = loadSettings()
+      if (toolId === 'ultragrid') saveSettings({ ...s, ugPath: picked })
+      else saveSettings({ ...s, natnetOscPath: picked })
+    }
+    compatStatus = await runCompatCheck()
+    broadcastCompat()
+    return compatStatus
+  })
+
+  ipcMain.handle('compat:open-download', async (_event, toolId: 'ultragrid' | 'natnetOsc') => {
+    const req = TOOL_REQUIREMENTS.find((r) => r.id === toolId)
+    if (!req) return false
+    const url = req.downloadUrl[process.platform]
+    if (!url) return false
+    await shell.openExternal(url)
+    return true
+  })
+
+  ipcMain.handle('compat:reveal-tools-folder', async () => {
+    const dir = app.getPath('userData')
+    await shell.openPath(dir)
+    return dir
+  })
+
   ipcMain.handle('geo:lookup', async (_event, ip?: string) => {
     const key = ip || ''
     if (geoCache.has(key)) return geoCache.get(key)
@@ -388,6 +462,15 @@ app.whenReady().then(async () => {
   console.log('PeerId:', bus!.peerId)
 
   createWindow()
+
+  runCompatCheck()
+    .then((status) => {
+      compatStatus = status
+      broadcastCompat()
+    })
+    .catch((err) => {
+      console.warn('[compat] initial check failed:', err)
+    })
 
   if (process.platform === 'darwin') {
     mainWindow!.on('close', (e) => {

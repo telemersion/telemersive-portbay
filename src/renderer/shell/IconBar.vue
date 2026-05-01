@@ -1,14 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { navItems, ICONS, type NavItem } from './navigation'
 import { panelState, togglePanel } from './panelState'
+import { initCompat, hasCompatIssues } from '../state/compat'
 
 const route = useRoute()
 const router = useRouter()
 
 const topItems = computed(() => navItems.filter(i => i.position === 'top'))
 const bottomItems = computed(() => navItems.filter(i => i.position === 'bottom'))
+
+onMounted(() => initCompat())
+
+function hasBadge(item: NavItem): boolean {
+  return item.id === 'settings' && hasCompatIssues.value
+}
 
 function activate(item: NavItem): void {
   if (item.kind === 'route') {
@@ -55,6 +62,7 @@ function isActive(item: NavItem): boolean {
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path :d="ICONS[item.icon]" />
         </svg>
+        <span v-if="hasBadge(item)" class="badge" title="Tool compatibility issue — see Settings"></span>
       </button>
     </div>
   </nav>
@@ -105,5 +113,21 @@ function isActive(item: NavItem): boolean {
 .icon-btn.active {
   background: #2a2a2a;
   color: #fff;
+}
+
+.icon-btn {
+  position: relative;
+}
+
+.badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e0c46d;
+  border: 1px solid #141414;
+  pointer-events: none;
 }
 </style>

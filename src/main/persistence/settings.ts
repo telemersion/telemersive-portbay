@@ -13,6 +13,10 @@ export interface Settings {
   lastRoomPwd: string
   panelRowHeight: number
   settingsVersion: number
+  appVersion: string
+  ugPath: string
+  natnetOscPath: string
+  lastCompatCheckAt: number | null
 }
 
 const DEFAULTS: Settings = {
@@ -25,7 +29,11 @@ const DEFAULTS: Settings = {
   lastRoomName: '',
   lastRoomPwd: '',
   panelRowHeight: 320,
-  settingsVersion: 1
+  settingsVersion: 1,
+  appVersion: '',
+  ugPath: '',
+  natnetOscPath: '',
+  lastCompatCheckAt: null
 }
 
 function settingsPath(): string {
