@@ -49,7 +49,8 @@ const RECEIVE_CHANNELS = [
   "mqtt:message",
   "chat",
   "log:entry",
-  "compat:status"
+  "compat:status",
+  "bus:error"
 ];
 electron.contextBridge.exposeInMainWorld("api", {
   send(channel, ...args) {

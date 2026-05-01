@@ -114,6 +114,12 @@ class TBusClient extends events.EventEmitter {
   parseBusEvent(content) {
     if (content.length === 0) return;
     const c = content;
+    if (c[0] === "error") {
+      const scope = String(c[1] ?? "unknown");
+      const message = typeof c[2] === "string" ? c[2] : JSON.stringify(c[2]);
+      this.emit("bus:error", { scope, message });
+      return;
+    }
     if (c[0] === "broker" && c[1] === "connected") {
       this.emit("broker:connected", c[2] === 1);
       return;
@@ -2440,8 +2446,10 @@ function flushRackSave() {
     clearTimeout(rackSaveTimer);
     rackSaveTimer = null;
   }
+  const snap = currentRackSnapshot();
+  if (Object.keys(snap).length === 0) return;
   try {
-    saveRack(currentRackSnapshot());
+    saveRack(snap);
   } catch {
   }
 }
@@ -2671,7 +2679,8 @@ function setupBus() {
     "peers:append",
     "peers:done",
     "ready",
-    "chat"
+    "chat",
+    "bus:error"
   ];
   for (const ch of channels) {
     forwardToRenderer(ch);
@@ -2700,6 +2709,7 @@ function setupIpcHandlers() {
     try {
       deviceRouter?.destroyAll();
     } finally {
+      retainedTopics.clear();
       rackSaveSuppressed = false;
     }
     bus.leave();
@@ -2728,8 +2738,8 @@ function setupIpcHandlers() {
   electron.ipcMain.handle("settings:load", () => {
     return loadSettings();
   });
-  electron.ipcMain.handle("settings:save", (_event, settings) => {
-    saveSettings(settings);
+  electron.ipcMain.handle("settings:save", (_event, partial) => {
+    saveSettings({ ...loadSettings(), ...partial });
   });
   electron.ipcMain.handle("log:get", () => {
     return getLogBuffer();
