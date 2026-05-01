@@ -355,8 +355,8 @@ function setupIpcHandlers(): void {
     return loadSettings()
   })
 
-  ipcMain.handle('settings:save', (_event, settings) => {
-    saveSettings(settings)
+  ipcMain.handle('settings:save', (_event, partial) => {
+    saveSettings({ ...loadSettings(), ...partial })
   })
 
   ipcMain.handle('log:get', () => {
