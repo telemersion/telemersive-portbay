@@ -132,7 +132,7 @@ function canLocate(s: ToolStatus): boolean {
               class="btn"
               :disabled="!canDownload(tool)"
               @click="openDownloadPage(tool.id)"
-            >Download official build ↗</button>
+            >Download required build from official website ↗</button>
           </div>
         </li>
       </ul>
