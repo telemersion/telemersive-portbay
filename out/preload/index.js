@@ -14,9 +14,17 @@ const INVOKE_CHANNELS = [
   "mqtt:unsubscribe",
   "settings:load",
   "settings:save",
+  "settings:get-path",
+  "settings:reveal",
+  "settings:open-in-editor",
   "log:get",
   "log:clear",
-  "geo:lookup"
+  "geo:lookup",
+  "compat:get-status",
+  "compat:recheck",
+  "compat:locate",
+  "compat:open-download",
+  "compat:reveal-tools-folder"
 ];
 const RECEIVE_CHANNELS = [
   "broker:connected",
@@ -40,7 +48,8 @@ const RECEIVE_CHANNELS = [
   "ready",
   "mqtt:message",
   "chat",
-  "log:entry"
+  "log:entry",
+  "compat:status"
 ];
 electron.contextBridge.exposeInMainWorld("api", {
   send(channel, ...args) {

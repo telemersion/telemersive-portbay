@@ -1,8 +1,8 @@
 "use strict";
 const electron = require("electron");
 const path = require("path");
-const events = require("events");
 const fs = require("fs");
+const events = require("events");
 const dgram = require("dgram");
 const dns = require("dns");
 const util = require("util");
@@ -199,7 +199,11 @@ const DEFAULTS = {
   lastRoomName: "",
   lastRoomPwd: "",
   panelRowHeight: 320,
-  settingsVersion: 1
+  settingsVersion: 1,
+  appVersion: "",
+  ugPath: "",
+  natnetOscPath: "",
+  lastCompatCheckAt: null
 };
 function settingsPath() {
   return path.join(electron.app.getPath("userData"), "settings.json");
@@ -1999,13 +2003,21 @@ class SpawnCliError extends Error {
   }
 }
 const DEFAULT_TIMEOUT_MS = 5e3;
+const SKIP_VENDORED = process.env.NG_SKIP_VENDORED_UG === "1";
 function resolveUgPath() {
+  try {
+    const userPath = loadSettings().ugPath;
+    if (userPath && fs.existsSync(userPath)) return userPath;
+  } catch {
+  }
   if (process.env.UG_PATH) {
     return fs.existsSync(process.env.UG_PATH) ? process.env.UG_PATH : null;
   }
   if (process.platform === "darwin") {
-    const vendored = path.resolve(process.cwd(), "vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv");
-    if (fs.existsSync(vendored)) return vendored;
+    if (!SKIP_VENDORED) {
+      const vendored = path.resolve(process.cwd(), "vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv");
+      if (fs.existsSync(vendored)) return vendored;
+    }
     const system = "/Applications/uv-qt.app/Contents/MacOS/uv";
     return fs.existsSync(system) ? system : null;
   }
@@ -2232,6 +2244,162 @@ function registerDefaultBackends() {
   registerBackend("wasapiCapture", { args: ["-s", "wasapi:help"], parse: parseWasapi });
   registerBackend("wasapiReceive", { args: ["-r", "wasapi:help"], parse: parseWasapi });
 }
+const REQUIRED_UG_VERSION = "1.10.3";
+const REQUIRED_NATNET_OSC_VERSION = "10.0.0";
+const ULTRAGRID_REQUIREMENT = {
+  id: "ultragrid",
+  label: "UltraGrid",
+  requiredVersion: REQUIRED_UG_VERSION,
+  downloadUrl: {
+    darwin: `https://github.com/CESNET/UltraGrid/releases/tag/v${REQUIRED_UG_VERSION}`,
+    win32: `https://github.com/CESNET/UltraGrid/releases/tag/v${REQUIRED_UG_VERSION}`,
+    linux: `https://github.com/CESNET/UltraGrid/releases/tag/v${REQUIRED_UG_VERSION}`
+  },
+  supportedPlatforms: ["darwin", "win32", "linux"]
+};
+const NATNET_OSC_REQUIREMENT = {
+  id: "natnetOsc",
+  label: "NatNetFour2OSC",
+  requiredVersion: REQUIRED_NATNET_OSC_VERSION,
+  downloadUrl: {
+    win32: `https://github.com/immersive-arts/NatNetFour2OSC/releases/tag/v${REQUIRED_NATNET_OSC_VERSION}`
+  },
+  supportedPlatforms: ["win32"]
+};
+const TOOL_REQUIREMENTS = [
+  ULTRAGRID_REQUIREMENT,
+  NATNET_OSC_REQUIREMENT
+];
+const VERSION_PROBE_TIMEOUT_MS = 5e3;
+function platformSupported(req) {
+  return req.supportedPlatforms.includes(process.platform);
+}
+function probeVersion(binary, args, regex) {
+  return new Promise((resolve) => {
+    if (!fs.existsSync(binary)) {
+      resolve(null);
+      return;
+    }
+    let stdout = "";
+    let stderr = "";
+    let settled = false;
+    const finish = (val) => {
+      if (settled) return;
+      settled = true;
+      resolve(val);
+    };
+    let child;
+    try {
+      child = child_process.spawn(binary, args);
+    } catch {
+      finish(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      try {
+        child.kill("SIGTERM");
+      } catch {
+      }
+      finish(null);
+    }, VERSION_PROBE_TIMEOUT_MS);
+    child.stdout?.on("data", (c) => {
+      stdout += c.toString();
+    });
+    child.stderr?.on("data", (c) => {
+      stderr += c.toString();
+    });
+    child.on("error", () => {
+      clearTimeout(timer);
+      finish(null);
+    });
+    child.on("close", () => {
+      clearTimeout(timer);
+      const text = stdout + "\n" + stderr;
+      const m = text.match(regex);
+      finish(m ? m[1] : null);
+    });
+  });
+}
+function probeUgVersion(path2) {
+  return probeVersion(path2, ["--version"], /UltraGrid\s+(\d+\.\d+\.\d+)/i);
+}
+function probeNatNetVersion(path2) {
+  return probeVersion(path2, ["--version"], /v?(\d+\.\d+\.\d+)/);
+}
+function makeStatus(req, installed, path2, errorMsg) {
+  const base = { id: req.id, label: req.label, required: req.requiredVersion };
+  if (!platformSupported(req)) {
+    return { ...base, installed: null, path: null, status: "unsupported-os" };
+  }
+  if (errorMsg) {
+    return { ...base, installed, path: path2, status: "error", error: errorMsg };
+  }
+  if (!path2 || !installed) {
+    return { ...base, installed: null, path: null, status: "missing" };
+  }
+  if (installed !== req.requiredVersion) {
+    return { ...base, installed, path: path2, status: "version-mismatch" };
+  }
+  return { ...base, installed, path: path2, status: "ok" };
+}
+async function checkUg() {
+  if (!platformSupported(ULTRAGRID_REQUIREMENT)) {
+    return makeStatus(ULTRAGRID_REQUIREMENT, null, null);
+  }
+  const path2 = resolveUgPath();
+  if (!path2) return makeStatus(ULTRAGRID_REQUIREMENT, null, null);
+  const installed = await probeUgVersion(path2);
+  return makeStatus(ULTRAGRID_REQUIREMENT, installed, path2);
+}
+async function checkNatNetOsc() {
+  if (!platformSupported(NATNET_OSC_REQUIREMENT)) {
+    return makeStatus(NATNET_OSC_REQUIREMENT, null, null);
+  }
+  const settings = loadSettings();
+  const path2 = settings.natnetOscPath || null;
+  if (!path2 || !fs.existsSync(path2)) {
+    return makeStatus(NATNET_OSC_REQUIREMENT, null, null);
+  }
+  const installed = await probeNatNetVersion(path2);
+  return makeStatus(NATNET_OSC_REQUIREMENT, installed, path2);
+}
+async function runCompatCheck() {
+  const tools = await Promise.all([checkUg(), checkNatNetOsc()]);
+  const status = {
+    ngVersion: electron.app.getVersion(),
+    lastCheckedAt: Date.now(),
+    tools
+  };
+  const s = loadSettings();
+  saveSettings({
+    ...s,
+    appVersion: status.ngVersion,
+    lastCompatCheckAt: status.lastCheckedAt
+  });
+  return status;
+}
+function expectedToolForId(id) {
+  return TOOL_REQUIREMENTS.find((r) => r.id === id) ?? null;
+}
+async function validateToolPath(id, path2) {
+  const req = expectedToolForId(id);
+  if (!req) {
+    return {
+      id,
+      label: id,
+      required: "",
+      installed: null,
+      path: null,
+      status: "error",
+      error: `unknown tool: ${id}`
+    };
+  }
+  if (!fs.existsSync(path2)) {
+    return makeStatus(req, null, null, `path does not exist: ${path2}`);
+  }
+  const installed = id === "ultragrid" ? await probeUgVersion(path2) : await probeNatNetVersion(path2);
+  return makeStatus(req, installed, path2);
+}
 let mainWindow = null;
 let bus = null;
 let deviceRouter = null;
@@ -2247,6 +2415,12 @@ const retainedTopics = /* @__PURE__ */ new Map();
 const RACK_SAVE_DEBOUNCE_MS = 500;
 let rackSaveTimer = null;
 let rackSaveSuppressed = false;
+let compatStatus = null;
+function broadcastCompat() {
+  if (compatStatus) {
+    mainWindow?.webContents.send("compat:status", compatStatus);
+  }
+}
 function currentRackSnapshot() {
   return buildRackSnapshot(retainedTopics, localPeerId);
 }
@@ -2563,6 +2737,73 @@ function setupIpcHandlers() {
   electron.ipcMain.handle("log:clear", () => {
     clearLogBuffer();
   });
+  electron.ipcMain.handle("compat:get-status", async () => {
+    if (!compatStatus) compatStatus = await runCompatCheck();
+    return compatStatus;
+  });
+  electron.ipcMain.handle("compat:recheck", async () => {
+    compatStatus = await runCompatCheck();
+    broadcastCompat();
+    return compatStatus;
+  });
+  electron.ipcMain.handle("compat:locate", async (_event, toolId) => {
+    if (!mainWindow) return null;
+    const isUg = toolId === "ultragrid";
+    const filters = process.platform === "darwin" && isUg ? [{ name: "UltraGrid app", extensions: ["app"] }] : process.platform === "win32" ? [{ name: "Executable", extensions: ["exe"] }] : [{ name: "All files", extensions: ["*"] }];
+    const defaultPath = process.platform === "darwin" ? "/Applications" : process.platform === "win32" ? process.env["ProgramFiles"] || "C:\\Program Files" : "/usr/local/bin";
+    const result = await electron.dialog.showOpenDialog(mainWindow, {
+      title: `Locate ${isUg ? "UltraGrid" : "NatNetFour2OSC"}`,
+      defaultPath,
+      properties: ["openFile"],
+      filters
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    let picked = result.filePaths[0];
+    if (process.platform === "darwin" && isUg && picked.endsWith(".app")) {
+      const inner = path.join(picked, "Contents", "MacOS", "uv");
+      if (fs.existsSync(inner)) picked = inner;
+    }
+    const validated = await validateToolPath(toolId, picked);
+    if (validated.status === "ok" || validated.status === "version-mismatch") {
+      const s = loadSettings();
+      if (toolId === "ultragrid") saveSettings({ ...s, ugPath: picked });
+      else saveSettings({ ...s, natnetOscPath: picked });
+    }
+    compatStatus = await runCompatCheck();
+    broadcastCompat();
+    return compatStatus;
+  });
+  electron.ipcMain.handle("compat:open-download", async (_event, toolId) => {
+    const req = TOOL_REQUIREMENTS.find((r) => r.id === toolId);
+    if (!req) return false;
+    const url = req.downloadUrl[process.platform];
+    if (!url) return false;
+    await electron.shell.openExternal(url);
+    return true;
+  });
+  electron.ipcMain.handle("compat:reveal-tools-folder", async () => {
+    const dir = electron.app.getPath("userData");
+    await electron.shell.openPath(dir);
+    return dir;
+  });
+  electron.ipcMain.handle("settings:get-path", () => {
+    return path.join(electron.app.getPath("userData"), "settings.json");
+  });
+  electron.ipcMain.handle("settings:reveal", () => {
+    const path$1 = path.join(electron.app.getPath("userData"), "settings.json");
+    if (fs.existsSync(path$1)) {
+      electron.shell.showItemInFolder(path$1);
+    } else {
+      electron.shell.openPath(electron.app.getPath("userData"));
+    }
+    return path$1;
+  });
+  electron.ipcMain.handle("settings:open-in-editor", async () => {
+    const path$1 = path.join(electron.app.getPath("userData"), "settings.json");
+    if (!fs.existsSync(path$1)) return null;
+    const err = await electron.shell.openPath(path$1);
+    return err ? { error: err } : { ok: true };
+  });
   electron.ipcMain.handle("geo:lookup", async (_event, ip) => {
     const key = ip || "";
     if (geoCache.has(key)) return geoCache.get(key);
@@ -2591,6 +2832,12 @@ electron.app.whenReady().then(async () => {
   console.log("Local IP:", localIP);
   console.log("PeerId:", bus.peerId);
   createWindow();
+  runCompatCheck().then((status) => {
+    compatStatus = status;
+    broadcastCompat();
+  }).catch((err) => {
+    console.warn("[compat] initial check failed:", err);
+  });
   if (process.platform === "darwin") {
     mainWindow.on("close", (e) => {
       if (!isShuttingDown) {
