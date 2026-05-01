@@ -60,7 +60,12 @@ function flushRackSave(): void {
     clearTimeout(rackSaveTimer)
     rackSaveTimer = null
   }
-  try { saveRack(currentRackSnapshot()) } catch {}
+  const snap = currentRackSnapshot()
+  // Never overwrite a populated on-disk rack with an empty snapshot — that's
+  // the symptom of a teardown having drained retainedTopics. The good snapshot
+  // is already on disk from the last meaningful save.
+  if (Object.keys(snap).length === 0) return
+  try { saveRack(snap) } catch {}
 }
 
 function createWindow(): void {
@@ -320,8 +325,16 @@ function setupIpcHandlers(): void {
   ipcMain.handle('bus:leave', () => {
     flushRackSave()
     rackSaveSuppressed = true
-    try { deviceRouter?.destroyAll() }
-    finally { rackSaveSuppressed = false }
+    try {
+      deviceRouter?.destroyAll()
+    } finally {
+      // Teardown publishes empty retained values to clear broker state, which
+      // also drains retainedTopics via trackedPublish. Drop whatever is left so
+      // a later flush (e.g. on quit) cannot overwrite the saved rack snapshot
+      // with the post-teardown empty map.
+      retainedTopics.clear()
+      rackSaveSuppressed = false
+    }
     bus!.leave()
   })
 
