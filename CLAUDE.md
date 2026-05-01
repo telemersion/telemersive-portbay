@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Single test: `npx vitest run tests/main/devices/OscDevice.test.ts` (or `-t "pattern"` to filter cases).
 - Parser-only: `npx vitest run tests/main/enumeration/parsers`.
 - `scripts/capture-uv-fixtures.sh` — re-capture UltraGrid CLI fixtures into `tests/fixtures/ultragrid/<version>/` when a new `uv` build is vendored. Must be run any time UV is upgraded — parsers are version-coupled (see "UltraGrid parsers" below).
+- `npm run gen:icons-data` — regenerate `docs/design/icons-data.js` from [src/renderer/assets/icons.ts](src/renderer/assets/icons.ts). Must be run any time `icons.ts` is edited — `docs/design/design_reference.html` is opened via `file://` and loads the generated mirror as a classic `<script>` (ESM imports of `.ts` don't work without a build step).
 
 ## Architecture
 

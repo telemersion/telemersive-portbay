@@ -1,10 +1,12 @@
+// AUTO-GENERATED from src/renderer/assets/icons.ts — do not edit by hand.
+// Regenerate via: npm run gen:icons-data
 // Ground truth for all device cell SVG icon paths.
 // viewBox is always "0 0 200 200". Each value is the `d` attribute of one <path>.
 // DeviceCell.vue imports this directly. docs/design/design_reference.html loads
 // docs/design/icons-data.js, which is generated from this file — after editing
 // here, run `npm run gen:icons-data` to refresh the design reference mirror.
 
-export const ICON_PATHS = {
+const ICON_PATHS = {
   // Ground platform — shared base for all composite icons
   Sink:            'm 10,140 v 50 h 180 v -50 h -20 v 30 H 30 v -30 z',
 
@@ -35,7 +37,7 @@ export const ICON_PATHS = {
 
 // Composite icon definitions: named sets of { path, role } used per device/direction.
 // role: 'tx' | 'rx' | 'sink' — determines which reactive fill color is applied.
-export const ICON_COMPOSITES = {
+const ICON_COMPOSITES = {
   // OSC / StageControl bidirectional (loaded=1|4)
   bidi: [
     { path: ICON_PATHS.Sink,        role: 'sink' },
@@ -90,3 +92,6 @@ export const ICON_COMPOSITES = {
     { path: ICON_PATHS.FromLocal, role: 'sink' },
   ],
 }
+
+window.ICON_PATHS = ICON_PATHS
+window.ICON_COMPOSITES = ICON_COMPOSITES
