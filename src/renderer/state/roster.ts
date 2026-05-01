@@ -33,5 +33,18 @@ export function createRoster() {
     }
   }
 
-  return { entries, addPeer, removePeer, setLocalPeer }
+  function clear(): void {
+    for (const id of Object.keys(entries)) delete entries[id]
+  }
+
+  return { entries, addPeer, removePeer, setLocalPeer, clear }
+}
+
+export type Roster = ReturnType<typeof createRoster>
+
+let singleton: Roster | null = null
+
+export function useRoster(): Roster {
+  if (!singleton) singleton = createRoster()
+  return singleton
 }

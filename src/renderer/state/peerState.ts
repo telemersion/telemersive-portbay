@@ -34,5 +34,18 @@ export function createPeerState() {
     delete peers[peerId]
   }
 
-  return { peers, applyTopic, removePeer }
+  function clear(): void {
+    for (const id of Object.keys(peers)) delete peers[id]
+  }
+
+  return { peers, applyTopic, removePeer, clear }
+}
+
+export type PeerState = ReturnType<typeof createPeerState>
+
+let singleton: PeerState | null = null
+
+export function usePeerState(): PeerState {
+  if (!singleton) singleton = createPeerState()
+  return singleton
 }

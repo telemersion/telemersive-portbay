@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
-import { createPeerState } from '../state/peerState'
-import { createRoster } from '../state/roster'
+import { computed, ref, onMounted, toRefs } from 'vue'
+import { usePeerState } from '../state/peerState'
+import { useRoster } from '../state/roster'
+import { localPeerState, initBusWiring } from '../state/localPeer'
 import { usePanelRow } from '../composables/usePanelRow'
 import { usePeerDetail } from '../composables/usePeerDetail'
 import PeerRow from '../components/PeerRow.vue'
@@ -10,15 +11,11 @@ import PeerDetailPanel from '../components/PeerDetailPanel.vue'
 import AddDevicePopup from '../components/AddDevicePopup.vue'
 import RoomHeader from '../components/RoomHeader.vue'
 
-const peerState = createPeerState()
-const roster = createRoster()
+initBusWiring()
 
-const ownPeerId = ref('')
-const ownPeerName = ref('')
-const ownLocalIP = ref('')
-const ownPublicIP = ref('')
-const roomName = ref('')
-const roomId = ref<number | string>('')
+const peerState = usePeerState()
+const roster = useRoster()
+const { peerId: ownPeerId, localIP: ownLocalIP, publicIP: ownPublicIP, roomName, roomId } = toRefs(localPeerState)
 
 const CHANNEL_COUNT = 20
 
@@ -76,46 +73,6 @@ function selectedChannelForPeer(peerId: string): number | null {
   if (aPeerId !== peerId) return null
   return Number(aCh)
 }
-
-// ── IPC event wiring ─────────────────────────────────────────────
-window.api.invoke('bus:localPeer').then((info: any) => {
-  if (info?.peerId) {
-    ownPeerId.value = info.peerId
-    ownPeerName.value = info.peerName || ''
-    ownLocalIP.value = info.localIP || ''
-    if (typeof info.roomId === 'number') roomId.value = info.roomId
-    roster.setLocalPeer(info.peerId, info.peerName || '', info.localIP || '', '')
-  }
-})
-
-window.api.invoke('bus:state').then((s: any) => {
-  if (s?.roomName) roomName.value = s.roomName
-  if (typeof s?.roomId === 'number') roomId.value = s.roomId
-})
-
-window.api.on('peer:id', (id: string) => { ownPeerId.value = id })
-window.api.on('peer:localIP', (ip: string) => {
-  ownLocalIP.value = ip
-  if (ownPeerId.value) roster.setLocalPeer(ownPeerId.value, ownPeerName.value, ip, '')
-})
-window.api.on('peer:publicIP', (ip: string) => { ownPublicIP.value = ip })
-window.api.on('peer:room:name', (name: string) => { roomName.value = name })
-window.api.on('peer:room:id', (id: number) => { roomId.value = id })
-window.api.on('peers:remote:joined', (info: any) => { roster.addPeer(info) })
-window.api.on('peers:remote:left', (info: { peerName: string; peerId: string }) => {
-  roster.removePeer(info.peerId)
-  peerState.removePeer(info.peerId)
-})
-window.api.on('peers:clear', () => {
-  const local = ownPeerId.value
-  for (const id of Object.keys(roster.entries)) {
-    if (id !== local) roster.removePeer(id)
-  }
-})
-window.api.on('peers:append', (info: any) => { roster.addPeer(info) })
-window.api.on('mqtt:message', (msg: { topic: string; payload: string }) => {
-  peerState.applyTopic(msg.topic, msg.payload)
-})
 
 // ── Peer state helpers ───────────────────────────────────────────
 const sortedPeerIds = computed(() => {

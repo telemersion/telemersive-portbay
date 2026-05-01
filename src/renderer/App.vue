@@ -5,9 +5,11 @@ import LogPanel from './shell/LogPanel.vue'
 import { panelState } from './shell/panelState'
 import { initCompat } from './state/compat'
 import { initSession } from './state/session'
+import { initBusWiring } from './state/localPeer'
 
 initCompat()
 initSession()
+initBusWiring()
 
 const ICON_BAR_WIDTH = 48
 const LOG_PANEL_WIDTH = 400
