@@ -25,6 +25,7 @@ const RECEIVE_CHANNELS = [
 ] as const
 
 contextBridge.exposeInMainWorld('api', {
+  platform: process.platform,
   send(channel: string, ...args: any[]) {
     if ((SEND_CHANNELS as readonly string[]).includes(channel)) {
       ipcRenderer.send(channel, ...args)

@@ -59,6 +59,20 @@ function canDownload(s: ToolStatus): boolean {
 function canLocate(s: ToolStatus): boolean {
   return s.status !== 'unsupported-os'
 }
+
+function locateHint(s: ToolStatus): string | null {
+  if (s.status !== 'missing' && s.status !== 'version-mismatch') return null
+  const platform = (window as any).api?.platform as string | undefined
+  if (s.id === 'ultragrid') {
+    if (platform === 'darwin') return 'Pick uv-qt.app from where you unpacked the UltraGrid release.'
+    if (platform === 'win32')  return 'Pick uv.exe from where you unpacked the UltraGrid release.'
+    return 'Pick the uv binary from where you unpacked the UltraGrid release.'
+  }
+  if (s.id === 'natnetOsc') {
+    return 'Pick NatNetFour2OSC.exe from where you unpacked the release.'
+  }
+  return null
+}
 </script>
 
 <template>
@@ -122,6 +136,7 @@ function canLocate(s: ToolStatus): boolean {
               <dd :title="tool.path ?? ''">{{ tool.path ?? '—' }}</dd>
             </div>
           </dl>
+          <p v-if="locateHint(tool)" class="locate-hint">{{ locateHint(tool) }}</p>
           <div class="tool-actions">
             <button
               class="btn"
@@ -255,6 +270,11 @@ function canLocate(s: ToolStatus): boolean {
 }
 .path-row dd {
   font-size: 11px;
+}
+.locate-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #888;
 }
 .tool-actions {
   display: flex;

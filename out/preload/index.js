@@ -54,6 +54,7 @@ const RECEIVE_CHANNELS = [
   "bus:error"
 ];
 electron.contextBridge.exposeInMainWorld("api", {
+  platform: process.platform,
   send(channel, ...args) {
     if (SEND_CHANNELS.includes(channel)) {
       electron.ipcRenderer.send(channel, ...args);

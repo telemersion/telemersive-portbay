@@ -3376,8 +3376,9 @@ function setupIpcHandlers() {
     const isUg = toolId === "ultragrid";
     const filters = process.platform === "darwin" && isUg ? [{ name: "UltraGrid app", extensions: ["app"] }] : process.platform === "win32" ? [{ name: "Executable", extensions: ["exe"] }] : [{ name: "All files", extensions: ["*"] }];
     const defaultPath = process.platform === "darwin" ? "/Applications" : process.platform === "win32" ? process.env["ProgramFiles"] || "C:\\Program Files" : "/usr/local/bin";
+    const titleSuffix = isUg ? process.platform === "darwin" ? " (uv-qt.app)" : process.platform === "win32" ? " (uv.exe)" : " (uv binary)" : " (NatNetFour2OSC.exe)";
     const result = await electron.dialog.showOpenDialog(mainWindow, {
-      title: `Locate ${isUg ? "UltraGrid" : "NatNetFour2OSC"}`,
+      title: `Locate ${isUg ? "UltraGrid" : "NatNetFour2OSC"}${titleSuffix}`,
       defaultPath,
       properties: ["openFile"],
       filters

@@ -1,72 +1,53 @@
-# Telemersive Gateway NG
+# Telemersive Portbay
 
-Electron + Vue 3 desktop app — a drop-in replacement for the Max MSP "Telemersive Gateway". It joins a telemersive-bus room over MQTT and bridges local UltraGrid / OSC / NatNet devices into the shared session. The MQTT data plane is wire-compatible with the Max gateway, so mixed Max/NG rooms work.
+Telemersive Portbay is a desktop app for joining a telemersive-bus room — a shared MQTT-based session for routing video, audio, OSC, and motion-capture data between remote participants. It bridges local UltraGrid, OSC, and Motive devices into the room. It is a drop-in replacement for the Max MSP Telemersive Gateway and is wire-compatible, so mixed Max/Portbay rooms work.
 
 See [docs/spec.md](docs/spec.md) for the protocol and design specification, and [CLAUDE.md](CLAUDE.md) for an architecture overview.
 
+## Supported devices
+
+- **UltraGrid** — video and audio relay (uses the UltraGrid CLI; located on first run)
+- **OSC** — bidirectional OSC message relay
+- **StageControl** — OSC variant for stage automation cues
+- **Mocap** — Optitrack NatNet to OSC relay
+- **Motive Bridge** — Optitrack NatNet protocol relay 
+
+
 ## Requirements
 
-- **Node.js** 18+ and **npm**
-- **macOS** (current target — process management and the UltraGrid bundle layout are macOS-specific)
-- **UltraGrid** macOS build, if you want to use UG channels — see [Installing UltraGrid](#installing-ultragrid) below
+- **[Node.js]** 18+ and **[npm]**
 
-## Install
+link to download and install [Node.js and npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+
+Once Node.js and npm are installed, you can verify the installation by running the following commands in your terminal:
 
 ```sh
-npm install
+node -v
+npm -v
 ```
 
-## Run in development
+then follow the instructions below to install and run the app.
+
+## Install and run
+
+Inside the terminal, `cd` to a directory where you want to have your local folder for the project, then run the following commands:
 
 ```sh
+git clone https://github.com/telemersion/telemersive-portbay.git
+cd telemersive-portbay
+npm install
 npm run dev
 ```
 
 This starts the electron-vite dev server with HMR for the renderer and live-reload for the main and preload processes. The app window opens automatically.
 
-By default the app connects to the public telemersive-bus broker. Use the in-app session UI to pick a room and join.
+Use the in-app session UI to pick a room and join.
 
-## Build a production app
+## First-run setup
 
-```sh
-npm run build
-```
+On first launch, open the **Settings** view and find the **Tools & Compatibility** section. The app checks whether **UltraGrid** and **NatNetFour2OSC** (currently Windows only) are installed at compatible versions and shows the status of each. For any tool marked missing or version-mismatched, use **Download required build from official website ↗** to get the right version, then **Locate…** to point the app at the installed binary. The app validates the version and persists the path.
 
-The build output lands in `out/`, which `electron-builder` consumes (config in [electron-builder.yml](electron-builder.yml)) to package a distributable app.
-
-## Installing UltraGrid
-
-UltraGrid is not bundled. The runtime looks for it in this order (see [src/main/enumeration/spawnCli.ts](src/main/enumeration/spawnCli.ts)):
-
-1. `$UG_PATH` — explicit override
-2. `vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv` — repo-local
-3. `/Applications/uv-qt.app/Contents/MacOS/uv` — system install
-
-To install a repo-local copy:
-
-1. Download a macOS build from <https://www.ultragrid.cz/>.
-2. Place it under a version-named directory and symlink `active`:
-
-   ```sh
-   mkdir -p vendor/ultragrid/1.9.3
-   mv ~/Downloads/uv-qt.app vendor/ultragrid/1.9.3/
-   cd vendor/ultragrid && ln -sfn 1.9.3 active
-   ```
-
-3. Verify:
-
-   ```sh
-   vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv --version
-   ```
-
-UltraGrid CLI output changes between versions, so parsers are version-coupled. After upgrading UG, re-capture fixtures with `scripts/capture-uv-fixtures.sh` and run the parser tests. Full details in [vendor/ultragrid/README.md](vendor/ultragrid/README.md).
-
-## Other commands
-
-- `npm run typecheck` — type-check main + renderer (`vue-tsc --noEmit`)
-- `npm test` — run the full vitest suite
-- `npx vitest run tests/main/devices/OscDevice.test.ts` — run a single test file
-- `npx vitest run tests/main/enumeration/parsers` — run only the UG parser tests
+UltraGrid is needed for video/audio channels. NatNetFour2OSC is needed for NatNet and Motive channels. OSC and StageControl channels need no external tools.
 
 ## Project layout
 
@@ -76,3 +57,22 @@ UltraGrid CLI output changes between versions, so parsers are version-coupled. A
 - [src/shared/](src/shared/) — topic helpers and shared types
 - [tests/](tests/) — vitest suite with golden UG fixtures
 - [vendor/ultragrid/](vendor/ultragrid/) — per-version UG installs (gitignored except for the README)
+
+## Development
+
+- `npm run typecheck` — type-check main + renderer (`vue-tsc --noEmit`)
+- `npm test` — run the full vitest suite
+- `npx vitest run tests/main/devices/OscDevice.test.ts` — run a single test file
+- `npx vitest run tests/main/enumeration/parsers` — run only the UG parser tests
+- `npm run build` — production build into `out/`
+- `npm run preview` — launch the built app from `out/` without HMR
+
+UltraGrid CLI output changes between versions, so the parsers in [src/main/enumeration/parsers/](src/main/enumeration/parsers/) are version-coupled. After upgrading the vendored UltraGrid, re-capture fixtures with `scripts/capture-uv-fixtures.sh` and run the parser tests. See [vendor/ultragrid/README.md](vendor/ultragrid/README.md) for vendor layout details.
+
+## Issues
+
+Bugs and feature requests: [GitHub Issues](../../issues).
+
+## License
+
+MIT. Copyright © 2024–2026 Martin Froehlich (maybites) for Immersive Art Space and Zürich University of the Arts (ZHdK). See [LICENSE](LICENSE).

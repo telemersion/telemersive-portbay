@@ -429,8 +429,13 @@ function setupIpcHandlers(): void {
       process.platform === 'darwin' ? '/Applications'
         : process.platform === 'win32' ? process.env['ProgramFiles'] || 'C:\\Program Files'
           : '/usr/local/bin'
+    const titleSuffix = isUg
+      ? process.platform === 'darwin' ? ' (uv-qt.app)'
+        : process.platform === 'win32' ? ' (uv.exe)'
+          : ' (uv binary)'
+      : ' (NatNetFour2OSC.exe)'
     const result = await dialog.showOpenDialog(mainWindow, {
-      title: `Locate ${isUg ? 'UltraGrid' : 'NatNetFour2OSC'}`,
+      title: `Locate ${isUg ? 'UltraGrid' : 'NatNetFour2OSC'}${titleSuffix}`,
       defaultPath,
       properties: ['openFile'],
       filters
