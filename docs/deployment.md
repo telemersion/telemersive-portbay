@@ -6,7 +6,7 @@ This document covers how to build and publish release artifacts for Telemersive 
 
 Releases are built automatically via GitHub Actions when a version tag is pushed. The workflow produces:
 
-- **macOS**: a signed and notarized `.dmg` (x64 + arm64 universal)
+- **macOS**: two signed and notarized DMGs — one for Intel (`x64`) and one for Apple Silicon (`arm64`)
 - **Windows**: an NSIS installer `.exe` (x64)
 
 Both are attached to a GitHub Release with auto-generated release notes.
@@ -77,8 +77,11 @@ Any tag matching `v*` triggers `.github/workflows/release.yml`, which runs three
 
 electron-builder derives names from `productName` and `version` in `package.json`. Example for `v1.0.0`:
 
-- `Telemersive Gateway-1.0.0.dmg`
+- `Telemersive Gateway-1.0.0-x64.dmg` — Intel Macs
+- `Telemersive Gateway-1.0.0-arm64.dmg` — Apple Silicon Macs
 - `Telemersive Gateway Setup 1.0.0.exe`
+
+The macOS DMG name is set by `mac.artifactName` in [electron-builder.yml](../electron-builder.yml); the Windows name uses electron-builder's default.
 
 ---
 

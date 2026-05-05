@@ -11,6 +11,7 @@ mac:
       arch:
         - x64
         - arm64
+  artifactName: ${productName}-${version}-${arch}.${ext}
   identity: "Developer ID Application"
 
 win:
