@@ -1,5 +1,5 @@
-appId: ch.telemersive.gateway-ng
-productName: Telemersive Gateway NG
+appId: ch.telemersive.gateway
+productName: Telemersive Gateway
 directories:
   buildResources: build
   output: dist
@@ -11,3 +11,12 @@ mac:
       arch:
         - x64
         - arm64
+  identity: "Developer ID Application"
+  notarize:
+    teamId: ${APPLE_TEAM_ID}
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64

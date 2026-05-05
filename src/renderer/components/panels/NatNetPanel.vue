@@ -168,7 +168,8 @@ const enableNatNetOn = computed(() => direction.value?.enableNatNet === '1')
       </div>
     </section>
 
-    <section>
+    <!-- ReceiveFromRouter: editable dual-output forwarding targets -->
+    <section v-if="!showCliParams">
       <h4>Forward to</h4>
       <div class="field-row">
         <label>output 1</label>
@@ -211,6 +212,27 @@ const enableNatNetOn = computed(() => direction.value?.enableNatNet === '1')
             @change="outputPortTwo.set(($event.target as HTMLInputElement).value)"
           />
         </template>
+      </div>
+    </section>
+
+    <!-- SendToLocal / SendToRouter: single editable OSC output port (--oscSendPort) -->
+    <section v-if="showCliParams">
+      <h4>OSC output port</h4>
+      <div class="field-row">
+        <label>local IP</label>
+        <input
+          :value="listeningIP.value.value"
+          :disabled="isLocked"
+          placeholder="IP address"
+          @change="listeningIP.set(($event.target as HTMLInputElement).value)"
+        />
+        <input
+          class="port-input"
+          :value="outputPortOne.value.value"
+          :disabled="isLocked"
+          placeholder="port"
+          @change="outputPortOne.set(($event.target as HTMLInputElement).value)"
+        />
       </div>
     </section>
 

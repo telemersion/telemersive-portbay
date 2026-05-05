@@ -1,18 +1,16 @@
 {
+  "env": {
+    "PATH": "$PATH;C:\\Users\\IAAdmin\\AppData\\Local\\nvm;C:\\nvm4w\\nodejs"
+  },
   "permissions": {
     "allow": [
-      "PowerShell(node --version)",
-      "PowerShell(npm --version)",
-      "PowerShell(cmd /c \"dir /a d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\\\\node_modules\\\\telemersive-bus\")",
-      "PowerShell(cmd /c \"type d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\\\\node_modules\\\\telemersive-bus\\\\index.js\")",
-      "PowerShell(cmd /c \"type d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\\\\node_modules\\\\telemersive-bus\\\\lib\\\\BusClient.js\" 2>&1)",
-      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); Set-Location \"d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\"; node -e \"const r = require\\('electron'\\); console.log\\(typeof r, r\\)\" 2>&1)",
-      "PowerShell(cmd /c \"dir d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\\\\node_modules\\\\electron\\\\dist\" 2>&1)",
-      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); Set-Location \"d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\"; npm run dev 2>&1)",
-      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); Set-Location \"d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\"; & \".\\\\node_modules\\\\electron\\\\dist\\\\electron.exe\" --version 2>&1)",
-      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); Set-Location \"d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\"; $env:ELECTRON_RENDERER_URL = \"http://localhost:5173\"; & \".\\\\node_modules\\\\electron\\\\dist\\\\electron.exe\" \".\\\\out\\\\main\\\\index.js\" 2>&1)",
-      "PowerShell(cmd /c \"dir d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\\\\node_modules\\\\electron-vite\\\\dist\" 2>&1)",
-      "PowerShell($content = cmd /c \"type d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\\\\out\\\\main\\\\index.js\"; $lines = $content -split \"`n\"; $results = for\\($i=0; $i -lt $lines.Count; $i++\\) { if\\($lines[$i] -match \"\\\\belectron\\\\b\"\\) { \"$\\($i+1\\): $\\($lines[$i]\\)\" } }; $results | Select-Object -Last 30)"
+      "Bash(npm *)",
+      "PowerShell(npm *)",
+      "PowerShell(node *)",
+      "PowerShell(npx *)",
+      "Bash(Get-ChildItem -Path \"d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(npx vitest *)"
     ]
   }
 }

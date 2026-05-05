@@ -1,7 +1,7 @@
 {
-  "name": "telemersive-gateway-ng",
+  "name": "telemersive-gateway",
   "version": "0.1.0",
-  "description": "Telemersive Gateway NG - Electron + Vue 3 application",
+  "description": "Telemersive Gateway - Electron + Vue 3 application",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -9,7 +9,8 @@
     "preview": "electron-vite preview",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest",
-    "gen:icons-data": "node scripts/generate-icons-data.mjs"
+    "gen:icons-data": "node scripts/generate-icons-data.mjs",
+    "package": "npm run build && electron-builder"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

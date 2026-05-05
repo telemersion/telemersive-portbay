@@ -3,17 +3,20 @@ import * as dns from 'dns'
 import { promisify } from 'util'
 import { topics } from '../../shared/topics'
 import { allocateMocapLocalPorts, allocateMocapRoomPorts, type MocapPorts } from '../portAllocator'
+import { ChildProcessLifecycle, type LifecycleOptions, type ExitReason } from './ChildProcessLifecycle'
+import { MonitorLogBuffer } from './ultragrid/monitorLog'
 import type { DeviceHandler } from './types'
 
 const dnsLookup = promisify(dns.lookup)
 
 type PublishFn = (retained: 0 | 1, topic: string, ...values: string[]) => void
 type HasRetainedFn = (topic: string) => boolean
+type SpawnFactory = (opts: LifecycleOptions) => ChildProcessLifecycle
 
 // direction/select values (confirmed from Max dropdown):
-//   1 = send to router          (requires NatNetThree2OSC CLI)
+//   1 = send to router          (requires NatNetFour2OSC CLI)
 //   2 = receive from router     (pure OSC relay — no CLI needed)
-//   4 = send to local           (requires NatNetThree2OSC CLI)
+//   4 = send to local           (requires NatNetFour2OSC CLI)
 export const enum Direction {
   SendToRouter = 1,
   ReceiveFromRouter = 2,
@@ -25,10 +28,116 @@ export const enum Direction {
 const HEARTBEAT = Buffer.from([47, 104, 98, 0, 44, 0, 0, 0])
 const HEARTBEAT_INTERVAL_MS = 5000
 
+const MONITOR_LOG_CAPACITY = 200
+
 function localOsTag(): string {
   if (process.platform === 'darwin') return 'osx'
   if (process.platform === 'win32') return 'windows'
   return process.platform
+}
+
+export interface NatNetDeviceOptions {
+  channelIndex: number
+  peerId: string
+  localIP: string
+  roomId: number
+  publish: PublishFn
+  hasRetained?: HasRetainedFn
+  brokerHost?: string
+  resolveBinary?: () => string | null
+  spawnFactory?: SpawnFactory
+}
+
+// Stored natnet/* config values — used to build CLI args at spawn time.
+interface NatNetCliConfig {
+  defaultLocalIP: string
+  autoReconnect: string
+  bundled: string
+  cmdPort: string
+  codec: string
+  dataPort: string
+  frameModulo: string
+  invmatrix: string
+  leftHanded: string
+  matrix: string
+  motiveIP: string
+  multicastIP: string
+  sendMarkerInfos: string
+  sendOtherMarkerInfos: string
+  sendSkeletons: string
+  verbose: string
+  yUp2zUp: string
+}
+
+function defaultCliConfig(localIP: string): NatNetCliConfig {
+  return {
+    defaultLocalIP: '0',
+    autoReconnect: '0',
+    bundled: '0',
+    cmdPort: '1510',
+    codec: '3',
+    dataPort: '1511',
+    frameModulo: '1',
+    invmatrix: '0',
+    leftHanded: '0',
+    matrix: '0',
+    motiveIP: localIP,
+    multicastIP: '239.255.42.99',
+    sendMarkerInfos: '0',
+    sendOtherMarkerInfos: '0',
+    sendSkeletons: '0',
+    verbose: '0',
+    yUp2zUp: '0',
+  }
+}
+
+// Build NatNetFour2OSC (v1.2.0) CLI args from stored config + port/IP targets.
+// Flag names verified against NatNetFour2OSC v1.2.0 --help output.
+// Note: the Max topic field names don't map 1:1 to flag names — see comments.
+function buildNatNetArgs(
+  cfg: NatNetCliConfig,
+  localIP: string,   // this machine's IP  → --localIP (required)
+  oscSendIP: string, // OSC destination IP → --oscSendIP (required)
+  oscSendPort: number // OSC destination port → --oscSendPort (required)
+): string[] {
+  const args: string[] = []
+
+  // Required flags.
+  args.push('--localIP', localIP)
+  args.push('--motiveIP', cfg.motiveIP)
+  args.push('--oscSendIP', oscSendIP)
+  args.push('--oscSendPort', String(oscSendPort))
+  // v1.2.0 has a parser bug: it fails to deserialize the default value for
+  // --oscMode unless it's passed explicitly on the command line.
+  args.push('--oscMode', 'max')
+
+  // Optional flags with non-default values.
+  if (cfg.multicastIP && cfg.multicastIP !== '239.255.42.99') {
+    args.push('--multiCastIP', cfg.multicastIP)   // capital C per CLI help
+  }
+  if (cfg.dataPort && cfg.dataPort !== '1511') {
+    args.push('--motiveDataPort', cfg.dataPort)
+  }
+  if (cfg.cmdPort && cfg.cmdPort !== '1510') {
+    args.push('--motiveCmdPort', cfg.cmdPort)
+  }
+  if (cfg.frameModulo && cfg.frameModulo !== '1') {
+    args.push('--frameModulo', cfg.frameModulo)
+  }
+
+  // Boolean flags — only emitted when enabled (value '1').
+  if (cfg.autoReconnect === '1') args.push('--autoReconnect')
+  if (cfg.bundled === '1') args.push('--bundled')
+  if (cfg.invmatrix === '1') args.push('--invMatrix')      // capital M per CLI help
+  if (cfg.leftHanded === '1') args.push('--leftHanded')
+  if (cfg.matrix === '1') args.push('--matrix')
+  if (cfg.sendMarkerInfos === '1') args.push('--sendMarkerInfo')   // no trailing s
+  if (cfg.sendOtherMarkerInfos === '1') args.push('--sendOtherMarkerInfo') // no trailing s
+  if (cfg.sendSkeletons === '1') args.push('--sendSkeletons')
+  if (cfg.verbose === '1') args.push('--verbose')
+  if (cfg.yUp2zUp === '1') args.push('--yup2zup')          // all lowercase per CLI help
+
+  return args
 }
 
 export class NatNetDevice implements DeviceHandler {
@@ -42,6 +151,8 @@ export class NatNetDevice implements DeviceHandler {
   private publishedTopics: string[] = []
   private publish: PublishFn
   private hasRetained: HasRetainedFn
+  private resolveBinary: () => string | null
+  private spawnFactory: SpawnFactory
 
   private enabled = false
   private enableTwo = false
@@ -53,38 +164,42 @@ export class NatNetDevice implements DeviceHandler {
   private outputIPTwo: string
   private listeningIP: string
 
+  // Stored natnet/* config (CLI args built from these at spawn time).
+  private cliConfig: NatNetCliConfig
+
   // Receive-from-router relay state (direction = 2).
   private socket: dgram.Socket | null = null
   private proxyIP: string | null = null
   private heartbeatTimer: NodeJS.Timeout | null = null
 
-  // Indicator slot 1 ("minor") pulses on inbound proxy traffic.
+  // CLI process state (directions 1 and 4).
+  private lifecycle: ChildProcessLifecycle | null = null
+  private readonly monitor = new MonitorLogBuffer(MONITOR_LOG_CAPACITY)
+  private monitorGateOn = false
+
+  // Indicator slots: {input} {output} {running}
   private minorIndicatorOn = false
   private minorIndicatorTimer: NodeJS.Timeout | null = null
+  private runningIndicatorOn = false
   private static readonly INDICATOR_HOLD_MS = 150
 
-  constructor(
-    channelIndex: number,
-    peerId: string,
-    localIP: string,
-    roomId: number,
-    publish: PublishFn,
-    hasRetained: HasRetainedFn = () => false,
-    brokerHost: string = 'telemersion.zhdk.ch'
-  ) {
-    this.channelIndex = channelIndex
-    this.peerId = peerId
-    this.localIP = localIP
-    this.brokerHost = brokerHost
-    this.localPorts = allocateMocapLocalPorts(channelIndex)
-    this.roomPorts = allocateMocapRoomPorts(roomId, channelIndex)
-    this.publish = publish
-    this.hasRetained = hasRetained
+  constructor(opts: NatNetDeviceOptions) {
+    this.channelIndex = opts.channelIndex
+    this.peerId = opts.peerId
+    this.localIP = opts.localIP
+    this.brokerHost = opts.brokerHost ?? 'telemersion.zhdk.ch'
+    this.localPorts = allocateMocapLocalPorts(opts.channelIndex)
+    this.roomPorts = allocateMocapRoomPorts(opts.roomId, opts.channelIndex)
+    this.publish = opts.publish
+    this.hasRetained = opts.hasRetained ?? (() => false)
+    this.resolveBinary = opts.resolveBinary ?? (() => null)
+    this.spawnFactory = opts.spawnFactory ?? ((o) => new ChildProcessLifecycle(o))
     this.outputPortOne = this.localPorts.inputPort
     this.outputPortTwo = this.localPorts.inputPort
-    this.outputIPOne = localIP
-    this.outputIPTwo = localIP
-    this.listeningIP = localIP
+    this.outputIPOne = opts.localIP
+    this.outputIPTwo = opts.localIP
+    this.listeningIP = opts.localIP
+    this.cliConfig = defaultCliConfig(opts.localIP)
   }
 
   publishDefaults(): void {
@@ -110,8 +225,7 @@ export class NatNetDevice implements DeviceHandler {
     pub('localudp/outputPortTwo', String(this.outputPortTwo))
     pub('localudp/reset', '0')
 
-    // NatNet CLI parameters — meaningful only when direction = SendToRouter/SendToLocal.
-    // Defaults mirror Max patch; NatNetThree2OSC CLI spawn is not wired yet (stage 2).
+    // NatNet CLI parameters — used when direction = SendToRouter/SendToLocal.
     pub('natnet/defaultLocalIP', '0')
     pub('natnet/autoReconnect', '0')
     pub('natnet/bundled', '0')
@@ -150,11 +264,23 @@ export class NatNetDevice implements DeviceHandler {
       case 'gui/enableTwo':
         this.enableTwo = value === '1'
         break
-      case 'gui/direction/select':
-        this.direction = parseInt(value, 10) || 0
+      case 'gui/direction/select': {
+        const d = parseInt(value, 10) || 0
+        this.direction = d
+        // Re-publish ports when switching modes so the panel shows correct values.
+        // CLI modes: outputPortOne defaults to base+0 (--oscSendPort), inputPort is base+2.
+        // ReceiveFromRouter: restore the relay ports.
+        if (d === Direction.SendToLocal || d === Direction.SendToRouter) {
+          this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'localudp/outputPortOne'), String(this.localPorts.outputPort))
+          this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'localudp/inputPort'), String(this.localPorts.outputPort + 2))
+        } else {
+          this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'localudp/outputPortOne'), String(this.outputPortOne))
+          this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'localudp/inputPort'), String(this.localPorts.inputPort))
+        }
         break
+      }
       case 'gui/direction/enableNatNet':
-        // stored for future CLI wiring
+        // stored for future use
         break
       case 'gui/localudp/outputIPOne':
         if (value && value !== '0') this.outputIPOne = value
@@ -179,7 +305,29 @@ export class NatNetDevice implements DeviceHandler {
           this.resetToDefaults()
         }
         break
+      case 'gui/monitor/monitorGate':
+        this.handleMonitorGate(value === '1')
+        break
+      case 'gui/monitor/log':
+        break
+      default:
+        this.handleNatNetConfig(subpath, value)
+        break
     }
+  }
+
+  private handleNatNetConfig(subpath: string, value: string): void {
+    if (!subpath.startsWith('gui/natnet/')) return
+    const key = subpath.slice('gui/natnet/'.length) as keyof NatNetCliConfig
+    if (key in this.cliConfig) {
+      this.cliConfig = { ...this.cliConfig, [key]: value }
+    }
+  }
+
+  private handleMonitorGate(on: boolean): void {
+    if (on === this.monitorGateOn) return
+    this.monitorGateOn = on
+    if (on) this.replayMonitorLog()
   }
 
   private resetToDefaults(): void {
@@ -190,6 +338,7 @@ export class NatNetDevice implements DeviceHandler {
     this.outputIPTwo = this.localIP
     this.listeningIP = this.localIP
     this.enableTwo = false
+    this.cliConfig = defaultCliConfig(this.localIP)
     this.emitDefaults(true)
   }
 
@@ -201,20 +350,118 @@ export class NatNetDevice implements DeviceHandler {
         void this.startReceiveRelay()
         return
       }
-      // SendToRouter (1) and SendToLocal (4) require the NatNetThree2OSC CLI — not wired yet.
-      const mode = this.direction === Direction.SendToLocal ? 'send-to-local' : 'send-to-router'
-      console.log(`[NatNet ch.${this.channelIndex}] enable=1 (direction=${mode}) — handler not implemented yet`)
+      if (this.direction === Direction.SendToLocal || this.direction === Direction.SendToRouter) {
+        this.enabled = true
+        this.startCliProcess()
+        return
+      }
+      // Unknown direction — refuse silently.
+      console.warn(`[NatNet ch.${this.channelIndex}] unknown direction ${this.direction}; ignoring enable`)
       this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'enable'), '0')
       return
     }
     this.enabled = false
     this.stopReceiveRelay()
+    this.stopCliProcess()
     console.log(`[NatNet ch.${this.channelIndex}] enable=0`)
   }
 
-  // Receive-from-router (direction=2): bind roomPorts.inputPort (proxy many_port = base+1),
-  // send periodic heartbeats to stay registered as a sink, forward received packets
-  // to outputPortOne (and outputPortTwo if enableTwo).
+  // -------------------------------------------------------------------------
+  // Direction = 4 (SendToLocal) / 1 (SendToRouter) — NatNetFour2OSC CLI
+  // -------------------------------------------------------------------------
+
+  private startCliProcess(): void {
+    const binary = this.resolveBinary()
+    if (!binary) {
+      this.logWarn('NatNetFour2OSC binary not found — check Settings')
+      this.publishEnableOff()
+      this.enabled = false
+      return
+    }
+
+    // --oscSendIP/Port: where the CLI sends OSC data.
+    // SendToLocal: user-configured IP (listeningIP) and port (outputPortOne, default base+0).
+    // SendToRouter: proxy host and room output port (fixed, not user-configurable).
+    const outputIP = this.direction === Direction.SendToRouter
+      ? this.brokerHost
+      : this.listeningIP
+    const outputPort = this.direction === Direction.SendToRouter
+      ? this.roomPorts.outputPort
+      : this.outputPortOne
+
+    const args = buildNatNetArgs(this.cliConfig, this.listeningIP, outputIP, outputPort)
+
+    this.monitor.clear()
+    const cliLine = `${binary} ${args.join(' ')}`
+    console.log(`[NatNet ch.${this.channelIndex}] spawn: ${cliLine}`)
+    const cliLogLine = `[CLI] ${cliLine}`
+    this.monitor.append(cliLogLine)
+    if (this.monitorGateOn) this.publishMonitorLine(cliLogLine)
+
+    this.lifecycle = this.spawnFactory({
+      binary,
+      args,
+      onStdout: (line) => this.handleLogLine(line),
+      onStderr: (line) => this.handleLogLine(line),
+      onExit: (reason, code) => this.handleCliExit(reason, code)
+    })
+    this.lifecycle.start()
+
+    this.setRunningIndicator(true)
+  }
+
+  private stopCliProcess(): void {
+    this.lifecycle?.stop()
+    this.lifecycle = null
+    this.setRunningIndicator(false)
+  }
+
+  private handleLogLine(line: string): void {
+    this.monitor.append(line)
+    if (this.monitorGateOn) this.publishMonitorLine(line)
+    if (line.includes('Program terminated')) {
+      this.logWarn('NatNet reported "Program terminated"; disabling')
+      this.enabled = false
+      this.stopCliProcess()
+      this.publishEnableOff()
+    }
+  }
+
+  private publishMonitorLine(line: string): void {
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'monitor/log'), line)
+  }
+
+  private replayMonitorLog(): void {
+    for (const line of this.monitor.replay()) {
+      this.publishMonitorLine(line)
+    }
+  }
+
+  private handleCliExit(reason: ExitReason, code: number | null): void {
+    this.lifecycle = null
+    this.setRunningIndicator(false)
+    if (reason === 'killed') return
+    const label = reason === 'spawn-failure' ? 'NatNet spawn-failure' : 'NatNet crashed'
+    this.logWarn(`${label} (code ${code}); disabling`)
+    this.enabled = false
+    this.publishEnableOff()
+  }
+
+  private logWarn(message: string): void {
+    const line = `[NG] ${message}`
+    this.monitor.append(line)
+    if (this.monitorGateOn) this.publishMonitorLine(line)
+    console.warn(`[NatNet ch.${this.channelIndex}] ${message}`)
+  }
+
+  private publishEnableOff(): void {
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'enable'), '0')
+  }
+
+  // -------------------------------------------------------------------------
+  // Direction = 2 (ReceiveFromRouter) — pure UDP relay
+  // -------------------------------------------------------------------------
+
   private async startReceiveRelay(): Promise<void> {
     try {
       const { address } = await dnsLookup(this.brokerHost, { family: 4 })
@@ -274,15 +521,22 @@ export class NatNetDevice implements DeviceHandler {
     }, NatNetDevice.INDICATOR_HOLD_MS)
   }
 
+  private setRunningIndicator(on: boolean): void {
+    if (on === this.runningIndicatorOn) return
+    this.runningIndicatorOn = on
+    this.publishIndicators()
+  }
+
   private publishIndicators(): void {
     const minor = this.minorIndicatorOn ? '1' : '0'
-    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'indicators'), '0', minor, '0')
+    const running = this.runningIndicatorOn ? '1' : '0'
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'indicators'), '0', minor, running)
   }
 
   private disableOnError(): void {
     this.stopReceiveRelay()
     this.enabled = false
-    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'enable'), '0')
+    this.publishEnableOff()
   }
 
   private stopReceiveRelay(): void {
@@ -307,11 +561,13 @@ export class NatNetDevice implements DeviceHandler {
 
   teardown(): string[] {
     this.stopReceiveRelay()
+    this.stopCliProcess()
     return [...this.publishedTopics]
   }
 
   destroy(): void {
     this.enabled = false
     this.stopReceiveRelay()
+    this.stopCliProcess()
   }
 }

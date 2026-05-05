@@ -41,7 +41,7 @@ let compatStatus: CompatStatus | null = null
 
 function broadcastCompat(): void {
   if (compatStatus) {
-    mainWindow?.webContents.send('compat:status', compatStatus)
+    sendToRenderer('compat:status', compatStatus)
   }
 }
 
@@ -121,10 +121,13 @@ function trackedPublish(retained: 0 | 1, topic: string, ...values: any[]): void 
   if (rackMutated) scheduleRackSave()
 }
 
+function sendToRenderer(channel: string, ...args: any[]): void {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  mainWindow.webContents.send(channel, ...args)
+}
+
 function forwardToRenderer(channel: string): void {
-  bus!.on(channel, (...args: any[]) => {
-    mainWindow?.webContents.send(channel, ...args)
-  })
+  bus!.on(channel, (...args: any[]) => sendToRenderer(channel, ...args))
 }
 
 function publishInitSequence(): void {
@@ -204,7 +207,7 @@ function setupBus(): void {
 
   bus.on('peer:joined', (joined: boolean) => {
     peerJoined = joined
-    mainWindow?.webContents.send('peer:joined', joined)
+    sendToRenderer('peer:joined', joined)
     if (joined) {
       bus!.subscribe(topics.settingsSubscribe(localPeerId))
       bus!.subscribe(topics.loadedSubscribe(localPeerId))
@@ -222,15 +225,16 @@ function setupBus(): void {
             )
           }
           if (type === 3) {
-            return new NatNetDevice(
-              channel,
-              localPeerId,
+            return new NatNetDevice({
+              channelIndex: channel,
+              peerId: localPeerId,
               localIP,
               roomId,
-              (retained, topic, value) => trackedPublish(retained, topic, value),
-              (topic: string) => retainedTopics.has(topic),
-              loadSettings().brokerUrl
-            )
+              publish: (retained, topic, ...values) => trackedPublish(retained, topic, ...values),
+              hasRetained: (topic: string) => retainedTopics.has(topic),
+              brokerHost: loadSettings().brokerUrl,
+              resolveBinary: () => loadSettings().natnetOscPath || null
+            })
           }
           if (type === 2) {
             return new UltraGridDevice({
@@ -292,7 +296,7 @@ function setupBus(): void {
   })
 
   bus.on('mqtt:message', (msg: { topic: string; payload: string }) => {
-    mainWindow?.webContents.send('mqtt:message', msg)
+    sendToRenderer('mqtt:message', msg)
     if (deviceRouter) {
       deviceRouter.onMqttMessage(msg.topic, msg.payload)
     }

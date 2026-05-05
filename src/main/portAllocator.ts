@@ -57,12 +57,13 @@ export function allocateStageControlPort(roomId: number): number {
 }
 
 // MoCap/NatNet uses a one2manyBi proxy:
-//   base + 0 = listen_port  — source-client sends TO the router (outputPort)
+//   base + 0 = listen_port  — source-client sends TO the router (outputPort);
+//              also used as --oscSendPort default for SendToLocal/SendToRouter.
 //   base + 1 = many_port    — sink-clients receive FROM the router (inputPort);
 //              sink-clients must send periodic heartbeat packets to stay registered.
 export interface MocapPorts {
-  outputPort: number
-  inputPort: number
+  outputPort: number   // base + 0
+  inputPort: number    // base + 1 (ReceiveFromRouter) or base + 2 (CLI modes)
 }
 
 export function allocateMocapLocalPorts(channelIndex: number): MocapPorts {
@@ -72,6 +73,7 @@ export function allocateMocapLocalPorts(channelIndex: number): MocapPorts {
     inputPort: base + 1
   }
 }
+
 
 export function allocateMocapRoomPorts(roomId: number, channelIndex: number): MocapPorts {
   const base = portBase(roomId, channelIndex)

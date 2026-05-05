@@ -1,4 +1,4 @@
-# Telemersive Gateway NG — v1 Specification (Draft)
+# Telemersive Gateway — v1 Specification (Draft)
 
 Status: working draft, derived from inquisition session against `context.md`,
 revised against primary sources in `docs/wiki/` and `docs/javascript/` (and
@@ -492,8 +492,8 @@ Motive bridge state participates in the standard rack persistence (§6.4): topic
 ### 6.3 Local Settings File
 
 Stored as JSON in `app.getPath('userData')`:
-- macOS: `~/Library/Application Support/telemersive-gateway-ng/settings.json`
-- Windows: `%APPDATA%\telemersive-gateway-ng\settings.json`
+- macOS: `~/Library/Application Support/telemersive-gateway/settings.json`
+- Windows: `%APPDATA%\telemersive-gateway\settings.json`
 
 Contents:
 - `peerName: string`
