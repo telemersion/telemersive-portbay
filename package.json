@@ -24,7 +24,7 @@
     "@types/leaflet": "^1.9.21",
     "@types/node": "^22.10.5",
     "@vitejs/plugin-vue": "^5.2.1",
-    "electron": "^33.2.1",
+    "electron": "^39.8.9",
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
     "typescript": "^5.7.2",
