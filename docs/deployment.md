@@ -2,6 +2,8 @@
 
 This document covers how to build and publish release artifacts for Telemersive Gateway.
 
+For the separate procedure of upgrading the vendored UltraGrid binary, see [docs/upgrading-ultragrid.md](upgrading-ultragrid.md). UG upgrades typically end with a release cut per this manual.
+
 ## Overview
 
 Releases are built automatically via GitHub Actions when a version tag is pushed. The workflow produces:

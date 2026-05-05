@@ -92,7 +92,11 @@ UltraGrid is needed for video/audio channels. [NatNetFour2OSC](https://github.co
 - `npm run build` — production build into `out/`
 - `npm run preview` — launch the built app from `out/` without HMR
 
-UltraGrid CLI output changes between versions, so the parsers in [src/main/enumeration/parsers/](src/main/enumeration/parsers/) are version-coupled. After upgrading the vendored UltraGrid, re-capture fixtures with `scripts/capture-uv-fixtures.sh` and run the parser tests. See [vendor/ultragrid/README.md](vendor/ultragrid/README.md) for vendor layout details.
+UltraGrid CLI output changes between versions, so the parsers in [src/main/enumeration/parsers/](src/main/enumeration/parsers/) are version-coupled. Upgrading the vendored UltraGrid is a deliberate multi-step procedure — see [docs/upgrading-ultragrid.md](docs/upgrading-ultragrid.md) for the full runbook, and [vendor/ultragrid/README.md](vendor/ultragrid/README.md) for vendor layout details.
+
+## Releasing
+
+Releases are built and published by GitHub Actions on tag push. See [docs/deployment.md](docs/deployment.md) for the full workflow, signing/notarization setup, and versioning conventions.
 
 ## Issues
 
