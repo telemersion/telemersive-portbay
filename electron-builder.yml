@@ -12,8 +12,6 @@ mac:
         - x64
         - arm64
   identity: "Developer ID Application"
-  notarize:
-    teamId: ${APPLE_TEAM_ID}
 
 win:
   target:
