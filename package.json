@@ -10,7 +10,7 @@
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:integration": "vitest run --exclude '' tests/main/devices/ultragrid/codecAcceptance.integration.test.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "gen:icons-data": "node scripts/generate-icons-data.mjs",
     "package": "npm run build && electron-builder"
   },
