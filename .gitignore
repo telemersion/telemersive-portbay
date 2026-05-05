@@ -3,3 +3,6 @@ node_modules
 # UltraGrid binaries — per-version installs; fixtures under tests/fixtures/ultragrid/ are tracked.
 vendor/ultragrid/*/
 vendor/ultragrid/active
+
+# Local-only wiki snapshot from the old implementation, kept on disk for reference.
+docs/wiki/
