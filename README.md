@@ -2,7 +2,11 @@
 
 [![Latest release](https://img.shields.io/github/v/release/telemersion/telemersive-portbay)](https://github.com/telemersion/telemersive-portbay/releases/latest)
 
+
+
 Telemersive Portbay is a desktop app for joining a telemersive-bus room — a shared MQTT-based session for routing video, audio, OSC, and motion-capture data between remote participants. It bridges local UltraGrid, OSC, and Motive devices into the room. It is a drop-in replacement for the Max MSP Telemersive Gateway and is wire-compatible, so mixed Max/Portbay rooms work.
+
+![Gateway Matrix](docs/assets/Gateway_Matrix.png)
 
 See [docs/spec.md](docs/spec.md) for the protocol and design specification, and [CLAUDE.md](CLAUDE.md) for an architecture overview.
 
