@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import IconBar from './shell/IconBar.vue'
 import LogPanel from './shell/LogPanel.vue'
+import AboutModal from './shell/AboutModal.vue'
 import { panelState } from './shell/panelState'
 import { initCompat } from './state/compat'
 import { initSession } from './state/session'
@@ -23,6 +24,7 @@ const contentLeft = computed(() => {
 <template>
   <IconBar />
   <LogPanel v-if="panelState.openPanelId === 'log'" />
+  <AboutModal v-if="panelState.openPanelId === 'about'" />
   <main class="app-content" :style="{ marginLeft: contentLeft + 'px' }">
     <router-view />
   </main>

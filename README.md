@@ -100,7 +100,25 @@ UltraGrid CLI output changes between versions, so the parsers in [src/main/enume
 
 ## Releasing
 
-Releases are built and published by GitHub Actions on tag push. See [docs/deployment.md](docs/deployment.md) for the full workflow, signing/notarization setup, and versioning conventions.
+Use `npm version` to bump both atomically:
+
+```sh
+npm version patch   # 0.1.4 → 0.1.5  (bug fixes)
+npm version minor   # 0.1.4 → 0.2.0  (new features)
+npm version major   # 0.1.4 → 1.0.0  (breaking changes)
+```
+
+This updates `package.json`, commits the change, and creates a matching git tag (e.g. `v0.1.5`). Then push both:
+
+```sh
+git push && git push --tags
+```
+
+To build the installer locally:
+
+```sh
+npm run package     # runs build + electron-builder → dist/
+```
 
 ## Issues
 

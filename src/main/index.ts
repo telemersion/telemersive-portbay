@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, dialog, Menu } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'
 import { networkInterfaces } from 'os'
@@ -69,6 +69,28 @@ function flushRackSave(): void {
   // is already on disk from the last meaningful save.
   if (Object.keys(snap).length === 0) return
   try { saveRack(snap) } catch {}
+}
+
+const REPO = 'https://github.com/telemersion/telemersive-portbay'
+
+function setupMenu(): void {
+  const template = Menu.buildFromTemplate([
+    ...(process.platform === 'darwin' ? [{ role: 'appMenu' as const }] : []),
+    { role: 'fileMenu' as const },
+    { role: 'editMenu' as const },
+    { role: 'viewMenu' as const },
+    { role: 'windowMenu' as const },
+    {
+      label: 'Help',
+      submenu: [
+        { label: 'Repository',  click: () => shell.openExternal(REPO) },
+        { label: 'Releases',    click: () => shell.openExternal(`${REPO}/releases`) },
+        { label: 'Wiki',        click: () => shell.openExternal(`${REPO}/wiki`) },
+        { label: 'Report Issue', click: () => shell.openExternal(`${REPO}/issues`) },
+      ]
+    }
+  ])
+  Menu.setApplicationMenu(template)
 }
 
 function createWindow(): void {
@@ -533,6 +555,7 @@ app.whenReady().then(async () => {
   registerDefaultBackends()
   setupBus()
   setupIpcHandlers()
+  setupMenu()
 
   const ips = await bus!.init()
   const firstIp = Object.values(ips).find((v: any) => v?.address)

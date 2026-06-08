@@ -3271,6 +3271,26 @@ function flushRackSave() {
   } catch {
   }
 }
+const REPO = "https://github.com/telemersion/telemersive-portbay";
+function setupMenu() {
+  const template = electron.Menu.buildFromTemplate([
+    ...process.platform === "darwin" ? [{ role: "appMenu" }] : [],
+    { role: "fileMenu" },
+    { role: "editMenu" },
+    { role: "viewMenu" },
+    { role: "windowMenu" },
+    {
+      label: "Help",
+      submenu: [
+        { label: "Repository", click: () => electron.shell.openExternal(REPO) },
+        { label: "Releases", click: () => electron.shell.openExternal(`${REPO}/releases`) },
+        { label: "Wiki", click: () => electron.shell.openExternal(`${REPO}/wiki`) },
+        { label: "Report Issue", click: () => electron.shell.openExternal(`${REPO}/issues`) }
+      ]
+    }
+  ]);
+  electron.Menu.setApplicationMenu(template);
+}
 function createWindow() {
   mainWindow = new electron.BrowserWindow({
     width: 1200,
@@ -3690,6 +3710,7 @@ electron.app.whenReady().then(async () => {
   registerDefaultBackends();
   setupBus();
   setupIpcHandlers();
+  setupMenu();
   const ips = await bus.init();
   const firstIp = Object.values(ips).find((v) => v?.address);
   if (firstIp && !localIP) {

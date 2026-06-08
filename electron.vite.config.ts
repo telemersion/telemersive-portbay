@@ -1,6 +1,15 @@
 import { resolve } from 'path'
+import { execSync } from 'child_process'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import vue from '@vitejs/plugin-vue'
+
+function gitVersion(): string {
+  try {
+    return execSync('git describe --tags --always', { encoding: 'utf8' }).trim()
+  } catch {
+    return 'unknown'
+  }
+}
 
 export default defineConfig({
   main: {
@@ -25,6 +34,9 @@ export default defineConfig({
   },
   renderer: {
     root: resolve(__dirname, 'src/renderer'),
+    define: {
+      __APP_VERSION__: JSON.stringify(gitVersion())
+    },
     build: {
       rollupOptions: {
         input: {

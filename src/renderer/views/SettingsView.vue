@@ -152,6 +152,7 @@ function locateHint(s: ToolStatus): string | null {
         </li>
       </ul>
     </section>
+
   </section>
 </template>
 
