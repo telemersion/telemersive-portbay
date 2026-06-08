@@ -1,6 +1,6 @@
 {
   "name": "telemersive-gateway",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Telemersive Gateway - Electron + Vue 3 application",
   "main": "./out/main/index.js",
   "scripts": {
