@@ -62,6 +62,7 @@ interface NatNetCliConfig {
   matrix: string
   motiveIP: string
   multicastIP: string
+  oscMode: string
   sendMarkerInfos: string
   sendOtherMarkerInfos: string
   sendSkeletons: string
@@ -83,6 +84,7 @@ function defaultCliConfig(localIP: string): NatNetCliConfig {
     matrix: '0',
     motiveIP: localIP,
     multicastIP: '239.255.42.99',
+    oscMode: 'max',
     sendMarkerInfos: '0',
     sendOtherMarkerInfos: '0',
     sendSkeletons: '0',
@@ -109,7 +111,7 @@ function buildNatNetArgs(
   args.push('--oscSendPort', String(oscSendPort))
   // v1.2.0 has a parser bug: it fails to deserialize the default value for
   // --oscMode unless it's passed explicitly on the command line.
-  args.push('--oscMode', 'max')
+  args.push('--oscMode', cfg.oscMode || 'max')
 
   // Optional flags with non-default values.
   if (cfg.multicastIP && cfg.multicastIP !== '239.255.42.99') {
@@ -238,6 +240,7 @@ export class NatNetDevice implements DeviceHandler {
     pub('natnet/matrix', '0')
     pub('natnet/motiveIP', this.localIP)
     pub('natnet/multicastIP', '239.255.42.99')
+    pub('natnet/oscMode', 'max')
     pub('natnet/sendMarkerInfos', '0')
     pub('natnet/sendOtherMarkerInfos', '0')
     pub('natnet/sendSkeletons', '0')

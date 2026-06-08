@@ -60,8 +60,8 @@ const cmdPort = bind('natnet/cmdPort', () => natnet.value?.cmdPort)
 const dataPort = bind('natnet/dataPort', () => natnet.value?.dataPort)
 const motiveIP = bind('natnet/motiveIP', () => natnet.value?.motiveIP)
 const multicastIP = bind('natnet/multicastIP', () => natnet.value?.multicastIP)
-const codec = bind('natnet/codec', () => natnet.value?.codec)
 const frameModulo = bind('natnet/frameModulo', () => natnet.value?.frameModulo)
+const oscMode = bind('natnet/oscMode', () => natnet.value?.oscMode)
 
 const defaultLocalIP = bind('natnet/defaultLocalIP', () => natnet.value?.defaultLocalIP)
 const autoReconnect = bind('natnet/autoReconnect', () => natnet.value?.autoReconnect)
@@ -272,42 +272,20 @@ const enableNatNetOn = computed(() => direction.value?.enableNatNet === '1')
         />
       </div>
       <div class="field-row">
-        <label>multicast</label>
-        <input
-          :value="multicastIP.value.value"
-          :disabled="isLocked"
-          placeholder="IP address"
-          @change="multicastIP.set(($event.target as HTMLInputElement).value)"
-        />
-      </div>
-      <div class="field-row">
-        <label>cmd port</label>
-        <input
-          class="port-input"
-          :value="cmdPort.value.value"
-          :disabled="isLocked"
-          @change="cmdPort.set(($event.target as HTMLInputElement).value)"
-        />
-        <label>data port</label>
-        <input
-          class="port-input"
-          :value="dataPort.value.value"
-          :disabled="isLocked"
-          @change="dataPort.set(($event.target as HTMLInputElement).value)"
-        />
-      </div>
-      <div class="field-row">
-        <label>codec</label>
+        <label>osc mode</label>
         <select
-          :value="codec.value.value"
+          :value="oscMode.value.value || 'max'"
           :disabled="isLocked"
-          @change="codec.set(($event.target as HTMLSelectElement).value)"
+          @change="oscMode.set(($event.target as HTMLSelectElement).value)"
         >
-          <option value="0">NatNet 2.x</option>
-          <option value="1">NatNet 3.x</option>
-          <option value="2">NatNet 4.x</option>
-          <option value="3">auto</option>
+          <option value="max">max</option>
+          <option value="isadora">isadora</option>
+          <option value="touch">touch</option>
+          <option value="sparck">sparck</option>
+          <option value="ambi">ambi</option>
         </select>
+      </div>
+      <div class="field-row">
         <label>frame %</label>
         <input
           class="port-input"
@@ -317,6 +295,51 @@ const enableNatNetOn = computed(() => direction.value?.enableNatNet === '1')
         />
       </div>
 
+      <div class="field-row">
+        <label>default local IP</label>
+        <button class="toggle-btn" :class="{ on: defaultLocalIP.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(defaultLocalIP)">{{ defaultLocalIP.value.value === '1' ? 'on' : 'off' }}</button>
+      </div>
+      <div class="field-row">
+        <label>auto reconnect</label>
+        <button class="toggle-btn" :class="{ on: autoReconnect.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(autoReconnect)">{{ autoReconnect.value.value === '1' ? 'on' : 'off' }}</button>
+      </div>
+      <div class="field-row">
+        <label>bundled</label>
+        <button class="toggle-btn" :class="{ on: bundled.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(bundled)">{{ bundled.value.value === '1' ? 'on' : 'off' }}</button>
+      </div>
+      <div class="field-row">
+        <label>matrix</label>
+        <button class="toggle-btn" :class="{ on: matrix.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(matrix)">{{ matrix.value.value === '1' ? 'on' : 'off' }}</button>
+      </div>
+      <div class="field-row">
+        <label>inv matrix</label>
+        <button class="toggle-btn" :class="{ on: invmatrix.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(invmatrix)">{{ invmatrix.value.value === '1' ? 'on' : 'off' }}</button>
+      </div>
+      <div class="field-row">
+        <label>left handed</label>
+        <button class="toggle-btn" :class="{ on: leftHanded.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(leftHanded)">{{ leftHanded.value.value === '1' ? 'on' : 'off' }}</button>
+      </div>
+      <div class="field-row">
+        <label>Y-up → Z-up</label>
+        <button class="toggle-btn" :class="{ on: yUp2zUp.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(yUp2zUp)">{{ yUp2zUp.value.value === '1' ? 'on' : 'off' }}</button>
+      </div>
+      <div class="field-row">
+        <label>skeletons</label>
+        <button class="toggle-btn" :class="{ on: sendSkeletons.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendSkeletons)">{{ sendSkeletons.value.value === '1' ? 'on' : 'off' }}</button>
+      </div>
+      <div class="field-row">
+        <label>marker infos</label>
+        <button class="toggle-btn" :class="{ on: sendMarkerInfos.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendMarkerInfos)">{{ sendMarkerInfos.value.value === '1' ? 'on' : 'off' }}</button>
+      </div>
+      <div class="field-row">
+        <label>other markers</label>
+        <button class="toggle-btn" :class="{ on: sendOtherMarkerInfos.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendOtherMarkerInfos)">{{ sendOtherMarkerInfos.value.value === '1' ? 'on' : 'off' }}</button>
+      </div>
+      <div class="field-row">
+        <label>verbose</label>
+        <button class="toggle-btn" :class="{ on: verbose.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(verbose)">{{ verbose.value.value === '1' ? 'on' : 'off' }}</button>
+      </div>
+
       <div class="advanced-row">
         <button class="advanced-pill" @click="cliAdvOpen = !cliAdvOpen">
           advanced {{ cliAdvOpen ? '▾' : '▸' }}
@@ -324,18 +347,30 @@ const enableNatNetOn = computed(() => direction.value?.enableNatNet === '1')
       </div>
 
       <div v-if="cliAdvOpen" class="advanced-fold">
-        <div class="flag-grid">
-          <button class="flag-btn" :class="{ on: defaultLocalIP.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(defaultLocalIP)">default local IP</button>
-          <button class="flag-btn" :class="{ on: autoReconnect.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(autoReconnect)">auto reconnect</button>
-          <button class="flag-btn" :class="{ on: bundled.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(bundled)">bundled</button>
-          <button class="flag-btn" :class="{ on: matrix.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(matrix)">matrix</button>
-          <button class="flag-btn" :class="{ on: invmatrix.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(invmatrix)">inv matrix</button>
-          <button class="flag-btn" :class="{ on: leftHanded.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(leftHanded)">left handed</button>
-          <button class="flag-btn" :class="{ on: yUp2zUp.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(yUp2zUp)">Y-up → Z-up</button>
-          <button class="flag-btn" :class="{ on: sendSkeletons.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendSkeletons)">skeletons</button>
-          <button class="flag-btn" :class="{ on: sendMarkerInfos.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendMarkerInfos)">marker infos</button>
-          <button class="flag-btn" :class="{ on: sendOtherMarkerInfos.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendOtherMarkerInfos)">other markers</button>
-          <button class="flag-btn" :class="{ on: verbose.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(verbose)">verbose</button>
+        <div class="field-row">
+          <label>multicast</label>
+          <input
+            :value="multicastIP.value.value"
+            :disabled="isLocked"
+            placeholder="IP address"
+            @change="multicastIP.set(($event.target as HTMLInputElement).value)"
+          />
+        </div>
+        <div class="field-row">
+          <label>cmd port</label>
+          <input
+            class="port-input"
+            :value="cmdPort.value.value"
+            :disabled="isLocked"
+            @change="cmdPort.set(($event.target as HTMLInputElement).value)"
+          />
+          <label>data port</label>
+          <input
+            class="port-input"
+            :value="dataPort.value.value"
+            :disabled="isLocked"
+            @change="dataPort.set(($event.target as HTMLInputElement).value)"
+          />
         </div>
       </div>
     </section>
@@ -380,6 +415,7 @@ h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px
 .field-row input:disabled, .field-row select:disabled { color: #666; cursor: not-allowed; }
 .port-input { max-width: 80px !important; flex: none !important; }
 .toggle-btn { padding: 2px 8px; border-radius: 4px; border: 1px solid #555; background: none; color: #888; cursor: pointer; font-size: 10px; }
+.field-row .toggle-btn { flex: 1; }
 .toggle-btn.on { background: #FFA126; color: #1a1a1a; border-color: #FFA126; }
 .toggle-btn.label-slot { min-width: 70px; text-align: center; font-size: 11px; }
 .toggle-btn:disabled { opacity: 0.4; cursor: not-allowed; }
