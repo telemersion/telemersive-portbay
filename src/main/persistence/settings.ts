@@ -17,6 +17,7 @@ export interface Settings {
   ugPath: string
   natnetOscPath: string
   lastCompatCheckAt: number | null
+  selectedInterface: string
 }
 
 const DEFAULTS: Settings = {
@@ -33,7 +34,8 @@ const DEFAULTS: Settings = {
   appVersion: '',
   ugPath: '',
   natnetOscPath: '',
-  lastCompatCheckAt: null
+  lastCompatCheckAt: null,
+  selectedInterface: ''
 }
 
 function settingsPath(): string {

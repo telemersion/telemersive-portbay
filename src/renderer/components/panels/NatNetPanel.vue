@@ -47,7 +47,6 @@ const enableBinding = bind('enable', () => gui.value?.enable)
 const enableTwoBinding = bind('enableTwo', () => gui.value?.enableTwo)
 const descBinding = bind('description', () => gui.value?.description)
 const directionBinding = bind('direction/select', () => direction.value?.select)
-const enableNatNetBinding = bind('direction/enableNatNet', () => direction.value?.enableNatNet)
 
 const outputIPOne = bind('localudp/outputIPOne', () => udp.value?.outputIPOne)
 const outputPortOne = bind('localudp/outputPortOne', () => udp.value?.outputPortOne)
@@ -63,7 +62,6 @@ const multicastIP = bind('natnet/multicastIP', () => natnet.value?.multicastIP)
 const frameModulo = bind('natnet/frameModulo', () => natnet.value?.frameModulo)
 const oscMode = bind('natnet/oscMode', () => natnet.value?.oscMode)
 
-const defaultLocalIP = bind('natnet/defaultLocalIP', () => natnet.value?.defaultLocalIP)
 const autoReconnect = bind('natnet/autoReconnect', () => natnet.value?.autoReconnect)
 const bundled = bind('natnet/bundled', () => natnet.value?.bundled)
 const invmatrix = bind('natnet/invmatrix', () => natnet.value?.invmatrix)
@@ -103,10 +101,6 @@ function toggleEnableTwo() {
   enableTwoBinding.set(gui.value?.enableTwo === '1' ? '0' : '1')
 }
 
-function toggleEnableNatNet() {
-  enableNatNetBinding.set(direction.value?.enableNatNet === '1' ? '0' : '1')
-}
-
 function toggleMonitorGate() {
   monitorGateBinding.set(monitorGateOn.value ? '0' : '1')
 }
@@ -130,7 +124,6 @@ async function resetDevice() {
 }
 
 const enableTwoOn = computed(() => gui.value?.enableTwo === '1')
-const enableNatNetOn = computed(() => direction.value?.enableNatNet === '1')
 </script>
 
 <template>
@@ -251,17 +244,7 @@ const enableNatNetOn = computed(() => direction.value?.enableNatNet === '1')
     </section>
 
     <section v-if="showCliParams">
-      <h4>
-        NatNet
-        <button
-          class="toggle-btn"
-          :class="{ on: enableNatNetOn }"
-          :disabled="isLocked || !cliAvailable"
-          @click="toggleEnableNatNet"
-        >
-          {{ enableNatNetOn ? 'ON' : 'OFF' }}
-        </button>
-      </h4>
+      <h4>NatNet</h4>
       <div class="field-row">
         <label>motive ip</label>
         <input
@@ -271,73 +254,70 @@ const enableNatNetOn = computed(() => direction.value?.enableNatNet === '1')
           @change="motiveIP.set(($event.target as HTMLInputElement).value)"
         />
       </div>
-      <div class="field-row">
-        <label>osc mode</label>
-        <select
-          :value="oscMode.value.value || 'max'"
-          :disabled="isLocked"
-          @change="oscMode.set(($event.target as HTMLSelectElement).value)"
-        >
-          <option value="max">max</option>
-          <option value="isadora">isadora</option>
-          <option value="touch">touch</option>
-          <option value="sparck">sparck</option>
-          <option value="ambi">ambi</option>
-        </select>
-      </div>
-      <div class="field-row">
-        <label>frame %</label>
-        <input
-          class="port-input"
-          :value="frameModulo.value.value"
-          :disabled="isLocked"
-          @change="frameModulo.set(($event.target as HTMLInputElement).value)"
-        />
-      </div>
-
-      <div class="field-row">
-        <label>default local IP</label>
-        <button class="toggle-btn" :class="{ on: defaultLocalIP.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(defaultLocalIP)">{{ defaultLocalIP.value.value === '1' ? 'on' : 'off' }}</button>
-      </div>
-      <div class="field-row">
-        <label>auto reconnect</label>
-        <button class="toggle-btn" :class="{ on: autoReconnect.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(autoReconnect)">{{ autoReconnect.value.value === '1' ? 'on' : 'off' }}</button>
-      </div>
-      <div class="field-row">
-        <label>bundled</label>
-        <button class="toggle-btn" :class="{ on: bundled.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(bundled)">{{ bundled.value.value === '1' ? 'on' : 'off' }}</button>
-      </div>
-      <div class="field-row">
-        <label>matrix</label>
-        <button class="toggle-btn" :class="{ on: matrix.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(matrix)">{{ matrix.value.value === '1' ? 'on' : 'off' }}</button>
-      </div>
-      <div class="field-row">
-        <label>inv matrix</label>
-        <button class="toggle-btn" :class="{ on: invmatrix.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(invmatrix)">{{ invmatrix.value.value === '1' ? 'on' : 'off' }}</button>
-      </div>
-      <div class="field-row">
-        <label>left handed</label>
-        <button class="toggle-btn" :class="{ on: leftHanded.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(leftHanded)">{{ leftHanded.value.value === '1' ? 'on' : 'off' }}</button>
-      </div>
-      <div class="field-row">
-        <label>Y-up → Z-up</label>
-        <button class="toggle-btn" :class="{ on: yUp2zUp.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(yUp2zUp)">{{ yUp2zUp.value.value === '1' ? 'on' : 'off' }}</button>
-      </div>
-      <div class="field-row">
-        <label>skeletons</label>
-        <button class="toggle-btn" :class="{ on: sendSkeletons.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendSkeletons)">{{ sendSkeletons.value.value === '1' ? 'on' : 'off' }}</button>
-      </div>
-      <div class="field-row">
-        <label>marker infos</label>
-        <button class="toggle-btn" :class="{ on: sendMarkerInfos.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendMarkerInfos)">{{ sendMarkerInfos.value.value === '1' ? 'on' : 'off' }}</button>
-      </div>
-      <div class="field-row">
-        <label>other markers</label>
-        <button class="toggle-btn" :class="{ on: sendOtherMarkerInfos.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendOtherMarkerInfos)">{{ sendOtherMarkerInfos.value.value === '1' ? 'on' : 'off' }}</button>
-      </div>
-      <div class="field-row">
-        <label>verbose</label>
-        <button class="toggle-btn" :class="{ on: verbose.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(verbose)">{{ verbose.value.value === '1' ? 'on' : 'off' }}</button>
+      <div class="field-grid-2">
+        <div class="field-row">
+          <label>osc mode</label>
+          <select
+            :value="oscMode.value.value || 'max'"
+            :disabled="isLocked"
+            @change="oscMode.set(($event.target as HTMLSelectElement).value)"
+          >
+            <option value="max">max</option>
+            <option value="isadora">isadora</option>
+            <option value="touch">touch</option>
+            <option value="sparck">sparck</option>
+            <option value="ambi">ambi</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>frame %</label>
+          <input
+            class="port-input"
+            :value="frameModulo.value.value"
+            :disabled="isLocked"
+            @change="frameModulo.set(($event.target as HTMLInputElement).value)"
+          />
+        </div>
+        <div class="field-row">
+          <label>skeletons</label>
+          <button class="toggle-btn" :class="{ on: sendSkeletons.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendSkeletons)">{{ sendSkeletons.value.value === '1' ? 'on' : 'off' }}</button>
+        </div>
+        <div class="field-row">
+          <label>Y-up → Z-up</label>
+          <button class="toggle-btn" :class="{ on: yUp2zUp.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(yUp2zUp)">{{ yUp2zUp.value.value === '1' ? 'on' : 'off' }}</button>
+        </div>
+        <div class="field-row">
+          <label>other markers</label>
+          <button class="toggle-btn" :class="{ on: sendOtherMarkerInfos.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendOtherMarkerInfos)">{{ sendOtherMarkerInfos.value.value === '1' ? 'on' : 'off' }}</button>
+        </div>
+        <div class="field-row">
+          <label>left handed</label>
+          <button class="toggle-btn" :class="{ on: leftHanded.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(leftHanded)">{{ leftHanded.value.value === '1' ? 'on' : 'off' }}</button>
+        </div>
+        <div class="field-row">
+          <label>marker infos</label>
+          <button class="toggle-btn" :class="{ on: sendMarkerInfos.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(sendMarkerInfos)">{{ sendMarkerInfos.value.value === '1' ? 'on' : 'off' }}</button>
+        </div>
+        <div class="field-row">
+          <label>bundled</label>
+          <button class="toggle-btn" :class="{ on: bundled.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(bundled)">{{ bundled.value.value === '1' ? 'on' : 'off' }}</button>
+        </div>
+        <div class="field-row">
+          <label>matrix</label>
+          <button class="toggle-btn" :class="{ on: matrix.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(matrix)">{{ matrix.value.value === '1' ? 'on' : 'off' }}</button>
+        </div>
+        <div class="field-row">
+          <label>verbose</label>
+          <button class="toggle-btn" :class="{ on: verbose.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(verbose)">{{ verbose.value.value === '1' ? 'on' : 'off' }}</button>
+        </div>
+        <div class="field-row">
+          <label>inv matrix</label>
+          <button class="toggle-btn" :class="{ on: invmatrix.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(invmatrix)">{{ invmatrix.value.value === '1' ? 'on' : 'off' }}</button>
+        </div>
+        <div class="field-row">
+          <label>auto reconnect</label>
+          <button class="toggle-btn" :class="{ on: autoReconnect.value.value === '1' }" :disabled="isLocked" @click="toggleBoolField(autoReconnect)">{{ autoReconnect.value.value === '1' ? 'on' : 'off' }}</button>
+        </div>
       </div>
 
       <div class="advanced-row">
@@ -414,8 +394,9 @@ h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px
 .field-row input, .field-row select { flex: 1; min-width: 0; padding: 4px 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: white; font-family: monospace; font-size: 12px; }
 .field-row input:disabled, .field-row select:disabled { color: #666; cursor: not-allowed; }
 .port-input { max-width: 80px !important; flex: none !important; }
-.toggle-btn { padding: 2px 8px; border-radius: 4px; border: 1px solid #555; background: none; color: #888; cursor: pointer; font-size: 10px; }
+.toggle-btn { padding: 4px 8px; border-radius: 4px; border: 1px solid #555; background: none; color: #888; cursor: pointer; font-size: 10px; }
 .field-row .toggle-btn { flex: 1; }
+.field-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px; }
 .toggle-btn.on { background: #FFA126; color: #1a1a1a; border-color: #FFA126; }
 .toggle-btn.label-slot { min-width: 70px; text-align: center; font-size: 11px; }
 .toggle-btn:disabled { opacity: 0.4; cursor: not-allowed; }

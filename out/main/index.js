@@ -210,7 +210,8 @@ const DEFAULTS = {
   appVersion: "",
   ugPath: "",
   natnetOscPath: "",
-  lastCompatCheckAt: null
+  lastCompatCheckAt: null,
+  selectedInterface: ""
 };
 function settingsPath() {
   return path.join(electron.app.getPath("userData"), "settings.json");
@@ -906,6 +907,7 @@ function defaultCliConfig(localIP2) {
     matrix: "0",
     motiveIP: localIP2,
     multicastIP: "239.255.42.99",
+    oscMode: "max",
     sendMarkerInfos: "0",
     sendOtherMarkerInfos: "0",
     sendSkeletons: "0",
@@ -919,7 +921,7 @@ function buildNatNetArgs(cfg, localIP2, oscSendIP, oscSendPort) {
   args.push("--motiveIP", cfg.motiveIP);
   args.push("--oscSendIP", oscSendIP);
   args.push("--oscSendPort", String(oscSendPort));
-  args.push("--oscMode", "max");
+  args.push("--oscMode", cfg.oscMode || "max");
   if (cfg.multicastIP && cfg.multicastIP !== "239.255.42.99") {
     args.push("--multiCastIP", cfg.multicastIP);
   }
@@ -1033,6 +1035,7 @@ class NatNetDevice {
     pub("natnet/matrix", "0");
     pub("natnet/motiveIP", this.localIP);
     pub("natnet/multicastIP", "239.255.42.99");
+    pub("natnet/oscMode", "max");
     pub("natnet/sendMarkerInfos", "0");
     pub("natnet/sendOtherMarkerInfos", "0");
     pub("natnet/sendSkeletons", "0");

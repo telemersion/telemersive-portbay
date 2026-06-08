@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useNetworkInterfaces, type NetInterface } from '../composables/useNetworkInterfaces'
 
 const router = useRouter()
 const error = ref('')
@@ -18,6 +19,21 @@ const config = reactive({
   localIP: ''
 })
 
+const { interfaces } = useNetworkInterfaces()
+const selectedInterface = ref<NetInterface | null>(null)
+
+function pickInterface(iface: NetInterface | null) {
+  selectedInterface.value = iface
+  config.localIP = iface?.address ?? ''
+}
+
+async function onInterfaceChange(e: Event) {
+  const address = (e.target as HTMLSelectElement).value
+  pickInterface(interfaces.value.find(i => i.address === address) ?? null)
+  const settings = await window.api.invoke('settings:load')
+  await window.api.invoke('settings:save', { ...settings, selectedInterface: selectedInterface.value?.name ?? '' })
+}
+
 const form = reactive({
   peerName: '',
   roomName: '',
@@ -33,6 +49,19 @@ window.api.invoke('settings:load').then((settings: any) => {
     form.peerName = settings.peerName || ''
     form.roomName = settings.lastRoomName || ''
     form.roomPwd = settings.lastRoomPwd || ''
+    // Restore saved NIC once interfaces are available.
+    const savedName: string = settings.selectedInterface || ''
+    const tryRestore = () => {
+      if (!interfaces.value.length) return
+      const match = savedName
+        ? interfaces.value.find(i => i.name === savedName) ?? interfaces.value[0]
+        : interfaces.value[0]
+      pickInterface(match)
+    }
+    if (interfaces.value.length) tryRestore()
+    else {
+      const stop = watch(interfaces, () => { tryRestore(); stop() })
+    }
   }
 })
 
@@ -85,7 +114,8 @@ async function connect() {
     brokerUrl: config.host,
     brokerPort: config.port,
     brokerUser: config.username,
-    brokerPwd: config.password
+    brokerPwd: config.password,
+    selectedInterface: selectedInterface.value?.name ?? ''
   })
   window.api.send('bus:configure', { ...config })
   try {
@@ -149,6 +179,21 @@ async function leave() {
       <div class="form-row">
         <label>RouterPwd</label>
         <input v-model="config.password" type="password" :disabled="isConnected" />
+      </div>
+      <div class="form-row">
+        <label>NetworkCard</label>
+        <select
+          :value="selectedInterface?.address ?? ''"
+          :disabled="isConnected"
+          @change="onInterfaceChange"
+        >
+          <option v-if="!interfaces.length" value="">detecting…</option>
+          <option
+            v-for="iface in interfaces"
+            :key="iface.address"
+            :value="iface.address"
+          >{{ iface.name }} — {{ iface.address }}</option>
+        </select>
       </div>
 
       <div class="btn-row">
