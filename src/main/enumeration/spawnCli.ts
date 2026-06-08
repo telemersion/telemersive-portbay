@@ -1,5 +1,5 @@
 import { spawn, type SpawnOptions } from 'child_process'
-import { existsSync } from 'fs'
+import { existsSync, readdirSync } from 'fs'
 import { resolve } from 'path'
 import { loadSettings } from '../persistence/settings'
 
@@ -46,6 +46,19 @@ export function resolveUgPath(): string | null {
     return existsSync(linux) ? linux : null
   }
   if (process.platform === 'win32') {
+    if (!SKIP_VENDORED) {
+      const vendored = resolve(process.cwd(), 'vendor/ultragrid/active/uv.exe')
+      if (existsSync(vendored)) return vendored
+    }
+    // Windows installs are versioned folders under Program Files — pick latest
+    const base = 'C:\\Program Files\\Ultragrid'
+    if (existsSync(base)) {
+      const versions = readdirSync(base).sort().reverse()
+      for (const v of versions) {
+        const candidate = resolve(base, v, 'uv.exe')
+        if (existsSync(candidate)) return candidate
+      }
+    }
     return null
   }
   return null

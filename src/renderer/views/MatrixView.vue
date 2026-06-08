@@ -22,14 +22,18 @@ const CHANNEL_COUNT = 20
 // ── Panel row split ──────────────────────────────────────────────
 const panelRowHeight = ref(320)
 const MIN_PANEL_HEIGHT = 160
+// Minimum pixels to keep visible above the panel: RoomHeader + channel header + one peer row.
+// Derived from CSS: ~45px header + 12px padding + 24px ch-header + 36px peer row + 6px gap = ~123px.
+const MATRIX_MIN_VISIBLE = 130
 let dragging = false
 let dragStartY = 0
 let dragStartHeight = 0
+let dragMaxHeight = 0
 
 onMounted(async () => {
   const settings = await window.api.invoke('settings:load')
   if (typeof settings?.panelRowHeight === 'number') {
-    panelRowHeight.value = settings.panelRowHeight
+    panelRowHeight.value = Math.min(settings.panelRowHeight, window.innerHeight - MATRIX_MIN_VISIBLE)
   }
 })
 
@@ -37,6 +41,7 @@ function onDragHandleMousedown(e: MouseEvent) {
   dragging = true
   dragStartY = e.clientY
   dragStartHeight = panelRowHeight.value
+  dragMaxHeight = window.innerHeight - MATRIX_MIN_VISIBLE
   window.addEventListener('mousemove', onDragMousemove)
   window.addEventListener('mouseup', onDragMouseup)
   e.preventDefault()
@@ -45,7 +50,7 @@ function onDragHandleMousedown(e: MouseEvent) {
 function onDragMousemove(e: MouseEvent) {
   if (!dragging) return
   const delta = dragStartY - e.clientY
-  panelRowHeight.value = Math.max(MIN_PANEL_HEIGHT, dragStartHeight + delta)
+  panelRowHeight.value = Math.min(dragMaxHeight, Math.max(MIN_PANEL_HEIGHT, dragStartHeight + delta))
 }
 
 function onDragMouseup() {
@@ -307,6 +312,7 @@ async function onRemoveDevice(peerId: string, channelIndex: number) {
   transition: bottom 0.15s;
   display: flex;
   flex-direction: column;
+  padding-bottom: 6px;
 }
 
 .matrix-scroll {
