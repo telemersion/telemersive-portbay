@@ -168,11 +168,20 @@ const videoFps = bind(
   () => videoCapture.value?.advanced?.texture?.fps
 )
 
+const videoCaptureCustomFlags = bind(
+  'audioVideo/videoCapture/custom/customFlags/flags',
+  () => videoCapture.value?.custom?.customFlags?.flags
+)
+
 const videoRxTypeBinding = bind(
   'audioVideo/videoReciever/type',
   () => videoReciever.value?.type
 )
 const videoRxType = computed(() => videoReciever.value?.type ?? '0')
+const videoRxCustomFlags = bind(
+  'audioVideo/videoReciever/custom/customFlags/flags',
+  () => videoReciever.value?.custom?.customFlags?.flags
+)
 const videoRxName = bind(
   'audioVideo/videoReciever/texture/name',
   () => videoReciever.value?.texture?.name
@@ -183,6 +192,10 @@ const videoRxNdiName = bind(
 )
 
 const audioTypeBinding = bind('audioVideo/audioCapture/type', () => audioCapture.value?.type)
+const audioCaptureCustomFlags = bind(
+  'audioVideo/audioCapture/custom/customFlags/flags',
+  () => audioCapture.value?.custom?.customFlags?.flags
+)
 const portaudioSel = bind(
   'audioVideo/audioCapture/portaudio/menu/selection',
   () => audioCapture.value?.portaudio?.menu?.selection
@@ -217,6 +230,10 @@ const audioSamplerate = bind(
 )
 
 const audioRxTypeBinding = bind('audioVideo/audioReceiver/type', () => audioReceiver.value?.type)
+const audioRxCustomFlags = bind(
+  'audioVideo/audioReceiver/custom/customFlags/flags',
+  () => audioReceiver.value?.custom?.customFlags?.flags
+)
 const portaudioRxSel = bind(
   'audioVideo/audioReceiver/portaudio/menu/selection',
   () => audioReceiver.value?.portaudio?.menu?.selection
@@ -498,7 +515,19 @@ async function triggerRefresh(backend: Backend) {
           >
             <option value="0">texture</option>
             <option value="1">ndi</option>
+            <option value="2">custom</option>
           </select>
+        </div>
+
+        <div v-if="videoType === '2'" class="field-row">
+          <label>flags</label>
+          <input
+            :value="videoCaptureCustomFlags.value.value"
+            :disabled="isLocked"
+            placeholder="-t my_capture:param"
+            @change="videoCaptureCustomFlags.set(($event.target as HTMLInputElement).value)"
+          />
+          <button class="clear-btn" :disabled="isLocked" @click="clearField(videoCaptureCustomFlags)">clear</button>
         </div>
 
         <div v-if="videoType === '0'" class="field-row">
@@ -527,13 +556,13 @@ async function triggerRefresh(backend: Backend) {
           <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('ndi')" title="Refresh">↻</button>
         </div>
 
-        <div class="advanced-row">
+        <div v-if="videoType !== '2'" class="advanced-row">
           <button class="advanced-pill" @click="videoCaptureAdvOpen = !videoCaptureAdvOpen">
             advanced {{ videoCaptureAdvOpen ? '▾' : '▸' }}
           </button>
         </div>
 
-        <div v-if="videoCaptureAdvOpen" class="advanced-fold">
+        <div v-if="videoType !== '2' && videoCaptureAdvOpen" class="advanced-fold">
           <div class="field-row">
             <label>codec</label>
             <select
@@ -607,8 +636,21 @@ async function triggerRefresh(backend: Backend) {
           >
             <option value="0">texture</option>
             <option value="1">ndi</option>
+            <option value="2">custom</option>
           </select>
         </div>
+
+        <div v-if="videoRxType === '2'" class="field-row">
+          <label>flags</label>
+          <input
+            :value="videoRxCustomFlags.value.value"
+            :disabled="isLocked"
+            placeholder="-d my_display:param"
+            @change="videoRxCustomFlags.set(($event.target as HTMLInputElement).value)"
+          />
+          <button class="clear-btn" :disabled="isLocked" @click="clearField(videoRxCustomFlags)">clear</button>
+        </div>
+
         <div v-if="videoRxType === '0'" class="field-row">
           <label>texture name</label>
           <input
@@ -626,13 +668,13 @@ async function triggerRefresh(backend: Backend) {
           />
         </div>
 
-        <div class="advanced-row">
+        <div v-if="videoRxType !== '2'" class="advanced-row">
           <button class="advanced-pill" @click="videoReceiverAdvOpen = !videoReceiverAdvOpen">
             advanced {{ videoReceiverAdvOpen ? '▾' : '▸' }}
           </button>
         </div>
 
-        <div v-if="videoReceiverAdvOpen" class="advanced-fold">
+        <div v-if="videoRxType !== '2' && videoReceiverAdvOpen" class="advanced-fold">
           <div class="field-row">
             <label>postprocess</label>
             <input
@@ -673,7 +715,19 @@ async function triggerRefresh(backend: Backend) {
             <option value="1">coreaudio</option>
             <option value="2">wasapi</option>
             <option value="3">jack</option>
+            <option value="7">custom</option>
           </select>
+        </div>
+
+        <div v-if="audioType === '7'" class="field-row">
+          <label>flags</label>
+          <input
+            :value="audioCaptureCustomFlags.value.value"
+            :disabled="isLocked"
+            placeholder="-s my_capture:param"
+            @change="audioCaptureCustomFlags.set(($event.target as HTMLInputElement).value)"
+          />
+          <button class="clear-btn" :disabled="isLocked" @click="clearField(audioCaptureCustomFlags)">clear</button>
         </div>
 
         <div v-if="audioType === '0'" class="field-row">
@@ -733,13 +787,13 @@ async function triggerRefresh(backend: Backend) {
           <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('jackCapture')" title="Refresh">↻</button>
         </div>
 
-        <div class="advanced-row">
+        <div v-if="audioType !== '7'" class="advanced-row">
           <button class="advanced-pill" @click="audioCaptureAdvOpen = !audioCaptureAdvOpen">
             advanced {{ audioCaptureAdvOpen ? '▾' : '▸' }}
           </button>
         </div>
 
-        <div v-if="audioCaptureAdvOpen" class="advanced-fold">
+        <div v-if="audioType !== '7' && audioCaptureAdvOpen" class="advanced-fold">
           <div class="field-row">
             <label>codec</label>
             <select
@@ -806,7 +860,19 @@ async function triggerRefresh(backend: Backend) {
             <option value="1">coreaudio</option>
             <option value="2">wasapi</option>
             <option value="3">jack</option>
+            <option value="7">custom</option>
           </select>
+        </div>
+
+        <div v-if="audioRxType === '7'" class="field-row">
+          <label>flags</label>
+          <input
+            :value="audioRxCustomFlags.value.value"
+            :disabled="isLocked"
+            placeholder="-r my_output:param"
+            @change="audioRxCustomFlags.set(($event.target as HTMLInputElement).value)"
+          />
+          <button class="clear-btn" :disabled="isLocked" @click="clearField(audioRxCustomFlags)">clear</button>
         </div>
 
         <div v-if="audioRxType === '0'" class="field-row">
@@ -866,13 +932,13 @@ async function triggerRefresh(backend: Backend) {
           <button class="refresh-icon" :disabled="isLocked" @click="triggerRefresh('jackReceive')" title="Refresh">↻</button>
         </div>
 
-        <div class="advanced-row">
+        <div v-if="audioRxType !== '7'" class="advanced-row">
           <button class="advanced-pill" @click="audioReceiverAdvOpen = !audioReceiverAdvOpen">
             advanced {{ audioReceiverAdvOpen ? '▾' : '▸' }}
           </button>
         </div>
 
-        <div v-if="audioReceiverAdvOpen" class="advanced-fold">
+        <div v-if="audioRxType !== '7' && audioReceiverAdvOpen" class="advanced-fold">
           <div class="field-row">
             <label>mapping</label>
             <input

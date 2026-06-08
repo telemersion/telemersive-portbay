@@ -2804,6 +2804,18 @@ function resolveUgPath() {
     return fs.existsSync(linux) ? linux : null;
   }
   if (process.platform === "win32") {
+    if (!SKIP_VENDORED) {
+      const vendored = path.resolve(process.cwd(), "vendor/ultragrid/active/uv.exe");
+      if (fs.existsSync(vendored)) return vendored;
+    }
+    const base = "C:\\Program Files\\Ultragrid";
+    if (fs.existsSync(base)) {
+      const versions = fs.readdirSync(base).sort().reverse();
+      for (const v of versions) {
+        const candidate = path.resolve(base, v, "uv.exe");
+        if (fs.existsSync(candidate)) return candidate;
+      }
+    }
     return null;
   }
   return null;
