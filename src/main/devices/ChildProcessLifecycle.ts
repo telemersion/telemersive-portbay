@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from 'child_process'
+import { spawn, type ChildProcess, type SpawnOptions } from 'child_process'
 
 export type ExitReason = 'spawn-failure' | 'crash' | 'killed'
 
@@ -26,6 +26,28 @@ export class ChildProcessLifecycle {
 
   constructor(private readonly opts: LifecycleOptions) {}
 
+  private spawnOptions(): SpawnOptions {
+    const env = this.opts.env ?? process.env
+    // stdout/stderr are piped so the monitor log keeps receiving UV output.
+    const stdio: SpawnOptions['stdio'] = ['ignore', 'pipe', 'pipe']
+
+    if (process.platform === 'win32') {
+      // windowsHide maps to CREATE_NO_WINDOW: UV (a console app launched from
+      // Electron's GUI subsystem) gets its OWN hidden console. Because it has a
+      // console, SpoutLibrary's AllocConsole() is a no-op, so no visible
+      // SpoutLibrary.log window appears (closing that window would kill UV).
+      // We must NOT pass detached on Windows — that maps to DETACHED_PROCESS,
+      // which gives the child no console, letting AllocConsole succeed and open
+      // the log window. Process-group teardown isn't needed here; stop() calls
+      // child.kill() (TerminateProcess) directly on Windows.
+      return { env, stdio, windowsHide: true }
+    }
+
+    // POSIX: detached puts the child in a new process group so stop() can signal
+    // the whole group — catches helper subprocesses UV may fork.
+    return { env, stdio, detached: true }
+  }
+
   start(): void {
     if (this.child) return
 
@@ -36,21 +58,7 @@ export class ChildProcessLifecycle {
 
     let child: ChildProcess
     try {
-      // detached: true puts the child in a new process group so we can signal
-      // the entire group on stop — catches helper subprocesses UV may fork
-      // (and works around PID-vs-group ambiguity with the shell-wrapped `uv`).
-      child = spawn(this.opts.binary, this.opts.args, {
-        env: this.opts.env ?? process.env,
-        detached: true,
-        // windowsHide suppresses the UG console/splash window.
-        // stdio: ignore stdin so Spout's AllocConsole() finds no console to
-        // attach to and does not create a visible SpoutLibrary.log window
-        // (closing that window would kill the UG process). GL's rendering
-        // window is created via CreateWindow, not AllocConsole, so it still
-        // appears normally. stdout/stderr remain piped for the monitor log.
-        windowsHide: true,
-        stdio: ['ignore', 'pipe', 'pipe']
-      })
+      child = spawn(this.opts.binary, this.opts.args, this.spawnOptions())
     } catch {
       this.opts.onExit?.('spawn-failure', null)
       return

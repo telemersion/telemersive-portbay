@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { ChildProcessLifecycle, type ExitReason } from '../../../src/main/devices/ChildProcessLifecycle'
 
-const SH = '/bin/sh'
+// Use the running Node binary — always available regardless of platform.
+const NODE = process.execPath
 
 function waitForExit(timeoutMs = 5000): {
   promise: Promise<{ reason: ExitReason; code: number | null }>
@@ -19,8 +20,8 @@ describe('ChildProcessLifecycle', () => {
   it('classifies early exit as spawn-failure', async () => {
     const exit = waitForExit()
     const lifecycle = new ChildProcessLifecycle({
-      binary: SH,
-      args: ['-c', 'exit 2'],
+      binary: NODE,
+      args: ['-e', 'process.exit(2)'],
       spawnGraceMs: 2000,
       onExit: (reason, code) => exit.resolve({ reason, code })
     })
@@ -33,8 +34,8 @@ describe('ChildProcessLifecycle', () => {
   it('classifies exit after spawn grace as crash', async () => {
     const exit = waitForExit()
     const lifecycle = new ChildProcessLifecycle({
-      binary: SH,
-      args: ['-c', 'sleep 0.3; exit 7'],
+      binary: NODE,
+      args: ['-e', 'setTimeout(() => process.exit(7), 300)'],
       spawnGraceMs: 100,
       onExit: (reason, code) => exit.resolve({ reason, code })
     })
@@ -47,8 +48,8 @@ describe('ChildProcessLifecycle', () => {
   it('classifies explicit stop as killed', async () => {
     const exit = waitForExit()
     const lifecycle = new ChildProcessLifecycle({
-      binary: SH,
-      args: ['-c', 'sleep 10'],
+      binary: NODE,
+      args: ['-e', 'setTimeout(() => {}, 10000)'],
       spawnGraceMs: 100,
       onExit: (reason, code) => exit.resolve({ reason, code })
     })
@@ -59,31 +60,12 @@ describe('ChildProcessLifecycle', () => {
     expect(reason).toBe('killed')
   })
 
-  it('stop kills immediately even when SIGTERM would be trapped', async () => {
-    // We send SIGKILL directly (no SIGTERM), so a process that traps/ignores
-    // TERM still dies without waiting. Verifies stop() doesn't rely on
-    // graceful cooperation from the child.
-    const exit = waitForExit()
-    const lifecycle = new ChildProcessLifecycle({
-      binary: SH,
-      args: ['-c', 'trap "" TERM; sleep 10'],
-      onExit: (reason) => exit.resolve({ reason, code: null })
-    })
-    lifecycle.start()
-    await new Promise((r) => setTimeout(r, 50))
-    const stopStarted = Date.now()
-    lifecycle.stop()
-    await exit.promise
-    const killLatency = Date.now() - stopStarted
-    expect(killLatency).toBeLessThan(500)
-  })
-
   it('splits stdout into lines', async () => {
     const lines: string[] = []
     const exit = waitForExit()
     const lifecycle = new ChildProcessLifecycle({
-      binary: SH,
-      args: ['-c', 'printf "one\\ntwo\\nthree\\n"'],
+      binary: NODE,
+      args: ['-e', 'process.stdout.write("one\\ntwo\\nthree\\n")'],
       spawnGraceMs: 50,
       onStdout: (line) => lines.push(line),
       onExit: (reason, code) => exit.resolve({ reason, code })
@@ -97,8 +79,8 @@ describe('ChildProcessLifecycle', () => {
     const lines: string[] = []
     const exit = waitForExit()
     const lifecycle = new ChildProcessLifecycle({
-      binary: SH,
-      args: ['-c', 'printf "err1\\nerr2\\n" 1>&2'],
+      binary: NODE,
+      args: ['-e', 'process.stderr.write("err1\\nerr2\\n")'],
       spawnGraceMs: 50,
       onStderr: (line) => lines.push(line),
       onExit: (reason, code) => exit.resolve({ reason, code })
@@ -112,8 +94,8 @@ describe('ChildProcessLifecycle', () => {
     const lines: string[] = []
     const exit = waitForExit()
     const lifecycle = new ChildProcessLifecycle({
-      binary: SH,
-      args: ['-c', 'printf "no-newline"'],
+      binary: NODE,
+      args: ['-e', 'process.stdout.write("no-newline")'],
       spawnGraceMs: 50,
       onStdout: (line) => lines.push(line),
       onExit: (reason, code) => exit.resolve({ reason, code })
@@ -126,8 +108,8 @@ describe('ChildProcessLifecycle', () => {
   it('isRunning reflects state across start/stop', async () => {
     const exit = waitForExit()
     const lifecycle = new ChildProcessLifecycle({
-      binary: SH,
-      args: ['-c', 'sleep 10'],
+      binary: NODE,
+      args: ['-e', 'setTimeout(() => {}, 10000)'],
       onExit: (reason, code) => exit.resolve({ reason, code })
     })
     expect(lifecycle.isRunning()).toBe(false)
@@ -138,42 +120,12 @@ describe('ChildProcessLifecycle', () => {
     await exit.promise
   })
 
-  it('stop signals the whole process group (kills forked helpers)', async () => {
-    // Shell script forks a `sleep` helper in its own background, prints the
-    // helper's PID, then waits. If stop() only signals the shell's PID, the
-    // helper would be orphaned (re-parented to PID 1) and survive.
-    const exit = waitForExit()
-    const helperPids: string[] = []
-    const lifecycle = new ChildProcessLifecycle({
-      binary: SH,
-      args: ['-c', 'sleep 30 & echo $!; wait'],
-      spawnGraceMs: 50,
-      onStdout: (line) => helperPids.push(line.trim()),
-      onExit: (reason, code) => exit.resolve({ reason, code })
-    })
-    lifecycle.start()
-    // Wait for the shell to print the helper PID.
-    await new Promise((r) => setTimeout(r, 100))
-    lifecycle.stop()
-    await exit.promise
-    expect(helperPids).toHaveLength(1)
-    const helperPid = Number(helperPids[0])
-    expect(Number.isFinite(helperPid)).toBe(true)
-    // Give the OS a moment to finalize exit state.
-    await new Promise((r) => setTimeout(r, 50))
-    // Signal 0 is the "does this PID exist" probe. If the helper survived,
-    // process.kill(pid, 0) resolves without throwing; if it's gone, it throws ESRCH.
-    let helperAlive = true
-    try { process.kill(helperPid, 0) } catch { helperAlive = false }
-    expect(helperAlive).toBe(false)
-  })
-
   it('start is idempotent while running', async () => {
     const exits: ExitReason[] = []
     const exit = waitForExit()
     const lifecycle = new ChildProcessLifecycle({
-      binary: SH,
-      args: ['-c', 'sleep 10'],
+      binary: NODE,
+      args: ['-e', 'setTimeout(() => {}, 10000)'],
       onExit: (reason) => { exits.push(reason); exit.resolve({ reason, code: null }) }
     })
     lifecycle.start()
@@ -182,5 +134,51 @@ describe('ChildProcessLifecycle', () => {
     lifecycle.stop()
     await exit.promise
     expect(exits).toEqual(['killed'])
+  })
+
+  // POSIX only: signal trapping and process-group kill rely on UNIX semantics.
+  const describeIfPosix = process.platform === 'win32' ? describe.skip : describe
+
+  describeIfPosix('POSIX-only', () => {
+    const SH = '/bin/sh'
+
+    it('stop kills immediately even when SIGTERM would be trapped', async () => {
+      const exit = waitForExit()
+      const lifecycle = new ChildProcessLifecycle({
+        binary: SH,
+        args: ['-c', 'trap "" TERM; sleep 10'],
+        onExit: (reason) => exit.resolve({ reason, code: null })
+      })
+      lifecycle.start()
+      await new Promise((r) => setTimeout(r, 50))
+      const stopStarted = Date.now()
+      lifecycle.stop()
+      await exit.promise
+      const killLatency = Date.now() - stopStarted
+      expect(killLatency).toBeLessThan(500)
+    })
+
+    it('stop signals the whole process group (kills forked helpers)', async () => {
+      const exit = waitForExit()
+      const helperPids: string[] = []
+      const lifecycle = new ChildProcessLifecycle({
+        binary: SH,
+        args: ['-c', 'sleep 30 & echo $!; wait'],
+        spawnGraceMs: 50,
+        onStdout: (line) => helperPids.push(line.trim()),
+        onExit: (reason, code) => exit.resolve({ reason, code })
+      })
+      lifecycle.start()
+      await new Promise((r) => setTimeout(r, 100))
+      lifecycle.stop()
+      await exit.promise
+      expect(helperPids).toHaveLength(1)
+      const helperPid = Number(helperPids[0])
+      expect(Number.isFinite(helperPid)).toBe(true)
+      await new Promise((r) => setTimeout(r, 50))
+      let helperAlive = true
+      try { process.kill(helperPid, 0) } catch { helperAlive = false }
+      expect(helperAlive).toBe(false)
+    })
   })
 })

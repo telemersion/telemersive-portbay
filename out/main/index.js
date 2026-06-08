@@ -768,6 +768,14 @@ class ChildProcessLifecycle {
   escapeTimer = null;
   stdoutBuf = "";
   stderrBuf = "";
+  spawnOptions() {
+    const env = this.opts.env ?? process.env;
+    const stdio = ["ignore", "pipe", "pipe"];
+    if (process.platform === "win32") {
+      return { env, stdio, windowsHide: true };
+    }
+    return { env, stdio, detached: true };
+  }
   start() {
     if (this.child) return;
     this.stopRequested = false;
@@ -776,18 +784,7 @@ class ChildProcessLifecycle {
     this.spawnedAt = Date.now();
     let child;
     try {
-      child = child_process.spawn(this.opts.binary, this.opts.args, {
-        env: this.opts.env ?? process.env,
-        detached: true,
-        // windowsHide suppresses the UG console/splash window.
-        // stdio: ignore stdin so Spout's AllocConsole() finds no console to
-        // attach to and does not create a visible SpoutLibrary.log window
-        // (closing that window would kill the UG process). GL's rendering
-        // window is created via CreateWindow, not AllocConsole, so it still
-        // appears normally. stdout/stderr remain piped for the monitor log.
-        windowsHide: true,
-        stdio: ["ignore", "pipe", "pipe"]
-      });
+      child = child_process.spawn(this.opts.binary, this.opts.args, this.spawnOptions());
     } catch {
       this.opts.onExit?.("spawn-failure", null);
       return;
