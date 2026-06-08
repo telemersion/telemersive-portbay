@@ -46,19 +46,31 @@ describe('parseTextureSender', () => {
       })
     })
 
-    it('emits name= selections for spout senders', () => {
+    it('parses real-world Spout sender list (UG 1.10.3 Windows format)', () => {
       const synth = [
-        'Available servers:',
-        '\t1) app: Spout Sender name: ',
-        '\t2) app: OBS name: Program',
+        'Servers:',
+        '\tIO (OBS_Motive)) width: 1920, height: 1080',
+        '',
+        'Exit'
+      ].join('\n')
+      const result = parseTextureSender(synth, 'spout')
+      expect(result.count).toBe(1)
+      expect(result.range).toBe("name='IO (OBS_Motive)'")
+    })
+
+    it('parses multiple Spout senders', () => {
+      const synth = [
+        'Servers:',
+        '\tSpoutSender1) width: 1280, height: 720',
+        '\tIO (OBS_Motive)) width: 1920, height: 1080',
         '',
         'Exit'
       ].join('\n')
       const result = parseTextureSender(synth, 'spout')
       expect(result.count).toBe(2)
       expect(result.range.split('|')).toEqual([
-        "name='Spout Sender'",
-        "name='OBS/Program'"
+        "name='SpoutSender1'",
+        "name='IO (OBS_Motive)'"
       ])
     })
   })

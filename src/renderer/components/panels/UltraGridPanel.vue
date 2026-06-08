@@ -2,6 +2,135 @@
 import { useMqttBinding } from '../../composables/useMqttBinding'
 import { computed, ref, watch } from 'vue'
 import { type Backend, refreshTopic } from '../../../shared/topics'
+import CustomFlagsModal, { type FlagsPreset, type DocLink } from './CustomFlagsModal.vue'
+
+// ── Custom flags modal state ─────────────────────────────────────
+type CustomFlagsTarget = 'videoCapture' | 'videoReceiver' | 'audioCapture' | 'audioReceiver'
+const customFlagsModalTarget = ref<CustomFlagsTarget | null>(null)
+
+function openCustomFlags(target: CustomFlagsTarget) {
+  customFlagsModalTarget.value = target
+}
+
+function onCustomFlagsUpdate(value: string) {
+  switch (customFlagsModalTarget.value) {
+    case 'videoCapture':   videoCaptureCustomFlags.set(value); break
+    case 'videoReceiver':  videoRxCustomFlags.set(value); break
+    case 'audioCapture':   audioCaptureCustomFlags.set(value); break
+    case 'audioReceiver':  audioRxCustomFlags.set(value); break
+  }
+}
+
+const customFlagsModalValue = computed(() => {
+  switch (customFlagsModalTarget.value) {
+    case 'videoCapture':  return videoCaptureCustomFlags.value.value
+    case 'videoReceiver': return videoRxCustomFlags.value.value
+    case 'audioCapture':  return audioCaptureCustomFlags.value.value
+    case 'audioReceiver': return audioRxCustomFlags.value.value
+    default: return '-none-'
+  }
+})
+
+const customFlagsModalTitle = computed(() => {
+  switch (customFlagsModalTarget.value) {
+    case 'videoCapture':  return 'Video Capture — custom flags'
+    case 'videoReceiver': return 'Video Receiver — custom flags'
+    case 'audioCapture':  return 'Audio Capture — custom flags'
+    case 'audioReceiver': return 'Audio Receiver — custom flags'
+    default: return 'Custom flags'
+  }
+})
+
+const VIDEO_CAPTURE_PRESETS: FlagsPreset[] = [
+  { flags: '',                                                   description: 'ignore / no capture' },
+  { flags: '-t screen',                                          description: 'screen capture' },
+  { flags: '-t dshow:5',                                         description: 'Windows: addressing devices directly (or screen capture for win)' },
+  { flags: '-t avfoundation:device=1',                           description: 'macOS: streaming webcam' },
+  { flags: '-t spout:name=SpoutTX0:fps=25',                     description: 'Windows: capture Spout stream by name at 25 fps' },
+  { flags: '-t syphon:name=Jitter:app=Max:override_fps=60',     description: 'macOS: capture Syphon from specific app at 60 fps' },
+  { flags: '-t decklink:0',                                      description: 'DeckLink: 1st device, default format' },
+  { flags: '-t decklink:0:Hi50:UYVY:connection=SDI',            description: 'DeckLink: 1st device, 1080i50, SDI input' },
+  { flags: '-t decklink:1:Hi50:UYVY:connection=HDMI',           description: 'DeckLink: 2nd device, 1080i50, HDMI input' },
+  { flags: '-t testcard:1920:1080:50i:UYVY',                    description: 'test card: 1080i50' },
+  { flags: '-t testcard:1920:1080:25p:UYVY',                    description: 'test card: 1080p25' },
+  { flags: '-t testcard:80:60:1:UYVY',                          description: 'test card: minimal 80×60 at 1 fps' },
+]
+
+const VIDEO_RECEIVER_PRESETS: FlagsPreset[] = [
+  { flags: '',                                              description: 'ignore / no display' },
+  { flags: '-d gl',                                         description: 'OpenGL window display' },
+  { flags: '-d gl:spout=SpoutRX0',                         description: 'Windows: OpenGL window + Spout output stream' },
+  { flags: '-d gl:syphon=SyphonRX0',                       description: 'macOS: OpenGL window + Syphon output stream' },
+  { flags: '-d decklink:0',                                 description: 'DeckLink: 1st device, default format' },
+  { flags: '-d decklink:0:Use1080pNotPsF=false',           description: 'DeckLink: 1st device, output 25p as 25PsF' },
+  { flags: '-d decklink:2:Use1080pNotPsF=false',           description: 'DeckLink: 3rd device, output 25p as 25PsF' },
+  { flags: "-d ndi:name='My Stream'",                      description: 'NDI: output as named NDI stream' },
+]
+
+const AUDIO_CAPTURE_PRESETS: FlagsPreset[] = [
+  { flags: '',                                        description: 'ignore / no capture' },
+  { flags: '-s portaudio',                         description: 'default portaudio input device' },
+  { flags: '-s portaudio:help',                description: 'portaudio help (see monitor)' },
+  { flags: '-s coreaudio:48 --audio-codec OPUS',   description: 'macOS Core Audio input using OPUS codec' },
+]
+
+const AUDIO_RECEIVER_PRESETS: FlagsPreset[] = [
+  { flags: '',                                        description: 'ignore / no capture' },
+  { flags: '-r portaudio',                         description: 'default portaudio output device' },
+  { flags: '-r portaudio:device=2',                description: 'specific portaudio device by index' },
+  { flags: '-r coreaudio',                         description: 'macOS Core Audio output' },
+  { flags: '-r wasapi',                            description: 'Windows WASAPI output' },
+]
+
+const VIDEO_CUSTOM_DOCS: DocLink[] = [
+  { label: 'UltraGrid', url: 'https://github.com/CESNET/UltraGrid/wiki/Running-UltraGrid' },
+  { label: 'Wiki',    url: 'https://iaspace.zhdk.ch/wiki/ultragrid/' },
+  { label: 'Devices',            url: 'https://github.com/CESNET/UltraGrid/wiki/Device-Settings' },
+  { label: 'Syphon/Spout/NDI',  url: 'https://github.com/CESNET/UltraGrid/wiki/Syphon,-Spout-and-NDI' },
+  { label: 'Advanced',  url: 'https://github.com/CESNET/UltraGrid/wiki/Running-UltraGrid#advanced-settings' },
+]
+
+const AUDIO_CAPTURE_DOCS: DocLink[] = [
+  { label: 'UltraGrid', url: 'https://github.com/CESNET/UltraGrid/wiki/Running-UltraGrid' },
+  { label: 'Wiki',    url: 'https://iaspace.zhdk.ch/wiki/ultragrid/' },
+  { label: 'Audio (-s)', url: 'https://github.com/CESNET/UltraGrid/wiki/Audio-Settings#sending' },
+  { label: 'Advanced',  url: 'https://github.com/CESNET/UltraGrid/wiki/Running-UltraGrid#advanced-settings' },
+]
+
+const AUDIO_RECEIVER_DOCS: DocLink[] = [
+  { label: 'UltraGrid', url: 'https://github.com/CESNET/UltraGrid/wiki/Running-UltraGrid' },
+  { label: 'Wiki',    url: 'https://iaspace.zhdk.ch/wiki/ultragrid/' },
+  { label: 'Audio (-r)', url: 'https://github.com/CESNET/UltraGrid/wiki/Audio-Settings#receiving' },
+  { label: 'Advanced',  url: 'https://github.com/CESNET/UltraGrid/wiki/Running-UltraGrid#advanced-settings' },
+]
+
+const VIDEO_RECEIVER_DOCS: DocLink[] = [
+  { label: 'UltraGrid', url: 'https://github.com/CESNET/UltraGrid/wiki/Running-UltraGrid' },
+  { label: 'Wiki',    url: 'https://iaspace.zhdk.ch/wiki/ultragrid/' },
+  { label: 'DeckLink',          url: 'https://github.com/CESNET/UltraGrid/wiki/Device-Settings#decklink' },
+  { label: 'Syphon/Spout/NDI',  url: 'https://github.com/CESNET/UltraGrid/wiki/Syphon,-Spout-and-NDI' },
+  { label: 'Advanced',  url: 'https://github.com/CESNET/UltraGrid/wiki/Running-UltraGrid#advanced-settings' },
+]
+
+const customFlagsModalPresets = computed<FlagsPreset[]>(() => {
+  switch (customFlagsModalTarget.value) {
+    case 'videoCapture':  return VIDEO_CAPTURE_PRESETS
+    case 'videoReceiver': return VIDEO_RECEIVER_PRESETS
+    case 'audioCapture':  return AUDIO_CAPTURE_PRESETS
+    case 'audioReceiver': return AUDIO_RECEIVER_PRESETS
+    default: return []
+  }
+})
+
+const customFlagsModalDocs = computed<DocLink[]>(() => {
+  switch (customFlagsModalTarget.value) {
+    case 'videoCapture':  return VIDEO_CUSTOM_DOCS
+    case 'videoReceiver': return VIDEO_RECEIVER_DOCS
+    case 'audioCapture':  return AUDIO_CAPTURE_DOCS
+    case 'audioReceiver': return AUDIO_RECEIVER_DOCS
+    default: return []
+  }
+})
 
 const MONITOR_LOG_CAPACITY = 200
 
@@ -185,6 +314,10 @@ const videoRxCustomFlags = bind(
 const videoRxName = bind(
   'audioVideo/videoReciever/texture/name',
   () => videoReciever.value?.texture?.name
+)
+const videoRxClosedWindow = bind(
+  'audioVideo/videoReciever/texture/closedWindow',
+  () => videoReciever.value?.texture?.closedWindow
 )
 const videoRxNdiName = bind(
   'audioVideo/videoReciever/ndi/name',
@@ -521,13 +654,11 @@ async function triggerRefresh(backend: Backend) {
 
         <div v-if="videoType === '2'" class="field-row">
           <label>flags</label>
-          <input
-            :value="videoCaptureCustomFlags.value.value"
-            :disabled="isLocked"
-            placeholder="-t my_capture:param"
-            @change="videoCaptureCustomFlags.set(($event.target as HTMLInputElement).value)"
-          />
-          <button class="clear-btn" :disabled="isLocked" @click="clearField(videoCaptureCustomFlags)">clear</button>
+          <button class="flags-display" :disabled="isLocked" @click="openCustomFlags('videoCapture')">
+            <span :class="{ muted: !videoCaptureCustomFlags.value.value || videoCaptureCustomFlags.value.value === '-none-' }">
+              {{ videoCaptureCustomFlags.value.value === '-none-' || !videoCaptureCustomFlags.value.value ? 'click to edit…' : videoCaptureCustomFlags.value.value }}
+            </span>
+          </button>
         </div>
 
         <div v-if="videoType === '0'" class="field-row">
@@ -642,13 +773,11 @@ async function triggerRefresh(backend: Backend) {
 
         <div v-if="videoRxType === '2'" class="field-row">
           <label>flags</label>
-          <input
-            :value="videoRxCustomFlags.value.value"
-            :disabled="isLocked"
-            placeholder="-d my_display:param"
-            @change="videoRxCustomFlags.set(($event.target as HTMLInputElement).value)"
-          />
-          <button class="clear-btn" :disabled="isLocked" @click="clearField(videoRxCustomFlags)">clear</button>
+          <button class="flags-display" :disabled="isLocked" @click="openCustomFlags('videoReceiver')">
+            <span :class="{ muted: !videoRxCustomFlags.value.value || videoRxCustomFlags.value.value === '-none-' }">
+              {{ videoRxCustomFlags.value.value === '-none-' || !videoRxCustomFlags.value.value ? 'click to edit…' : videoRxCustomFlags.value.value }}
+            </span>
+          </button>
         </div>
 
         <div v-if="videoRxType === '0'" class="field-row">
@@ -658,6 +787,13 @@ async function triggerRefresh(backend: Backend) {
             :disabled="isLocked"
             @change="videoRxName.set(($event.target as HTMLInputElement).value)"
           />
+          <button
+            class="toggle-btn"
+            :class="{ on: videoRxClosedWindow.value.value === '1' }"
+            :disabled="isLocked"
+            title="start with closed window"
+            @click="videoRxClosedWindow.set(videoRxClosedWindow.value.value === '1' ? '0' : '1')"
+          >⊠</button>
         </div>
         <div v-if="videoRxType === '1'" class="field-row">
           <label>ndi name</label>
@@ -721,13 +857,11 @@ async function triggerRefresh(backend: Backend) {
 
         <div v-if="audioType === '7'" class="field-row">
           <label>flags</label>
-          <input
-            :value="audioCaptureCustomFlags.value.value"
-            :disabled="isLocked"
-            placeholder="-s my_capture:param"
-            @change="audioCaptureCustomFlags.set(($event.target as HTMLInputElement).value)"
-          />
-          <button class="clear-btn" :disabled="isLocked" @click="clearField(audioCaptureCustomFlags)">clear</button>
+          <button class="flags-display" :disabled="isLocked" @click="openCustomFlags('audioCapture')">
+            <span :class="{ muted: !audioCaptureCustomFlags.value.value || audioCaptureCustomFlags.value.value === '-none-' }">
+              {{ audioCaptureCustomFlags.value.value === '-none-' || !audioCaptureCustomFlags.value.value ? 'click to edit…' : audioCaptureCustomFlags.value.value }}
+            </span>
+          </button>
         </div>
 
         <div v-if="audioType === '0'" class="field-row">
@@ -866,13 +1000,11 @@ async function triggerRefresh(backend: Backend) {
 
         <div v-if="audioRxType === '7'" class="field-row">
           <label>flags</label>
-          <input
-            :value="audioRxCustomFlags.value.value"
-            :disabled="isLocked"
-            placeholder="-r my_output:param"
-            @change="audioRxCustomFlags.set(($event.target as HTMLInputElement).value)"
-          />
-          <button class="clear-btn" :disabled="isLocked" @click="clearField(audioRxCustomFlags)">clear</button>
+          <button class="flags-display" :disabled="isLocked" @click="openCustomFlags('audioReceiver')">
+            <span :class="{ muted: !audioRxCustomFlags.value.value || audioRxCustomFlags.value.value === '-none-' }">
+              {{ audioRxCustomFlags.value.value === '-none-' || !audioRxCustomFlags.value.value ? 'click to edit…' : audioRxCustomFlags.value.value }}
+            </span>
+          </button>
         </div>
 
         <div v-if="audioRxType === '0'" class="field-row">
@@ -1030,6 +1162,17 @@ async function triggerRefresh(backend: Backend) {
       </button>
     </div>
   </div>
+
+  <CustomFlagsModal
+    v-if="customFlagsModalTarget !== null"
+    :title="customFlagsModalTitle"
+    :value="customFlagsModalValue"
+    :presets="customFlagsModalPresets"
+    :docs="customFlagsModalDocs"
+    :disabled="isLocked"
+    @update="onCustomFlagsUpdate"
+    @close="customFlagsModalTarget = null"
+  />
 </template>
 
 <style scoped>
@@ -1043,6 +1186,10 @@ h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px
 .field-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .field-row label { min-width: 70px; font-size: 11px; color: #888; }
 .field-row input, .field-row select { flex: 1; min-width: 0; padding: 4px 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: white; font-family: monospace; font-size: 12px; }
+.flags-display { flex: 1; min-width: 0; padding: 4px 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #F0DE01; font-family: monospace; font-size: 12px; text-align: left; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.flags-display:hover { border-color: #666; }
+.flags-display:disabled { cursor: not-allowed; opacity: 0.5; }
+.flags-display .muted { color: #555; }
 .field-row select { text-overflow: ellipsis; }
 .field-row input:disabled, .field-row select:disabled { color: #666; cursor: not-allowed; }
 .port-input { max-width: 80px !important; flex: none !important; }

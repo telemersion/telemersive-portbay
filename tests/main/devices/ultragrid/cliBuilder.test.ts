@@ -601,6 +601,27 @@ describe('buildUvArgs — mode 7 (capture-to-local loopback)', () => {
     expect(tIdx).toBeGreaterThanOrEqual(0)
     expect(actual[tIdx + 1]).toBe('ndi:url=http://example.local')
   })
+
+  it('extracts source name from MACHINE (SOURCE) format for NDI capture', () => {
+    let config = applyTopicChange(defaultUltraGridConfig(), 'network/mode', '7')
+    config = applyTopicChange(config, 'audioVideo/videoCapture/type', '1')
+    const actual = buildUvArgs({
+      config,
+      ports: allocateUgPorts(11, 0),
+      indexes: {
+        textureCapture: null,
+        ndiCapture: 'IO (OBS_Motive)',
+        audioCapture: null,
+        audioReceive: null
+      },
+      host: 'x',
+      textureReceiverName: 'loop_channel_0',
+      localOs: 'win'
+    })
+    const tIdx = actual.indexOf('-t')
+    expect(tIdx).toBeGreaterThanOrEqual(0)
+    expect(actual[tIdx + 1]).toBe('ndi:name=OBS_Motive')
+  })
 })
 
 describe('buildUvArgs — top-level flags', () => {

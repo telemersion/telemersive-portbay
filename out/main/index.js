@@ -778,7 +778,15 @@ class ChildProcessLifecycle {
     try {
       child = child_process.spawn(this.opts.binary, this.opts.args, {
         env: this.opts.env ?? process.env,
-        detached: true
+        detached: true,
+        // windowsHide suppresses the UG console/splash window.
+        // stdio: ignore stdin so Spout's AllocConsole() finds no console to
+        // attach to and does not create a visible SpoutLibrary.log window
+        // (closing that window would kill the UG process). GL's rendering
+        // window is created via CreateWindow, not AllocConsole, so it still
+        // appears normally. stdout/stderr remain piped for the monitor log.
+        windowsHide: true,
+        stdio: ["ignore", "pipe", "pipe"]
       });
     } catch {
       this.opts.onExit?.("spawn-failure", null);
@@ -824,6 +832,13 @@ class ChildProcessLifecycle {
   }
   signalGroup(child, signal) {
     if (typeof child.pid !== "number") return;
+    if (process.platform === "win32") {
+      try {
+        child.kill();
+      } catch {
+      }
+      return;
+    }
     try {
       process.kill(-child.pid, signal);
     } catch {
@@ -1662,7 +1677,14 @@ function pushVideoCapture(args, config, indexes, localOs, opts = {}) {
   } else if (type === "1") {
     let flag = "ndi";
     if (indexes.ndiCapture && indexes.ndiCapture !== DEFAULT) {
-      flag += `:${indexes.ndiCapture}`;
+      const parenMatch = indexes.ndiCapture.match(/\((.+)\)$/);
+      if (parenMatch) {
+        flag += `:name=${parenMatch[1].trim()}`;
+      } else if (/^[a-z_]+=/.test(indexes.ndiCapture)) {
+        flag += `:${indexes.ndiCapture}`;
+      } else {
+        flag += `:name=${indexes.ndiCapture}`;
+      }
     }
     args.push("-t", flag);
   }
@@ -1687,7 +1709,10 @@ function pushVideoReceive(args, config, textureReceiverName, localOs) {
     return;
   }
   const name = config.audioVideo.videoReciever.texture.name || textureReceiverName;
-  args.push("-d", `${textureDisplayPrefix(localOs)}'${name}'`);
+  const hideWindow = config.audioVideo.videoReciever.texture.closedWindow === "1";
+  let displayFlag = `${textureDisplayPrefix(localOs)}'${name}'`;
+  if (hideWindow) displayFlag += ":hide-window";
+  args.push("-d", displayFlag);
 }
 function pushAudioCapture(args, config, indexes) {
   const type = config.audioVideo.audioCapture.type;
@@ -2994,6 +3019,22 @@ function parseWasapi(stdout) {
 function parseTextureSender(stdout, backend = "syphon") {
   if (/Unable to open capture device/i.test(stdout)) return DEFAULT_RANGE;
   const lines = stdout.split("\n");
+  if (backend === "spout") {
+    const headerIdx2 = lines.findIndex((l) => /^Servers:/i.test(l.trim()));
+    if (headerIdx2 < 0) return DEFAULT_RANGE;
+    const entries2 = [];
+    for (let i = headerIdx2 + 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      if (/^(Exit|MasterPort|\[)/i.test(line)) break;
+      const widthIdx = line.indexOf(") width:");
+      if (widthIdx < 0) continue;
+      const name = line.slice(0, widthIdx).trim();
+      if (name) entries2.push(`name='${name}'`);
+    }
+    if (entries2.length === 0) return DEFAULT_RANGE;
+    return { range: entries2.join("|"), count: entries2.length };
+  }
   const headerIdx = lines.findIndex((l) => /Available servers:/i.test(l));
   if (headerIdx < 0) return DEFAULT_RANGE;
   const entries = [];
@@ -3005,18 +3046,11 @@ function parseTextureSender(stdout, backend = "syphon") {
     if (!m) continue;
     const app = m[1].trim();
     const name = m[2].trim();
-    entries.push(formatSelection(backend, app, name));
+    if (name) entries.push(`app='${app}':name='${name}'`);
+    else entries.push(`app='${app}'`);
   }
   if (entries.length === 0) return DEFAULT_RANGE;
   return { range: entries.join("|"), count: entries.length };
-}
-function formatSelection(backend, app, name) {
-  if (backend === "syphon") {
-    if (name) return `app='${app}':name='${name}'`;
-    return `app='${app}'`;
-  }
-  const id = name ? `${app}/${name}` : app;
-  return `name='${id}'`;
 }
 function registerDefaultBackends() {
   const textureBackend = process.platform === "win32" ? "spout" : "syphon";

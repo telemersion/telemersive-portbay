@@ -270,7 +270,18 @@ function pushVideoCapture(
   } else if (type === '1') {
     let flag = 'ndi'
     if (indexes.ndiCapture && indexes.ndiCapture !== DEFAULT) {
-      flag += `:${indexes.ndiCapture}`
+      // Parser emits "MACHINE (SOURCE_NAME)" — extract source name from parentheses.
+      // UG's name= accepts the source name alone; passing the full "MACHINE (SOURCE)"
+      // string with spaces breaks arg tokenisation. If the value already contains a
+      // key=value pair (e.g. url=...) pass it through unchanged.
+      const parenMatch = indexes.ndiCapture.match(/\((.+)\)$/)
+      if (parenMatch) {
+        flag += `:name=${parenMatch[1].trim()}`
+      } else if (/^[a-z_]+=/.test(indexes.ndiCapture)) {
+        flag += `:${indexes.ndiCapture}`
+      } else {
+        flag += `:name=${indexes.ndiCapture}`
+      }
     }
     args.push('-t', flag)
   }
@@ -302,7 +313,10 @@ function pushVideoReceive(
   }
   // Default: texture (type === '0')
   const name = config.audioVideo.videoReciever.texture.name || textureReceiverName
-  args.push('-d', `${textureDisplayPrefix(localOs)}'${name}'`)
+  const hideWindow = config.audioVideo.videoReciever.texture.closedWindow === '1'
+  let displayFlag = `${textureDisplayPrefix(localOs)}'${name}'`
+  if (hideWindow) displayFlag += ':hide-window'
+  args.push('-d', displayFlag)
 }
 
 function pushAudioCapture(

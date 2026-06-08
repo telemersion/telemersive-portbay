@@ -41,7 +41,15 @@ export class ChildProcessLifecycle {
       // (and works around PID-vs-group ambiguity with the shell-wrapped `uv`).
       child = spawn(this.opts.binary, this.opts.args, {
         env: this.opts.env ?? process.env,
-        detached: true
+        detached: true,
+        // windowsHide suppresses the UG console/splash window.
+        // stdio: ignore stdin so Spout's AllocConsole() finds no console to
+        // attach to and does not create a visible SpoutLibrary.log window
+        // (closing that window would kill the UG process). GL's rendering
+        // window is created via CreateWindow, not AllocConsole, so it still
+        // appears normally. stdout/stderr remain piped for the monitor log.
+        windowsHide: true,
+        stdio: ['ignore', 'pipe', 'pipe']
       })
     } catch {
       this.opts.onExit?.('spawn-failure', null)
@@ -97,6 +105,13 @@ export class ChildProcessLifecycle {
 
   private signalGroup(child: ChildProcess, signal: NodeJS.Signals): void {
     if (typeof child.pid !== 'number') return
+    if (process.platform === 'win32') {
+      // Windows does not support POSIX process groups or signal names.
+      // child.kill() calls TerminateProcess under the hood, which is equivalent
+      // to SIGKILL — no graceful shutdown, which is what we want anyway.
+      try { child.kill() } catch { /* already dead */ }
+      return
+    }
     try { process.kill(-child.pid, signal) } catch {
       // Group kill can fail if the leader already died; fall back to the PID.
       try { child.kill(signal) } catch { /* already dead */ }
