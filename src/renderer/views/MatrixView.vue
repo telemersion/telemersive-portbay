@@ -160,10 +160,11 @@ function onPanelReorder(fromIndex: number, toIndex: number) {
   panelRow.reorderPinned(fromIndex, toIndex)
 }
 
-function onPanelRemove(peerId: string, channelIndex: number) {
+async function onPanelRemove(peerId: string, channelIndex: number) {
+  const removed = await onRemoveDevice(peerId, channelIndex)
+  if (!removed) return
   panelRow.closePinned(`${peerId}-${channelIndex}`)
   panelRow.clearSelection()
-  onRemoveDevice(peerId, channelIndex)
 }
 
 // ── Add device popup ─────────────────────────────────────────────
@@ -196,13 +197,14 @@ async function onAddDevice(peerId: string, channelIndex: number, deviceType: num
   panelRow.activateCell(peerId, channelIndex)
 }
 
-async function onRemoveDevice(peerId: string, channelIndex: number) {
+async function onRemoveDevice(peerId: string, channelIndex: number): Promise<boolean> {
   const confirmed = await confirm('Remove this device? The device will be stopped and all its settings cleared.')
-  if (!confirmed) return
+  if (!confirmed) return false
   const base = `/peer/${peerId}/rack/page_0/channel.${channelIndex}`
   // Disable first so the handler shuts down cleanly before teardown.
   await window.api.invoke('mqtt:publish', { topic: `${base}/device/gui/enable`, value: '0', retain: true })
   await window.api.invoke('mqtt:publish', { topic: `${base}/loaded`, value: '0', retain: true })
+  return true
 }
 
 // ── Proxy status modal ───────────────────────────────────────────

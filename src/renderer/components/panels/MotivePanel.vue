@@ -78,9 +78,7 @@ function flipDirection(next: string): void {
   directionBinding.set(next)
 }
 
-async function removeDevice(): Promise<void> {
-  const topic = `/peer/${props.peerId}/rack/page_0/channel.${props.channelIndex}/loaded`
-  await window.api.invoke('mqtt:publish', { topic, value: '0', retain: true })
+function removeDevice(): void {
   emit('remove')
 }
 

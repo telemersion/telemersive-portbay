@@ -49,9 +49,7 @@ function toggleEnable() {
   enableBinding.set(isEnabled.value ? '0' : '1')
 }
 
-async function removeDevice() {
-  const topic = `/peer/${props.peerId}/rack/page_0/channel.${props.channelIndex}/loaded`
-  await window.api.invoke('mqtt:publish', { topic, value: '0', retain: true })
+function removeDevice() {
   emit('remove')
 }
 

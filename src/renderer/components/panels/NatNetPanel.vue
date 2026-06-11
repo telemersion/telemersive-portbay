@@ -109,9 +109,7 @@ function toggleBoolField(binding: { value: { value: string }; set: (v: string) =
   binding.set(binding.value.value === '1' ? '0' : '1')
 }
 
-async function removeDevice() {
-  const topic = `/peer/${props.peerId}/rack/page_0/channel.${props.channelIndex}/loaded`
-  await window.api.invoke('mqtt:publish', { topic, value: '0', retain: true })
+function removeDevice() {
   emit('remove')
 }
 
