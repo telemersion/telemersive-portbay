@@ -11,6 +11,7 @@ import {
 import type { ToolStatus } from '../../shared/toolRequirements'
 
 const settingsPath = ref('')
+const switchboardPollIntervalSec = ref(5)
 const revealLabel = computed(() => {
   const p = navigator.platform.toLowerCase()
   if (p.includes('mac')) return 'Finder'
@@ -21,7 +22,17 @@ const revealLabel = computed(() => {
 onMounted(async () => {
   initCompat()
   settingsPath.value = await window.api.invoke('settings:get-path')
+  const settings = await window.api.invoke('settings:load')
+  if (typeof settings?.switchboardPollIntervalSec === 'number') {
+    switchboardPollIntervalSec.value = settings.switchboardPollIntervalSec
+  }
 })
+
+function onSwitchboardPollIntervalChange(): void {
+  const clamped = Math.min(60, Math.max(1, Math.round(switchboardPollIntervalSec.value)))
+  switchboardPollIntervalSec.value = clamped
+  window.api.invoke('settings:save', { switchboardPollIntervalSec: clamped })
+}
 
 function revealSettings(): void {
   window.api.invoke('settings:reveal')
@@ -99,6 +110,27 @@ function locateHint(s: ToolStatus): string | null {
           Open in default editor
         </button>
       </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Switchboard</h2>
+      </div>
+      <label class="field-row">
+        <span class="field-label">Proxy status poll interval (seconds)</span>
+        <input
+          v-model.number="switchboardPollIntervalSec"
+          type="number"
+          min="1"
+          max="60"
+          step="1"
+          class="field-input"
+          @change="onSwitchboardPollIntervalChange()"
+        />
+      </label>
+      <p class="field-hint">
+        How often the matrix header proxy indicators refresh from the switchboard.
+      </p>
     </section>
 
     <section class="card">
@@ -209,6 +241,29 @@ function locateHint(s: ToolStatus): string | null {
   color: #666;
   padding: 24px 0;
   text-align: center;
+}
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+.field-label {
+  color: #ccc;
+}
+.field-input {
+  width: 70px;
+  background: #141414;
+  color: #ddd;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.field-hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: #888;
 }
 .tool-list {
   list-style: none;

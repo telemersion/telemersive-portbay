@@ -1,6 +1,7 @@
 import { reactive } from 'vue'
 import { usePeerState } from './peerState'
 import { useRoster } from './roster'
+import { useSwitchboardState, type SwitchboardStatePayload } from './switchboardState'
 
 interface LocalPeer {
   peerId: string
@@ -99,6 +100,10 @@ export function initBusWiring(): void {
 
   window.api.on('mqtt:message', (msg: { topic: string; payload: string }) => {
     peerState.applyTopic(msg.topic, msg.payload)
+  })
+
+  window.api.on('switchboard:state', (payload: SwitchboardStatePayload) => {
+    useSwitchboardState().applyUpdate(payload)
   })
 }
 

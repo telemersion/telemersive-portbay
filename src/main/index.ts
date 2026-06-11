@@ -19,6 +19,12 @@ import { enumerate, handleRefreshTrigger } from './enumeration'
 import { registerDefaultBackends } from './enumeration/parsers'
 import { runCompatCheck, validateToolPath } from './compat'
 import { TOOL_REQUIREMENTS, type CompatStatus } from '../shared/toolRequirements'
+import {
+  switchboardBaseUrl,
+  fetchSwitchboardRoomState,
+  groupProxiesByChannel,
+  type ProxyEntry
+} from './switchboardClient'
 
 let mainWindow: BrowserWindow | null = null
 let bus: TBusClient | null = null
@@ -32,6 +38,10 @@ let brokerConnected = false
 let peerJoined = false
 const geoCache = new Map<string, Record<string, unknown>>()
 const retainedTopics = new Map<string, string>()
+
+let switchboardPollTimer: NodeJS.Timeout | null = null
+let switchboardPolling = false
+let lastSwitchboardChannels: Record<number, ProxyEntry[]> = {}
 
 const RACK_SAVE_DEBOUNCE_MS = 500
 let rackSaveTimer: NodeJS.Timeout | null = null
@@ -152,6 +162,42 @@ function forwardToRenderer(channel: string): void {
   bus!.on(channel, (...args: any[]) => sendToRenderer(channel, ...args))
 }
 
+async function pollSwitchboardOnce(): Promise<void> {
+  if (!roomName) return
+  const baseUrl = switchboardBaseUrl(loadSettings().brokerUrl)
+  try {
+    const state = await fetchSwitchboardRoomState(baseUrl, roomName)
+    lastSwitchboardChannels = groupProxiesByChannel(state, roomId)
+    sendToRenderer('switchboard:state', { roomId, error: false, channels: lastSwitchboardChannels })
+  } catch {
+    sendToRenderer('switchboard:state', { roomId, error: true, channels: lastSwitchboardChannels })
+  }
+}
+
+function startSwitchboardPolling(): void {
+  if (switchboardPolling) return
+  switchboardPolling = true
+  const tick = (): void => {
+    if (!switchboardPolling) return
+    pollSwitchboardOnce().finally(() => {
+      if (!switchboardPolling) return
+      const intervalMs = Math.max(1, loadSettings().switchboardPollIntervalSec) * 1000
+      switchboardPollTimer = setTimeout(tick, intervalMs)
+    })
+  }
+  tick()
+}
+
+function stopSwitchboardPolling(): void {
+  switchboardPolling = false
+  if (switchboardPollTimer) {
+    clearTimeout(switchboardPollTimer)
+    switchboardPollTimer = null
+  }
+  lastSwitchboardChannels = {}
+  sendToRenderer('switchboard:state', { roomId: 0, error: false, channels: {} })
+}
+
 function publishInitSequence(): void {
   const peerId = localPeerId
 
@@ -224,13 +270,18 @@ function setupBus(): void {
       peerJoined = false
       roomName = ''
       roomId = 0
+      stopSwitchboardPolling()
     }
   })
 
   bus.on('peer:joined', (joined: boolean) => {
     peerJoined = joined
     sendToRenderer('peer:joined', joined)
+    if (!joined) {
+      stopSwitchboardPolling()
+    }
     if (joined) {
+      startSwitchboardPolling()
       bus!.subscribe(topics.settingsSubscribe(localPeerId))
       bus!.subscribe(topics.loadedSubscribe(localPeerId))
 

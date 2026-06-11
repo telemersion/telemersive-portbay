@@ -21,7 +21,8 @@ const RECEIVE_CHANNELS = [
   'ready', 'mqtt:message', 'chat',
   'log:entry',
   'compat:status',
-  'bus:error'
+  'bus:error',
+  'switchboard:state'
 ] as const
 
 contextBridge.exposeInMainWorld('api', {

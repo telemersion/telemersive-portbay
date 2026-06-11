@@ -3,6 +3,7 @@ import { computed, ref, onMounted, toRefs } from 'vue'
 import { usePeerState } from '../state/peerState'
 import { useRoster } from '../state/roster'
 import { localPeerState, initBusWiring } from '../state/localPeer'
+import { useSwitchboardState } from '../state/switchboardState'
 import { usePanelRow } from '../composables/usePanelRow'
 import { usePeerDetail } from '../composables/usePeerDetail'
 import { useConfirm } from '../composables/useConfirm'
@@ -12,12 +13,15 @@ import PeerDetailPanel from '../components/PeerDetailPanel.vue'
 import AddDevicePopup from '../components/AddDevicePopup.vue'
 import RoomHeader from '../components/RoomHeader.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import ChannelProxyButton from '../components/ChannelProxyButton.vue'
+import ProxyStatusModal from '../components/ProxyStatusModal.vue'
 
 initBusWiring()
 
 const peerState = usePeerState()
 const roster = useRoster()
 const { confirm } = useConfirm()
+const switchboard = useSwitchboardState()
 const { peerId: ownPeerId, localIP: ownLocalIP, publicIP: ownPublicIP, roomName, roomId } = toRefs(localPeerState)
 
 const CHANNEL_COUNT = 20
@@ -200,6 +204,17 @@ async function onRemoveDevice(peerId: string, channelIndex: number) {
   await window.api.invoke('mqtt:publish', { topic: `${base}/device/gui/enable`, value: '0', retain: true })
   await window.api.invoke('mqtt:publish', { topic: `${base}/loaded`, value: '0', retain: true })
 }
+
+// ── Proxy status modal ───────────────────────────────────────────
+const proxyModalChannel = ref<number | null>(null)
+
+function onChannelProxyClick(channelIndex: number) {
+  proxyModalChannel.value = channelIndex
+}
+
+function closeProxyModal() {
+  proxyModalChannel.value = null
+}
 </script>
 
 <template>
@@ -220,7 +235,14 @@ async function onRemoveDevice(peerId: string, channelIndex: number) {
         <div class="matrix-grid" @click.self="panelRow.clearSelection(); peerDetail.close()">
           <div class="header-label">Peer</div>
           <div class="header-cells">
-            <span v-for="i in CHANNEL_COUNT" :key="i - 1" class="ch-num">{{ i - 1 }}</span>
+            <ChannelProxyButton
+              v-for="i in CHANNEL_COUNT"
+              :key="i - 1"
+              :channel-index="i - 1"
+              :proxies="switchboard.proxiesForChannel(i - 1)"
+              :error="switchboard.state.error"
+              @click="onChannelProxyClick(i - 1)"
+            />
           </div>
           <PeerRow
             v-for="peerId in sortedPeerIds"
@@ -298,6 +320,14 @@ async function onRemoveDevice(peerId: string, channelIndex: number) {
     </Transition>
 
     <ConfirmDialog />
+
+    <ProxyStatusModal
+      v-if="proxyModalChannel !== null"
+      :channel-index="proxyModalChannel"
+      :proxies="switchboard.proxiesForChannel(proxyModalChannel)"
+      :error="switchboard.state.error"
+      @close="closeProxyModal"
+    />
   </div>
 </template>
 
@@ -365,14 +395,6 @@ async function onRemoveDevice(peerId: string, channelIndex: number) {
   padding-bottom: 4px;
   border-bottom: 1px solid #333;
   align-items: flex-end;
-}
-
-.ch-num {
-  min-width: 50px;
-  width: 50px;
-  text-align: center;
-  font-size: 10px;
-  color: #555;
 }
 
 .muted {

@@ -18,6 +18,7 @@ export interface Settings {
   natnetOscPath: string
   lastCompatCheckAt: number | null
   selectedInterface: string
+  switchboardPollIntervalSec: number
 }
 
 const DEFAULTS: Settings = {
@@ -35,7 +36,8 @@ const DEFAULTS: Settings = {
   ugPath: '',
   natnetOscPath: '',
   lastCompatCheckAt: null,
-  selectedInterface: ''
+  selectedInterface: '',
+  switchboardPollIntervalSec: 5
 }
 
 function settingsPath(): string {
