@@ -5,16 +5,19 @@ import { useRoster } from '../state/roster'
 import { localPeerState, initBusWiring } from '../state/localPeer'
 import { usePanelRow } from '../composables/usePanelRow'
 import { usePeerDetail } from '../composables/usePeerDetail'
+import { useConfirm } from '../composables/useConfirm'
 import PeerRow from '../components/PeerRow.vue'
 import PanelRow from '../components/PanelRow.vue'
 import PeerDetailPanel from '../components/PeerDetailPanel.vue'
 import AddDevicePopup from '../components/AddDevicePopup.vue'
 import RoomHeader from '../components/RoomHeader.vue'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
 
 initBusWiring()
 
 const peerState = usePeerState()
 const roster = useRoster()
+const { confirm } = useConfirm()
 const { peerId: ownPeerId, localIP: ownLocalIP, publicIP: ownPublicIP, roomName, roomId } = toRefs(localPeerState)
 
 const CHANNEL_COUNT = 20
@@ -190,7 +193,7 @@ async function onAddDevice(peerId: string, channelIndex: number, deviceType: num
 }
 
 async function onRemoveDevice(peerId: string, channelIndex: number) {
-  const confirmed = window.confirm('Remove this device? The device will be stopped and all its settings cleared.')
+  const confirmed = await confirm('Remove this device? The device will be stopped and all its settings cleared.')
   if (!confirmed) return
   const base = `/peer/${peerId}/rack/page_0/channel.${channelIndex}`
   // Disable first so the handler shuts down cleanly before teardown.
@@ -293,6 +296,8 @@ async function onRemoveDevice(peerId: string, channelIndex: number) {
         @close="peerDetail.close()"
       />
     </Transition>
+
+    <ConfirmDialog />
   </div>
 </template>
 
