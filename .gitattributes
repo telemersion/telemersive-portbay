@@ -1,0 +1,5 @@
+# UltraGrid/Max CLI captures are byte-exact fixtures (LF, no trailing CRLF
+# munging). Force LF regardless of platform autocrlf settings — CRLF here
+# breaks `(.*)$`-style line-ending regexes in the parsers/cliBuilder under
+# test.
+tests/fixtures/** -text eol=lf
