@@ -18,6 +18,7 @@ import { logEvent, setLogSink, getLogBuffer, clearLogBuffer } from './logBus'
 import { enumerate, handleRefreshTrigger } from './enumeration'
 import { registerDefaultBackends } from './enumeration/parsers'
 import { runCompatCheck, validateToolPath } from './compat'
+import { initAutoUpdater, getUpdateStatus, checkForUpdates, downloadUpdate, quitAndInstall } from './updater'
 import { TOOL_REQUIREMENTS, type CompatStatus } from '../shared/toolRequirements'
 import {
   switchboardBaseUrl,
@@ -550,6 +551,32 @@ function setupIpcHandlers(): void {
     return dir
   })
 
+  ipcMain.handle('update:get-status', () => {
+    return getUpdateStatus()
+  })
+
+  ipcMain.handle('update:check', async () => {
+    if (app.isPackaged) {
+      await checkForUpdates()
+    } else {
+      sendToRenderer('update:status', { state: 'not-available' })
+    }
+  })
+
+  ipcMain.handle('update:download', async () => {
+    await downloadUpdate()
+  })
+
+  ipcMain.handle('update:install', () => {
+    isShuttingDown = true
+    flushRackSave()
+    rackSaveSuppressed = true
+    if (bus) {
+      performShutdown(bus, deviceRouter, [...retainedTopics.keys()])
+    }
+    quitAndInstall()
+  })
+
   ipcMain.handle('net:interfaces', () => {
     const all = networkInterfaces()
     const out: Array<{ name: string; address: string; family: string }> = []
@@ -618,6 +645,11 @@ app.whenReady().then(async () => {
   console.log('PeerId:', bus!.peerId)
 
   createWindow()
+
+  initAutoUpdater((status) => sendToRenderer('update:status', status))
+  if (app.isPackaged) {
+    setTimeout(() => checkForUpdates(), 2_000)
+  }
 
   runCompatCheck()
     .then((status) => {

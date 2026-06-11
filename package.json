@@ -15,6 +15,7 @@
     "package": "npm run build && electron-builder"
   },
   "dependencies": {
+    "electron-updater": "^6.8.9",
     "leaflet": "^1.9.4",
     "mqtt": "^5.10.4",
     "telemersive-bus": "^0.6.19",

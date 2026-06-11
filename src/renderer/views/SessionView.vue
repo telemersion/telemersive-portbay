@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNetworkInterfaces, type NetInterface } from '../composables/useNetworkInterfaces'
+import UpdateBanner from '../components/UpdateBanner.vue'
 
 const router = useRouter()
 const error = ref('')
@@ -161,6 +162,8 @@ async function leave() {
 
 <template>
   <div class="session-view">
+    <UpdateBanner />
+
     <section class="card">
       <h3>connect to the telemersive-router</h3>
 

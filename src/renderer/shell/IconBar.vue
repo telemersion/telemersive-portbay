@@ -5,6 +5,7 @@ import { navItems, ICONS, type NavItem, type NavGate } from './navigation'
 import { panelState, togglePanel, closePanel } from './panelState'
 import { initCompat, hasCompatIssues, compatState } from '../state/compat'
 import { initSession, sessionState } from '../state/session'
+import { initUpdater, hasUpdateAvailable } from '../state/updater'
 
 const route = useRoute()
 const router = useRouter()
@@ -12,6 +13,7 @@ const router = useRouter()
 onMounted(() => {
   initCompat()
   initSession()
+  initUpdater()
 })
 
 function gateMet(gate: NavGate): boolean {
@@ -28,7 +30,9 @@ const topItems = computed(() => visibleItems.value.filter(i => i.position === 't
 const bottomItems = computed(() => visibleItems.value.filter(i => i.position === 'bottom'))
 
 function hasBadge(item: NavItem): boolean {
-  return item.id === 'settings' && hasCompatIssues.value
+  if (item.id === 'settings') return hasCompatIssues.value
+  if (item.id === 'about') return hasUpdateAvailable.value
+  return false
 }
 
 // If the user is on a route that becomes ungated (compat issue appears, or they
@@ -112,7 +116,11 @@ function isActive(item: NavItem): boolean {
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path :d="ICONS[item.icon]" />
         </svg>
-        <span v-if="hasBadge(item)" class="badge" title="Tool compatibility issue — see Settings"></span>
+        <span
+          v-if="hasBadge(item)"
+          class="badge"
+          :title="item.id === 'about' ? 'Update available — see About' : 'Tool compatibility issue — see Settings'"
+        ></span>
       </button>
     </div>
   </nav>

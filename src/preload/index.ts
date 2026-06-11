@@ -10,7 +10,8 @@ const INVOKE_CHANNELS = [
   'geo:lookup',
   'compat:get-status', 'compat:recheck', 'compat:locate',
   'compat:open-download', 'compat:reveal-tools-folder',
-  'net:interfaces'
+  'net:interfaces',
+  'update:get-status', 'update:check', 'update:download', 'update:install'
 ] as const
 const RECEIVE_CHANNELS = [
   'broker:connected', 'peer:joined', 'peer:id', 'peer:name',
@@ -22,7 +23,8 @@ const RECEIVE_CHANNELS = [
   'log:entry',
   'compat:status',
   'bus:error',
-  'switchboard:state'
+  'switchboard:state',
+  'update:status'
 ] as const
 
 contextBridge.exposeInMainWorld('api', {

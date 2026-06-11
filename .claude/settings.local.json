@@ -11,7 +11,8 @@
       "Bash(Get-ChildItem -Path \"d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\" -Recurse -Directory)",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(npx vitest *)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(git -C \"d:\\\\03_personal\\\\MartinFroehlich\\\\telemersive-portbay\" remote -v)"
     ]
   }
 }

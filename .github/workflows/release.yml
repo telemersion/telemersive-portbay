@@ -31,7 +31,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mac-dist
-          path: dist/*.dmg
+          path: |
+            dist/*.dmg
+            dist/*.dmg.blockmap
+            dist/latest-mac.yml
 
   build-win:
     runs-on: windows-latest
@@ -52,7 +55,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: win-dist
-          path: dist/*.exe
+          path: |
+            dist/*.exe
+            dist/*.exe.blockmap
+            dist/latest.yml
 
   release:
     needs: [build-mac, build-win]
