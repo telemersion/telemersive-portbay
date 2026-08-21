@@ -11,7 +11,7 @@ mac:
       arch:
         - x64
         - arm64
-  artifactName: ${productName}-${version}-${arch}.${ext}
+  artifactName: Telemersive-Gateway-${version}-${arch}.${ext}
   identity: "Developer ID Application"
 
 win:
@@ -19,6 +19,7 @@ win:
     - target: nsis
       arch:
         - x64
+  artifactName: Telemersive-Gateway-Setup-${version}.${ext}
 
 nsis:
   oneClick: false
