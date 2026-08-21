@@ -11,6 +11,10 @@ mac:
       arch:
         - x64
         - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
   artifactName: Telemersive-Gateway-${version}-${arch}.${ext}
   identity: "Developer ID Application"
 
