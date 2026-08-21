@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useMqttBinding } from '../../composables/useMqttBinding'
 import { useNetworkInterfaces, bestGuessInterfaceName } from '../../composables/useNetworkInterfaces'
+import MonitorToggle from '../MonitorToggle.vue'
 
 const MONITOR_LOG_CAPACITY = 200
 
@@ -67,10 +68,6 @@ function clearMonitorLog(): void {
 
 function toggleEnable(): void {
   enableBinding.set(isEnabled.value ? '0' : '1')
-}
-
-function toggleMonitorGate(): void {
-  monitorGateBinding.set(monitorGateOn.value ? '0' : '1')
 }
 
 function flipDirection(next: string): void {
@@ -238,9 +235,11 @@ const healthLabel = computed(() => {
           <button class="toggle-btn" @click="clearMonitorLog" :disabled="monitorLogBuffer.length === 0">
             Clear
           </button>
-          <button class="toggle-btn" :class="{ on: monitorGateOn }" @click="toggleMonitorGate">
-            {{ monitorGateOn ? 'ON' : 'OFF' }}
-          </button>
+          <MonitorToggle
+            :on="monitorGateOn"
+            accent="#E84E4E"
+            @update:on="(v) => monitorGateBinding.set(v ? '1' : '0')"
+          />
         </span>
       </h4>
       <pre v-if="monitorGateOn" class="monitor-log">{{ monitorLogText || '(no output)' }}</pre>

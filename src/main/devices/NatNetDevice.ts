@@ -30,6 +30,32 @@ const HEARTBEAT_INTERVAL_MS = 5000
 
 const MONITOR_LOG_CAPACITY = 200
 
+// Interval for NatNetFour2OSC's --dataStreamInfo diagnostic printout. Always on
+// (not user-configurable) — its "streaminfo" lines drive the tx indicator arrow,
+// distinguishing "CLI process running" from "Motive is actually streaming frames".
+export const DATA_STREAM_INFO_INTERVAL_MS = 1000
+
+// Parses NatNetFour2OSC's "streaminfo {data} {ctrl} {fps}" diagnostic line
+// (see StreamInfoThread in NatNetFour2OSC.cs). A 2-token startup variant
+// ("streaminfo 0 0", no fps) is also emitted once before the timer starts.
+const STREAM_INFO_RE = /^streaminfo (\d) (\d)(?: (-?[\d.]+))?$/
+
+export interface StreamInfo {
+  dataActive: boolean
+  ctrlActive: boolean
+  fps: number | null
+}
+
+export function parseStreamInfoLine(line: string): StreamInfo | null {
+  const match = STREAM_INFO_RE.exec(line.trim())
+  if (!match) return null
+  return {
+    dataActive: match[1] === '1',
+    ctrlActive: match[2] === '1',
+    fps: match[3] !== undefined ? Number(match[3]) : null
+  }
+}
+
 function localOsTag(): string {
   if (process.platform === 'darwin') return 'osx'
   if (process.platform === 'win32') return 'windows'
@@ -112,6 +138,8 @@ function buildNatNetArgs(
   // v1.2.0 has a parser bug: it fails to deserialize the default value for
   // --oscMode unless it's passed explicitly on the command line.
   args.push('--oscMode', cfg.oscMode || 'max')
+  // Always on, not user-configurable — see parseStreamInfoLine() / handleLogLine().
+  args.push('--dataStreamInfo', String(DATA_STREAM_INFO_INTERVAL_MS))
 
   // Optional flags with non-default values.
   if (cfg.multicastIP && cfg.multicastIP !== '239.255.42.99') {
@@ -184,6 +212,11 @@ export class NatNetDevice implements DeviceHandler {
   private minorIndicatorTimer: NodeJS.Timeout | null = null
   private runningIndicatorOn = false
   private static readonly INDICATOR_HOLD_MS = 150
+
+  // Direction 1/4 (CLI) only — driven by parsed --dataStreamInfo "streaminfo" lines.
+  // Slot 0 (tx/major arrow): true only while Motive is actually streaming frames into
+  // the CLI, as opposed to runningIndicatorOn which just means the process is alive.
+  private dataStreamActive = false
 
   constructor(opts: NatNetDeviceOptions) {
     this.channelIndex = opts.channelIndex
@@ -416,10 +449,17 @@ export class NatNetDevice implements DeviceHandler {
   private stopCliProcess(): void {
     this.lifecycle?.stop()
     this.lifecycle = null
+    this.dataStreamActive = false
     this.setRunningIndicator(false)
   }
 
   private handleLogLine(line: string): void {
+    const streamInfo = parseStreamInfoLine(line)
+    if (streamInfo) {
+      this.handleStreamInfo(streamInfo)
+      return // 1Hz diagnostic noise — kept out of the visible monitor log.
+    }
+
     this.monitor.append(line)
     if (this.monitorGateOn) this.publishMonitorLine(line)
     if (line.includes('Program terminated')) {
@@ -428,6 +468,12 @@ export class NatNetDevice implements DeviceHandler {
       this.stopCliProcess()
       this.publishEnableOff()
     }
+  }
+
+  private handleStreamInfo(info: StreamInfo): void {
+    if (info.dataActive === this.dataStreamActive) return
+    this.dataStreamActive = info.dataActive
+    this.publishIndicators()
   }
 
   private publishMonitorLine(line: string): void {
@@ -442,6 +488,7 @@ export class NatNetDevice implements DeviceHandler {
 
   private handleCliExit(reason: ExitReason, code: number | null): void {
     this.lifecycle = null
+    this.dataStreamActive = false
     this.setRunningIndicator(false)
     if (reason === 'killed') return
     const label = reason === 'spawn-failure' ? 'NatNet spawn-failure' : 'NatNet crashed'
@@ -531,9 +578,10 @@ export class NatNetDevice implements DeviceHandler {
   }
 
   private publishIndicators(): void {
+    const major = this.dataStreamActive ? '1' : '0'
     const minor = this.minorIndicatorOn ? '1' : '0'
     const running = this.runningIndicatorOn ? '1' : '0'
-    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'indicators'), '0', minor, running)
+    this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'indicators'), major, minor, running)
   }
 
   private disableOnError(): void {

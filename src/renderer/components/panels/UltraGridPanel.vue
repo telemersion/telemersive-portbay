@@ -3,6 +3,7 @@ import { useMqttBinding } from '../../composables/useMqttBinding'
 import { computed, ref, watch } from 'vue'
 import { type Backend, refreshTopic } from '../../../shared/topics'
 import CustomFlagsModal, { type FlagsPreset, type DocLink } from './CustomFlagsModal.vue'
+import MonitorToggle from '../MonitorToggle.vue'
 
 // ── Custom flags modal state ─────────────────────────────────────
 type CustomFlagsTarget = 'videoCapture' | 'videoReceiver' | 'audioCapture' | 'audioReceiver'
@@ -424,10 +425,6 @@ watch([mode, connection], ([m, c]) => {
 
 function toggleEnable() {
   enableBinding.set(isEnabled.value ? '0' : '1')
-}
-
-function toggleMonitorGate() {
-  monitorGateBinding.set(monitorGateOn.value ? '0' : '1')
 }
 
 function removeDevice() {
@@ -1146,9 +1143,11 @@ async function triggerRefresh(backend: Backend) {
           <button class="toggle-btn" @click="clearMonitorLog" :disabled="monitorLogBuffer.length === 0">
             Clear
           </button>
-          <button class="toggle-btn" :class="{ on: monitorGateOn }" @click="toggleMonitorGate">
-            {{ monitorGateOn ? 'ON' : 'OFF' }}
-          </button>
+          <MonitorToggle
+            :on="monitorGateOn"
+            accent="#36ABFF"
+            @update:on="(v) => monitorGateBinding.set(v ? '1' : '0')"
+          />
         </span>
       </h4>
       <pre v-if="monitorGateOn" class="monitor-log">{{ monitorLogText || '(no output)' }}</pre>

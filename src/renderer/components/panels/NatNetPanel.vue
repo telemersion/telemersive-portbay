@@ -2,6 +2,7 @@
 import { useMqttBinding } from '../../composables/useMqttBinding'
 import { useSessionInfo } from '../../composables/useSessionInfo'
 import { computed, ref, watch } from 'vue'
+import MonitorToggle from '../MonitorToggle.vue'
 
 const MONITOR_LOG_CAPACITY = 200
 
@@ -114,10 +115,6 @@ function toggleEnable() {
 
 function toggleEnableTwo() {
   enableTwoBinding.set(gui.value?.enableTwo === '1' ? '0' : '1')
-}
-
-function toggleMonitorGate() {
-  monitorGateBinding.set(monitorGateOn.value ? '0' : '1')
 }
 
 function toggleBoolField(binding: { value: { value: string }; set: (v: string) => void }) {
@@ -394,9 +391,11 @@ const enableTwoOn = computed(() => gui.value?.enableTwo === '1')
           <button class="toggle-btn" @click="clearMonitorLog" :disabled="monitorLogBuffer.length === 0">
             Clear
           </button>
-          <button class="toggle-btn" :class="{ on: monitorGateOn }" @click="toggleMonitorGate">
-            {{ monitorGateOn ? 'ON' : 'OFF' }}
-          </button>
+          <MonitorToggle
+            :on="monitorGateOn"
+            accent="#FFA126"
+            @update:on="(v) => monitorGateBinding.set(v ? '1' : '0')"
+          />
         </span>
       </h4>
       <pre v-if="monitorGateOn" class="monitor-log">{{ monitorLogText || '(no output)' }}</pre>
