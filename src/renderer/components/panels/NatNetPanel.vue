@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useMqttBinding } from '../../composables/useMqttBinding'
+import { useSessionInfo } from '../../composables/useSessionInfo'
 import { computed, ref, watch } from 'vue'
 
 const MONITOR_LOG_CAPACITY = 200
@@ -32,8 +33,22 @@ const directionValue = computed(() => direction.value?.select ?? '2')
 const showCliParams = computed(() =>
   directionValue.value === '1' || directionValue.value === '4'
 )
+const isSendToRouter = computed(() => directionValue.value === '1')
 
 const cliAvailable = computed(() => props.peerSettings?.localProps?.natnet_enable === '1')
+
+const { brokerHost, roomId } = useSessionInfo()
+
+// Room port a peer derives locally from roomId + channelIndex — mirrors
+// allocateMocapRoomPorts()'s base+0 in portAllocator.ts. Never published over MQTT.
+const routerPort = computed(() => roomId.value * 1000 + props.channelIndex * 10)
+const routerStatusUrl = computed(() =>
+  roomId.value > 0 ? `http://${brokerHost.value}:3591/proxies/${routerPort.value}` : ''
+)
+
+function openRouterStatus() {
+  if (routerStatusUrl.value) window.open(routerStatusUrl.value, '_blank')
+}
 
 const prefix = computed(() =>
   `/peer/${props.peerId}/rack/page_0/channel.${props.channelIndex}/device/gui`
@@ -206,11 +221,11 @@ const enableTwoOn = computed(() => gui.value?.enableTwo === '1')
       </div>
     </section>
 
-    <!-- SendToLocal / SendToRouter: single editable OSC output port (--oscSendPort) -->
-    <section v-if="showCliParams">
-      <h4>OSC output port</h4>
+    <!-- SendToLocal: single editable OSC output port (--oscSendPort) -->
+    <section v-if="showCliParams && !isSendToRouter">
+      <h4>Forward to</h4>
       <div class="field-row">
-        <label>local IP</label>
+        <label>output</label>
         <input
           :value="listeningIP.value.value"
           :disabled="isLocked"
@@ -224,6 +239,23 @@ const enableTwoOn = computed(() => gui.value?.enableTwo === '1')
           placeholder="port"
           @change="outputPortOne.set(($event.target as HTMLInputElement).value)"
         />
+      </div>
+    </section>
+
+    <!-- SendToRouter: OSC goes to the proxy, not a user-editable target -->
+    <section v-if="isSendToRouter">
+      <h4>Router</h4>
+      <div class="field-row">
+        <label>router</label>
+        <input class="router-host" :value="brokerHost" disabled />
+        <button
+          class="router-port-btn port-input"
+          :disabled="!routerStatusUrl"
+          :title="routerStatusUrl || 'Join a room first'"
+          @click="openRouterStatus"
+        >
+          {{ routerPort }} ↗
+        </button>
       </div>
     </section>
 
@@ -342,6 +374,8 @@ const enableTwoOn = computed(() => gui.value?.enableTwo === '1')
             :disabled="isLocked"
             @change="cmdPort.set(($event.target as HTMLInputElement).value)"
           />
+        </div>
+        <div class="field-row">
           <label>data port</label>
           <input
             class="port-input"
@@ -392,6 +426,10 @@ h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px
 .field-row input, .field-row select { flex: 1; min-width: 0; padding: 4px 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: white; font-family: monospace; font-size: 12px; }
 .field-row input:disabled, .field-row select:disabled { color: #666; cursor: not-allowed; }
 .port-input { max-width: 80px !important; flex: none !important; }
+.router-host { color: #999 !important; }
+.router-port-btn { padding: 4px 6px; border-radius: 4px; border: 1px solid #444; background: #222; color: #ccc; cursor: pointer; font-family: monospace; font-size: 12px; text-align: center; }
+.router-port-btn:hover:not(:disabled) { background: #2a2a2a; color: #fff; border-color: #666; }
+.router-port-btn:disabled { color: #666; cursor: not-allowed; }
 .toggle-btn { padding: 4px 8px; border-radius: 4px; border: 1px solid #555; background: none; color: #888; cursor: pointer; font-size: 10px; }
 .field-row .toggle-btn { flex: 1; }
 .field-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px; }
