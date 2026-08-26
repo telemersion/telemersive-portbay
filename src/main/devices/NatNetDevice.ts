@@ -416,11 +416,11 @@ export class NatNetDevice implements DeviceHandler {
     }
 
     // --oscSendIP/Port: where the CLI sends OSC data.
-    // SendToLocal: user-configured IP (listeningIP) and port (outputPortOne, default base+0).
+    // SendToLocal: user-configured IP (outputIPOne) and port (outputPortOne, default base+0).
     // SendToRouter: proxy host and room output port (fixed, not user-configurable).
     const outputIP = this.direction === Direction.SendToRouter
       ? this.brokerHost
-      : this.listeningIP
+      : this.outputIPOne
     const outputPort = this.direction === Direction.SendToRouter
       ? this.roomPorts.outputPort
       : this.outputPortOne

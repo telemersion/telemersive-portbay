@@ -224,10 +224,10 @@ const enableTwoOn = computed(() => gui.value?.enableTwo === '1')
       <div class="field-row">
         <label>output</label>
         <input
-          :value="listeningIP.value.value"
+          :value="outputIPOne.value.value"
           :disabled="isLocked"
           placeholder="IP address"
-          @change="listeningIP.set(($event.target as HTMLInputElement).value)"
+          @change="outputIPOne.set(($event.target as HTMLInputElement).value)"
         />
         <input
           class="port-input"
