@@ -83,6 +83,21 @@ export function allocateMocapRoomPorts(roomId: number, channelIndex: number): Mo
   }
 }
 
+// NatNetFour2OSC's --oscCtrlPort (its own OSC control-listener port) defaults to
+// 65111 for every instance, which collides when more than one CLI process runs on
+// the same host (multiple channels and/or multiple app instances in different
+// rooms). base+5 is unused by every other device type at this base (Mocap: 0/1,
+// Motive: 0/2/6, OSC/StageC: 7/8/9, UltraGrid: 2/4/6/8), so deriving it from
+// roomId+channelIndex like the other room ports guarantees a conflict-free value
+// without needing to be published — only the local CLI process needs to know it.
+// The +30000 offset keeps this out of the low port range users are likely to
+// have manually assigned to other tools (room ports otherwise land <20000).
+const MOCAP_CTRL_PORT_OFFSET = 30000
+
+export function allocateMocapCtrlPort(roomId: number, channelIndex: number): number {
+  return MOCAP_CTRL_PORT_OFFSET + portBase(roomId, channelIndex) + 5
+}
+
 // Motive bridge (NG-only, loaded=5) reuses MoCap cmd slot xxcc0 and UltraGrid
 // video data slots xxcc2 (TX) / xxcc6 (RX) — see spec.md §5.6 / §8.7.
 //   cmdPort  = xxcc0  one2manyBi   — bidirectional NatNet command channel

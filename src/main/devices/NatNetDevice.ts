@@ -2,7 +2,7 @@ import * as dgram from 'dgram'
 import * as dns from 'dns'
 import { promisify } from 'util'
 import { topics } from '../../shared/topics'
-import { allocateMocapLocalPorts, allocateMocapRoomPorts, type MocapPorts } from '../portAllocator'
+import { allocateMocapLocalPorts, allocateMocapRoomPorts, allocateMocapCtrlPort, type MocapPorts } from '../portAllocator'
 import { ChildProcessLifecycle, type LifecycleOptions, type ExitReason } from './ChildProcessLifecycle'
 import { MonitorLogBuffer } from './ultragrid/monitorLog'
 import type { DeviceHandler } from './types'
@@ -126,7 +126,8 @@ function buildNatNetArgs(
   cfg: NatNetCliConfig,
   localIP: string,   // this machine's IP  → --localIP (required)
   oscSendIP: string, // OSC destination IP → --oscSendIP (required)
-  oscSendPort: number // OSC destination port → --oscSendPort (required)
+  oscSendPort: number, // OSC destination port → --oscSendPort (required)
+  oscCtrlPort: number // CLI's own OSC control-listener port → --oscCtrlPort (required)
 ): string[] {
   const args: string[] = []
 
@@ -135,6 +136,10 @@ function buildNatNetArgs(
   args.push('--motiveIP', cfg.motiveIP)
   args.push('--oscSendIP', oscSendIP)
   args.push('--oscSendPort', String(oscSendPort))
+  // Default (65111) is shared by every instance of the CLI, so it must always be
+  // passed explicitly — otherwise concurrent channels/rooms on the same host
+  // collide trying to bind it. See allocateMocapCtrlPort().
+  args.push('--oscCtrlPort', String(oscCtrlPort))
   // v1.2.0 has a parser bug: it fails to deserialize the default value for
   // --oscMode unless it's passed explicitly on the command line.
   args.push('--oscMode', cfg.oscMode || 'max')
@@ -178,6 +183,7 @@ export class NatNetDevice implements DeviceHandler {
   private brokerHost: string
   private localPorts: MocapPorts
   private roomPorts: MocapPorts
+  private ctrlPort: number
   private publishedTopics: string[] = []
   private publish: PublishFn
   private hasRetained: HasRetainedFn
@@ -225,6 +231,7 @@ export class NatNetDevice implements DeviceHandler {
     this.brokerHost = opts.brokerHost ?? 'telemersion.zhdk.ch'
     this.localPorts = allocateMocapLocalPorts(opts.channelIndex)
     this.roomPorts = allocateMocapRoomPorts(opts.roomId, opts.channelIndex)
+    this.ctrlPort = allocateMocapCtrlPort(opts.roomId, opts.channelIndex)
     this.publish = opts.publish
     this.hasRetained = opts.hasRetained ?? (() => false)
     this.resolveBinary = opts.resolveBinary ?? (() => null)
@@ -425,7 +432,7 @@ export class NatNetDevice implements DeviceHandler {
       ? this.roomPorts.outputPort
       : this.outputPortOne
 
-    const args = buildNatNetArgs(this.cliConfig, this.listeningIP, outputIP, outputPort)
+    const args = buildNatNetArgs(this.cliConfig, this.listeningIP, outputIP, outputPort, this.ctrlPort)
 
     this.monitor.clear()
     const cliLine = `${binary} ${args.join(' ')}`

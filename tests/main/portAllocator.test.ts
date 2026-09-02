@@ -3,7 +3,9 @@ import {
   allocateLocalPorts,
   allocateRoomPorts,
   allocateUgPorts,
-  allocateMotiveRoomPorts
+  allocateMotiveRoomPorts,
+  allocateMocapRoomPorts,
+  allocateMocapCtrlPort
 } from '../../src/main/portAllocator'
 
 describe('allocateLocalPorts', () => {
@@ -102,6 +104,33 @@ describe('allocateMotiveRoomPorts', () => {
       // the addresses scale correctly with the channel index.)
       expect(motive.cmdPort).toBe(11000 + ch * 10)
       expect(mocap.outputPortOne).toBe(11008 + ch * 10)
+    }
+  })
+})
+
+describe('allocateMocapCtrlPort', () => {
+  it('derives from room+channel for room 11 channel 0, offset by 30000', () => {
+    expect(allocateMocapCtrlPort(11, 0)).toBe(41005)
+  })
+
+  it('scales with channel index', () => {
+    expect(allocateMocapCtrlPort(11, 5)).toBe(41055)
+  })
+
+  it('differs between rooms for the same channel (fixes the shared-65111 conflict)', () => {
+    expect(allocateMocapCtrlPort(11, 0)).not.toBe(allocateMocapCtrlPort(12, 0))
+  })
+
+  it('never collides with MoCap or Motive room ports on the same channel', () => {
+    for (let ch = 0; ch < 20; ch++) {
+      const mocap = allocateMocapRoomPorts(11, ch)
+      const motive = allocateMotiveRoomPorts(11, ch)
+      const ctrl = allocateMocapCtrlPort(11, ch)
+      expect(ctrl).not.toBe(mocap.outputPort)
+      expect(ctrl).not.toBe(mocap.inputPort)
+      expect(ctrl).not.toBe(motive.cmdPort)
+      expect(ctrl).not.toBe(motive.dataTxPort)
+      expect(ctrl).not.toBe(motive.dataRxPort)
     }
   })
 })

@@ -97,6 +97,17 @@ describe('NatNetDevice --dataStreamInfo', () => {
     expect(args[idx + 1]).toBe(String(DATA_STREAM_INFO_INTERVAL_MS))
   })
 
+  it('always passes --oscCtrlPort derived from room+channel (default 65111 conflicts across instances)', () => {
+    const { device, spawned } = makeDevice()
+    device.onTopicChanged('gui/direction/select', String(Direction.SendToLocal))
+    device.onTopicChanged('gui/enable', '1')
+
+    const args = spawned[0].opts.args
+    const idx = args.indexOf('--oscCtrlPort')
+    expect(idx).toBeGreaterThanOrEqual(0)
+    expect(args[idx + 1]).toBe('41005') // 30000 + roomId 11, channel 0 — see makeDevice()
+  })
+
   it('drives the major indicator slot from streaminfo data flag, and keeps fps/ctrl off the visible monitor log', () => {
     const { device, publish, spawned } = makeDevice()
     device.onTopicChanged('gui/direction/select', String(Direction.SendToLocal))
