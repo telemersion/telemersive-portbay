@@ -273,6 +273,18 @@ function bind(subpath: string, getter: () => string | undefined) {
 const enableBinding = bind('enable', () => gui.value?.enable)
 const descBinding = bind('description', () => gui.value?.description)
 const modeBinding = bind('network/mode', () => network.value?.mode)
+const receiveChannelBinding = bind(
+  'network/ports/receiveChannel',
+  () => network.value?.ports?.receiveChannel
+)
+const alternativeChannelBinding = bind(
+  'network/ports/alternativeChannel',
+  () => network.value?.ports?.alternativeChannel
+)
+function setReceiveChannel(value: string) {
+  receiveChannelBinding.set(value)
+  alternativeChannelBinding.set(value)
+}
 const connectionBinding = bind('audioVideo/connection', () => av.value?.connection)
 const transmissionBinding = bind('audioVideo/transmission', () => av.value?.transmission)
 
@@ -513,6 +525,8 @@ const showAudioReceive = computed(() => {
 const showTransmission = computed(() => mode.value !== '7')
 const showConnection = computed(() => mode.value === '4' || mode.value === '5')
 const showCustomSending = computed(() => mode.value === '5')
+const showReceiveChannel = computed(() => mode.value === '2')
+const RECEIVE_CHANNEL_COUNT = 20
 const showStun = computed(() => mode.value === '4')
 const modeLabels: Record<string, string> = {
   '1': 'send to router',
@@ -565,6 +579,19 @@ async function triggerRefresh(backend: Backend) {
           <option value="4">peer to peer (automatic)</option>
           <option value="5">peer to peer (manual)</option>
           <option value="7">capture to local</option>
+        </select>
+      </div>
+      <div v-if="showReceiveChannel" class="field-row">
+        <label>channel</label>
+        <select
+          :value="receiveChannelBinding.value.value ?? '0'"
+          :disabled="isLocked"
+          @change="setReceiveChannel(($event.target as HTMLSelectElement).value)"
+        >
+          <option value="0">default</option>
+          <option v-for="n in RECEIVE_CHANNEL_COUNT" :key="n" :value="String(n)">
+            channel {{ n - 1 }}
+          </option>
         </select>
       </div>
       <div v-if="showCustomSending" class="field-row">

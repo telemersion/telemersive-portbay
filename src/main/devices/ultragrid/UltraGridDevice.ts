@@ -167,7 +167,7 @@ export class UltraGridDevice implements DeviceHandler {
 
     const indexes = this.resolveMenuIndexes()
     const ports = this.config.network.mode === '2'
-      ? allocateUgRxPorts(this.roomId, this.channelIndex)
+      ? allocateUgRxPorts(this.roomId, this.resolveReceiveChannel())
       : allocateUgPorts(this.roomId, this.channelIndex)
 
     let args: string[]
@@ -251,6 +251,14 @@ export class UltraGridDevice implements DeviceHandler {
     this.monitor.append(line)
     if (this.monitorGateOn) this.publishMonitorLine(line)
     console.warn(`[UG ch.${this.channelIndex}] ${message}`)
+  }
+
+  // network/ports/receiveChannel: '0' = default (this channel's own RX ports),
+  // 'N' (N>=1) = channel N-1's RX ports. Matches the Max gateway's dropdown.
+  private resolveReceiveChannel(): number {
+    const raw = Number(this.config.network.ports.receiveChannel)
+    if (!Number.isInteger(raw) || raw <= 0) return this.channelIndex
+    return raw - 1
   }
 
   private resolveMenuIndexes(): ResolvedMenuIndexes {

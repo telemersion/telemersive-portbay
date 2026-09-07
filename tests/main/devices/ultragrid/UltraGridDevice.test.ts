@@ -89,6 +89,21 @@ describe('UltraGridDevice', () => {
     }
   })
 
+  it('mode 2 defaults to own channel RX ports', () => {
+    const { device, spawned } = makeDevice()
+    device.onTopicChanged('gui/network/mode', '2')
+    device.onTopicChanged('gui/enable', '1')
+    expect(spawned[0].opts.args.some((a) => a.startsWith('-P11006'))).toBe(true)
+  })
+
+  it('mode 2 with receiveChannel set listens on that channel\'s RX ports instead', () => {
+    const { device, spawned } = makeDevice()
+    device.onTopicChanged('gui/network/mode', '2')
+    device.onTopicChanged('gui/network/ports/receiveChannel', '4')
+    device.onTopicChanged('gui/enable', '1')
+    expect(spawned[0].opts.args.some((a) => a.startsWith('-P11036'))).toBe(true)
+  })
+
   it('mode 1 builds -P port flag glued with no space', () => {
     const { device, spawned } = makeDevice()
     device.onTopicChanged('gui/network/mode', '1')
