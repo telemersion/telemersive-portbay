@@ -12,11 +12,17 @@ const isConnected = ref(false)
 const isJoined = ref(false)
 const rooms = ref<string[]>([])
 
-const config = reactive({
-  host: 'telemersion.zhdk.ch',
-  port: 3883,
-  username: 'peer',
-  password: 'telemersion2021',
+const config = reactive<{
+  host: string
+  port: number | null
+  username: string
+  password: string
+  localIP: string
+}>({
+  host: '',
+  port: null,
+  username: '',
+  password: '',
   localIP: ''
 })
 
