@@ -51,9 +51,19 @@ export class UltraGridIndicatorParser {
     if (!sourceMatch) return
 
     const dirMatch = stripped.match(DIRECTION_PATTERN)
-    if (!dirMatch) return
-
-    const isTx = /sender|capture|cap/.test(dirMatch[0])
+    let isTx: boolean
+    if (dirMatch) {
+      isTx = /sender|capture|cap/.test(dirMatch[0])
+    } else {
+      // Periodic summary lines for these two sources ("[GL] N frames in Ns = F FPS",
+      // "[testcard] N frames in Ns = F FPS") carry no direction token, unlike
+      // Syphon/Audio lines. In this app GL is display-only (RX) and testcard is
+      // capture-priming-only (TX), so the source name alone disambiguates.
+      const source = sourceMatch[1].toLowerCase()
+      if (source === 'gl') isTx = false
+      else if (source === 'testcard') isTx = true
+      else return
+    }
 
     // Extract FPS: "FPS 30/1 peak." or "FPS 60/1" or "57.4366 FPS" (periodic summary)
     let fpsMatch = stripped.match(/FPS\s+(\d+)\/(\d+)/)

@@ -56,6 +56,18 @@ describe('UltraGridIndicatorParser', () => {
     expect(published.length).toBe(before)
   })
 
+  it('parses GL periodic FPS summary as RX (no direction token in real uv output)', (ctx) => {
+    ctx.onTestFinished(() => parser.reset())
+    parser.handleLogLine('[GL] 301 frames in 5.01653 seconds = 60.0016 FPS')
+    expect(published).toContainEqual({ topic: 'test/indicators', value: expect.stringMatching(/^0 1 0 0 60\.0016/) })
+  })
+
+  it('parses testcard periodic FPS summary as TX (capture-priming, no direction token)', (ctx) => {
+    ctx.onTestFinished(() => parser.reset())
+    parser.handleLogLine('[testcard] 6 frames in 5.99392 seconds = 1.00101 FPS')
+    expect(published).toContainEqual({ topic: 'test/indicators', value: expect.stringMatching(/^1 0 1\.00101/) })
+  })
+
   it('ignores lines without recognized source prefix', (ctx) => {
     ctx.onTestFinished(() => parser.reset())
     const before = published.length
