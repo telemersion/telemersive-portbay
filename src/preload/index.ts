@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-const SEND_CHANNELS = ['bus:configure'] as const
+const SEND_CHANNELS = ['bus:configure', 'connect-form:sync'] as const
 const INVOKE_CHANNELS = [
   'bus:init', 'bus:connect', 'bus:disconnect', 'bus:join', 'bus:leave', 'bus:localPeer', 'bus:state',
   'mqtt:publish', 'mqtt:subscribe', 'mqtt:unsubscribe',
@@ -24,7 +24,8 @@ const RECEIVE_CHANNELS = [
   'compat:status',
   'bus:error',
   'switchboard:state',
-  'update:status'
+  'update:status',
+  'menu:open-settings', 'menu:rack-loaded'
 ] as const
 
 contextBridge.exposeInMainWorld('api', {

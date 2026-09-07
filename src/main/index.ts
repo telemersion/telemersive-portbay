@@ -1,10 +1,17 @@
-import { app, BrowserWindow, shell, ipcMain, dialog, Menu } from 'electron'
-import { join } from 'path'
-import { existsSync } from 'fs'
+import { app, BrowserWindow, shell, ipcMain, dialog, Menu, type MenuItem } from 'electron'
+import { join, basename } from 'path'
+import { existsSync, writeFileSync, readFileSync } from 'fs'
 import { networkInterfaces } from 'os'
 import { TBusClient } from './busClient'
-import { loadSettings, saveSettings } from './persistence/settings'
-import { loadRack, saveRack, buildRackSnapshot, isRackEligibleTail } from './persistence/rack'
+import { loadSettings, saveSettings, normalizeSettings, type Settings } from './persistence/settings'
+import { isPlainObject, looksLikeRack, looksLikeSettings } from './persistence/fileShapes'
+import {
+  loadRack,
+  saveRack,
+  buildRackSnapshot,
+  isRackEligibleTail,
+  type RackSnapshot
+} from './persistence/rack'
 import { topics } from '../shared/topics'
 import { DeviceRouter } from './deviceRouter'
 import { OscDevice } from './devices/OscDevice'
@@ -37,6 +44,161 @@ let roomId = 0
 let localIP = ''
 let brokerConnected = false
 let peerJoined = false
+let openSettingsMenuItem: MenuItem | null = null
+let openRackMenuItem: MenuItem | null = null
+
+// A rack loaded via File > Open Rack..., held in memory until the next join
+// restores it (racks only materialize on join). Nothing is written to rack.json
+// here — the normal debounced rack autosave persists it once restore republishes
+// the topics. Cleared as soon as it is consumed.
+let pendingRackOverride: RackSnapshot | null = null
+
+// Live snapshot of the connect-screen's Router fields, kept in sync from the
+// renderer as the user types (see 'connect-form:sync'). Not written to disk
+// until a File > Save/Save As action fires — normal autosave still only
+// persists on Connect/Join, this just lets Save capture typed-but-unconnected
+// credentials too.
+interface ConnectFormSnapshot {
+  host?: string
+  port?: number | null
+  username?: string
+  password?: string
+  selectedInterface?: string
+}
+let latestConnectForm: ConnectFormSnapshot = {}
+
+function connectFormToSettingsPartial(): Partial<Settings> {
+  const partial: Partial<Settings> = {}
+  if (latestConnectForm.host !== undefined) partial.brokerUrl = latestConnectForm.host
+  if (latestConnectForm.port !== undefined && latestConnectForm.port !== null) {
+    partial.brokerPort = latestConnectForm.port
+  }
+  if (latestConnectForm.username !== undefined) partial.brokerUser = latestConnectForm.username
+  if (latestConnectForm.password !== undefined) partial.brokerPwd = latestConnectForm.password
+  if (latestConnectForm.selectedInterface !== undefined) {
+    partial.selectedInterface = latestConnectForm.selectedInterface
+  }
+  return partial
+}
+
+function saveSettingsNow(): void {
+  saveSettings({ ...loadSettings(), ...connectFormToSettingsPartial() })
+}
+
+async function handleSaveSettingsAs(): Promise<void> {
+  const win = activeWindow()
+  if (!win) return
+  saveSettingsNow()
+  const result = await dialog.showSaveDialog(win, {
+    title: 'Save Settings As',
+    defaultPath: join(app.getPath('userData'), `settings-${new Date().toISOString().slice(0, 10)}.json`),
+    filters: [{ name: 'Settings', extensions: ['json'] }]
+  })
+  if (result.canceled || !result.filePath) return
+  writeFileSync(result.filePath, JSON.stringify(loadSettings(), null, 2), 'utf-8')
+}
+
+// The window to parent modal dialogs on, or null when there is none (macOS
+// keeps the app alive after its last window closes).
+function activeWindow(): BrowserWindow | null {
+  return mainWindow && !mainWindow.isDestroyed() ? mainWindow : null
+}
+
+// Reads and parses a user-picked JSON file, reporting parse failures itself.
+function readJsonFile(filePath: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(readFileSync(filePath, 'utf-8'))
+    if (!isPlainObject(parsed)) throw new Error('not an object')
+    return parsed
+  } catch {
+    dialog.showErrorBox('Open', `"${basename(filePath)}" is not a valid JSON file.`)
+    return null
+  }
+}
+
+// The rack to archive: a rack opened but not yet applied wins, otherwise the
+// live in-memory rack (flushed to disk first), falling back to what's on disk
+// when disconnected and nothing is live.
+function rackForExport(): RackSnapshot {
+  if (pendingRackOverride) return pendingRackOverride
+  flushRackSave()
+  const live = currentRackSnapshot()
+  return Object.keys(live).length > 0 ? live : loadRack()
+}
+
+async function handleSaveRackAs(): Promise<void> {
+  const win = activeWindow()
+  if (!win) return
+  const rack = rackForExport()
+  if (Object.keys(rack).length === 0) {
+    dialog.showErrorBox('Save Rack As', 'There is no rack to save yet.')
+    return
+  }
+  const result = await dialog.showSaveDialog(win, {
+    title: 'Save Rack As',
+    defaultPath: join(app.getPath('userData'), `rack-${new Date().toISOString().slice(0, 10)}.json`),
+    filters: [{ name: 'Rack', extensions: ['json'] }]
+  })
+  if (result.canceled || !result.filePath) return
+  writeFileSync(result.filePath, JSON.stringify(rack, null, 2), 'utf-8')
+}
+
+async function handleOpenRack(): Promise<void> {
+  const win = activeWindow()
+  if (!win || brokerConnected) return
+  const result = await dialog.showOpenDialog(win, {
+    title: 'Open Rack',
+    filters: [{ name: 'Rack', extensions: ['json'] }],
+    properties: ['openFile']
+  })
+  if (result.canceled || !result.filePaths[0]) return
+  const filePath = result.filePaths[0]
+
+  const parsed = readJsonFile(filePath)
+  if (!parsed) return
+  if (!looksLikeRack(parsed)) {
+    dialog.showErrorBox(
+      'Open Rack',
+      `"${basename(filePath)}" does not look like a rack file.` +
+        (looksLikeSettings(parsed) ? '\n\nThis looks like a settings file — use Open Settings... instead.' : '')
+    )
+    return
+  }
+
+  pendingRackOverride = parsed
+  // Reported in-app rather than via dialog.showMessageBox: on Windows an info
+  // box rings the system asterisk sound, and a successful load should be quiet.
+  sendToRenderer('menu:rack-loaded', basename(filePath))
+}
+
+async function handleOpenSettings(): Promise<void> {
+  const win = activeWindow()
+  if (!win || brokerConnected) return
+  const result = await dialog.showOpenDialog(win, {
+    title: 'Open Settings',
+    filters: [{ name: 'Settings', extensions: ['json'] }],
+    properties: ['openFile']
+  })
+  if (result.canceled || !result.filePaths[0]) return
+  const filePath = result.filePaths[0]
+
+  const parsed = readJsonFile(filePath)
+  if (!parsed) return
+  if (!looksLikeSettings(parsed)) {
+    dialog.showErrorBox(
+      'Open Settings',
+      `"${basename(filePath)}" does not look like a settings file.` +
+        (looksLikeRack(parsed) ? '\n\nThis looks like a rack file — use Open Rack... instead.' : '')
+    )
+    return
+  }
+
+  // Non-destructive: the opened file is never written to, and settings.json is
+  // left alone until the normal autosave fires on Connect. Nothing to confirm.
+  // The renderer's connect-form watcher re-syncs latestConnectForm for us once
+  // the form repopulates.
+  sendToRenderer('menu:open-settings', normalizeSettings(parsed))
+}
 const geoCache = new Map<string, Record<string, unknown>>()
 const retainedTopics = new Map<string, string>()
 
@@ -87,7 +249,46 @@ const REPO = 'https://github.com/telemersion/telemersive-portbay'
 function setupMenu(): void {
   const template = Menu.buildFromTemplate([
     ...(process.platform === 'darwin' ? [{ role: 'appMenu' as const }] : []),
-    { role: 'fileMenu' as const },
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Save',
+          accelerator: 'CmdOrCtrl+S',
+          click: () => saveSettingsNow()
+        },
+        { type: 'separator' as const },
+        {
+          label: 'Save Rack As...',
+          accelerator: 'CmdOrCtrl+Shift+S',
+          click: () => { handleSaveRackAs() }
+        },
+        {
+          label: 'Save Settings As...',
+          click: () => { handleSaveSettingsAs() }
+        },
+        { type: 'separator' as const },
+        {
+          id: 'open-settings',
+          label: 'Open Settings...',
+          enabled: !brokerConnected,
+          click: () => { handleOpenSettings() }
+        },
+        {
+          id: 'open-rack',
+          label: 'Open Rack...',
+          enabled: !brokerConnected,
+          click: () => { handleOpenRack() }
+        },
+        { type: 'separator' as const },
+        // Electron's built-in `fileMenu` role resolves to Close on macOS and
+        // Quit elsewhere. Building the submenu by hand means supplying that
+        // ourselves, or Windows/Linux lose File > Exit entirely.
+        process.platform === 'darwin'
+          ? { role: 'close' as const }
+          : { role: 'quit' as const }
+      ]
+    },
     { role: 'editMenu' as const },
     { role: 'viewMenu' as const },
     { role: 'windowMenu' as const },
@@ -102,6 +303,8 @@ function setupMenu(): void {
     }
   ])
   Menu.setApplicationMenu(template)
+  openSettingsMenuItem = template.getMenuItemById('open-settings')
+  openRackMenuItem = template.getMenuItemById('open-rack')
 }
 
 function createWindow(): void {
@@ -126,7 +329,13 @@ function createWindow(): void {
   }
 
   setLogSink(mainWindow)
-  mainWindow.on('closed', () => setLogSink(null))
+  mainWindow.on('closed', () => {
+    setLogSink(null)
+    // macOS keeps the app (and its menu) alive with no window. Clearing the
+    // reference keeps the `!mainWindow` guards honest — a destroyed window
+    // passed to dialog.* throws.
+    mainWindow = null
+  })
 }
 
 function trackedPublish(retained: 0 | 1, topic: string, ...values: any[]): void {
@@ -229,7 +438,10 @@ function publishInitSequence(): void {
   trackedPublish(1, topics.settings(peerId, 'localProps/stagec_enable'), '1')
   trackedPublish(1, topics.settings(peerId, 'localProps/motive_enable'), '1')
 
-  const savedRack = loadRack()
+  // A rack opened via File > Open Rack... takes precedence for this join; from
+  // then on the normal autosave owns rack.json again.
+  const savedRack = pendingRackOverride ?? loadRack()
+  pendingRackOverride = null
   if (Object.keys(savedRack).length > 0) {
     for (const [tail, value] of Object.entries(savedRack)) {
       if (!isRackEligibleTail(tail)) continue
@@ -267,6 +479,8 @@ function setupBus(): void {
 
   bus.on('broker:connected', (connected: boolean) => {
     brokerConnected = connected
+    if (openSettingsMenuItem) openSettingsMenuItem.enabled = !connected
+    if (openRackMenuItem) openRackMenuItem.enabled = !connected
     if (!connected) {
       peerJoined = false
       roomName = ''
@@ -406,6 +620,10 @@ function setupBus(): void {
 function setupIpcHandlers(): void {
   ipcMain.on('bus:configure', (_event, config) => {
     bus!.configure(config)
+  })
+
+  ipcMain.on('connect-form:sync', (_event, snapshot: ConnectFormSnapshot) => {
+    latestConnectForm = snapshot
   })
 
   ipcMain.handle('bus:init', async () => {

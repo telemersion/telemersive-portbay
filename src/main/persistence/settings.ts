@@ -61,3 +61,12 @@ export function saveSettings(settings: Settings): void {
   const path = settingsPath()
   writeFileSync(path, JSON.stringify(settings, null, 2), 'utf-8')
 }
+
+// Normalizes an arbitrary parsed object (e.g. from a settings file the user
+// opened) against DEFAULTS, giving it the same shape guarantee loadSettings()
+// gives for a file written by this app. Deliberately does NOT persist —
+// opening a file only loads values into the running app; the normal autosave
+// is what writes them to the default location.
+export function normalizeSettings(partial: Record<string, unknown>): Settings {
+  return { ...DEFAULTS, ...partial }
+}

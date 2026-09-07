@@ -6,6 +6,7 @@ import UpdateBanner from '../components/UpdateBanner.vue'
 
 const router = useRouter()
 const error = ref('')
+const notice = ref('')
 const connecting = ref(false)
 const joining = ref(false)
 const isConnected = ref(false)
@@ -47,29 +48,58 @@ const form = reactive({
   roomPwd: ''
 })
 
-window.api.invoke('settings:load').then((settings: any) => {
-  if (settings) {
-    config.host = settings.brokerUrl || config.host
-    config.port = settings.brokerPort || config.port
-    config.username = settings.brokerUser || config.username
-    config.password = settings.brokerPwd || config.password
-    form.peerName = settings.peerName || ''
-    form.roomName = settings.lastRoomName || ''
-    form.roomPwd = settings.lastRoomPwd || ''
-    // Restore saved NIC once interfaces are available.
-    const savedName: string = settings.selectedInterface || ''
-    const tryRestore = () => {
-      if (!interfaces.value.length) return
-      const match = savedName
-        ? interfaces.value.find(i => i.name === savedName) ?? interfaces.value[0]
-        : interfaces.value[0]
-      pickInterface(match)
-    }
-    if (interfaces.value.length) tryRestore()
-    else {
-      const stop = watch(interfaces, () => { tryRestore(); stop() })
-    }
+// `authoritative` is used by File > Open Settings...: the opened file's values
+// replace the form outright, so a field that is blank in that file clears
+// rather than inheriting whatever happens to be typed. Startup load keeps the
+// fallback so a partial settings.json doesn't wipe defaults.
+function applySettings(settings: any, authoritative = false) {
+  if (!settings) return
+  const take = <T>(incoming: T, current: T): T =>
+    authoritative ? incoming : (incoming || current)
+  config.host = take(settings.brokerUrl ?? '', config.host)
+  config.port = take(settings.brokerPort ?? null, config.port)
+  config.username = take(settings.brokerUser ?? '', config.username)
+  config.password = take(settings.brokerPwd ?? '', config.password)
+  form.peerName = settings.peerName || ''
+  form.roomName = settings.lastRoomName || ''
+  form.roomPwd = settings.lastRoomPwd || ''
+  // Restore saved NIC once interfaces are available.
+  const savedName: string = settings.selectedInterface || ''
+  const tryRestore = () => {
+    if (!interfaces.value.length) return
+    const match = savedName
+      ? interfaces.value.find(i => i.name === savedName) ?? interfaces.value[0]
+      : interfaces.value[0]
+    pickInterface(match)
   }
+  if (interfaces.value.length) tryRestore()
+  else {
+    const stop = watch(interfaces, () => { tryRestore(); stop() })
+  }
+}
+
+window.api.invoke('settings:load').then(applySettings)
+
+// Mirror the Router fields into main's in-memory cache as the user types, so
+// File > Save/Save As can capture typed-but-unconnected credentials without
+// autosave writing to disk on every keystroke.
+watch(
+  () => ({ host: config.host, port: config.port, username: config.username, password: config.password }),
+  (val) => {
+    window.api.send('connect-form:sync', { ...val, selectedInterface: selectedInterface.value?.name ?? '' })
+  },
+  { deep: true, immediate: true }
+)
+
+// File > Open Settings... read a settings file; load its values into the form.
+// Nothing has been written to disk — the normal autosave persists them to the
+// default location on Connect. No auto-reconnect.
+window.api.on('menu:open-settings', (settings: any) => applySettings(settings, true))
+
+// File > Open Rack... staged a rack in main; it is applied on the next join.
+// Reported here rather than in an OS dialog so the load stays silent.
+window.api.on('menu:rack-loaded', (fileName: string) => {
+  notice.value = `Rack loaded from "${fileName}" — it will be applied when you join a room.`
 })
 
 onMounted(async () => {
@@ -103,7 +133,11 @@ window.api.on('rooms:append', (name: string) => { rooms.value.push(name) })
 window.api.on('peer:joined', (joined: boolean) => {
   joining.value = false
   isJoined.value = joined
-  if (joined) router.push('/matrix')
+  if (joined) {
+    // A staged rack has been applied by now; the notice has served its purpose.
+    notice.value = ''
+    router.push('/matrix')
+  }
 })
 
 window.api.on('bus:error', (info: { scope: string; message: string }) => {
@@ -215,6 +249,7 @@ async function leave() {
       </div>
 
       <p v-if="error" class="error">{{ error }}</p>
+      <p v-if="notice" class="notice">{{ notice }}</p>
     </section>
 
     <section v-if="isConnected" class="card">
@@ -357,6 +392,13 @@ button {
 
 .error {
   color: #f66;
+  font-size: 12px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.notice {
+  color: #6cf;
   font-size: 12px;
   margin-top: 10px;
   text-align: center;
