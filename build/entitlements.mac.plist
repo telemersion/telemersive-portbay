@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <!-- electron-builder's defaults. Reproduced verbatim: supplying a custom
+         entitlements file REPLACES the template, it does not merge with it. -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+
+    <!-- UltraGrid runs as a child process, never as its own app. macOS TCC
+         attributes a child's hardware request to the *responsible process* —
+         this bundle — so the capture entitlements have to live here even
+         though nothing in the Electron code opens a device itself. Without
+         them the hardened runtime denies `uv`'s CoreAudio/AVFoundation open
+         with no prompt, which looks like broken hardware rather than a
+         missing permission. Same binary run from Terminal works because
+         Terminal is then the responsible process. -->
+    <key>com.apple.security.device.audio-input</key>
+    <true/>
+    <key>com.apple.security.device.camera</key>
+    <true/>
+  </dict>
+</plist>

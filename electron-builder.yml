@@ -17,6 +17,19 @@ mac:
         - arm64
   artifactName: Telemersive-Gateway-${version}-${arch}.${ext}
   identity: "Developer ID Application"
+  hardenedRuntime: true
+  # UltraGrid's mic/camera access is attributed to this bundle (it is the
+  # responsible process for the `uv` child), so the capture entitlements and
+  # usage strings must be declared here. See docs/deployment.md.
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    NSMicrophoneUsageDescription: >-
+      Telemersive Gateway needs the microphone so UltraGrid can capture and
+      stream audio to the other peers in your room.
+    NSCameraUsageDescription: >-
+      Telemersive Gateway needs the camera so UltraGrid can capture and stream
+      video to the other peers in your room.
 
 win:
   target:

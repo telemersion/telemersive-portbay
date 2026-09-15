@@ -20,6 +20,7 @@ import { UltraGridDevice } from './devices/ultragrid/UltraGridDevice'
 import { MotiveDevice } from './devices/motive/MotiveDevice'
 import type { MotiveSibling } from './devices/motive/motiveLogic'
 import { resolveUgPath } from './enumeration/spawnCli'
+import { mediaAccessStatus, primeMediaAccess } from './mediaPermissions'
 import { performShutdown } from './shutdown'
 import { logEvent, setLogSink, getLogBuffer, clearLogBuffer } from './logBus'
 import { enumerate, handleRefreshTrigger } from './enumeration'
@@ -535,7 +536,8 @@ function setupBus(): void {
               getSetting: (subpath: string) =>
                 retainedTopics.get(topics.settings(localPeerId, subpath)) ?? null,
               host: loadSettings().brokerUrl,
-              resolveBinary: resolveUgPath
+              resolveBinary: resolveUgPath,
+              mediaAccess: mediaAccessStatus
             })
           }
           if (type === 5) {
@@ -863,6 +865,10 @@ app.whenReady().then(async () => {
   console.log('PeerId:', bus!.peerId)
 
   createWindow()
+
+  // Must run while a window exists — the TCC dialog is hosted by the frontmost
+  // app. Fire-and-forget: a pending prompt must not hold up bus/device setup.
+  void primeMediaAccess()
 
   initAutoUpdater((status) => sendToRenderer('update:status', status))
   if (app.isPackaged) {

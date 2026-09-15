@@ -17,6 +17,9 @@ import { UltraGridIndicatorParser } from './indicators'
 type PublishFn = (retained: 0 | 1, topic: string, ...values: string[]) => void
 type GetSettingFn = (subpath: string) => string | null
 type SpawnFactory = (opts: LifecycleOptions) => ChildProcessLifecycle
+// Mirrors src/main/mediaPermissions.ts. Declared structurally rather than
+// imported so this module stays free of `electron` and remains unit-testable.
+type MediaAccessFn = (kind: 'microphone' | 'camera') => string
 
 const UG_DEVICE_TYPE = 2
 const MONITOR_LOG_CAPACITY = 50
@@ -35,6 +38,7 @@ export interface UltraGridDeviceOptions {
   resolveBinary?: () => string | null
   spawnFactory?: SpawnFactory
   osOverride?: LocalOs
+  mediaAccess?: MediaAccessFn
 }
 
 function detectLocalOs(): LocalOs {
@@ -56,6 +60,7 @@ export class UltraGridDevice implements DeviceHandler {
   private readonly resolveBinary: () => string | null
   private readonly spawnFactory: SpawnFactory
   private readonly localOs: LocalOs
+  private readonly mediaAccess: MediaAccessFn
 
   private config: UltraGridConfig = defaultUltraGridConfig()
   private readonly publishedTopics = new Set<string>()
@@ -77,6 +82,7 @@ export class UltraGridDevice implements DeviceHandler {
     this.resolveBinary = opts.resolveBinary ?? (() => null)
     this.spawnFactory = opts.spawnFactory ?? ((o) => new ChildProcessLifecycle(o))
     this.localOs = opts.osOverride ?? detectLocalOs()
+    this.mediaAccess = opts.mediaAccess ?? (() => 'unknown')
     this.config = applyTopicChange(this.config, 'remoteValues/local_os', this.localOs)
     const indicatorTopic = topics.deviceGui(opts.peerId, opts.channelIndex, 'indicators')
     this.indicatorParser = new UltraGridIndicatorParser(
@@ -188,6 +194,7 @@ export class UltraGridDevice implements DeviceHandler {
     }
 
     this.monitor.clear()
+    this.warnIfCaptureBlocked()
     const cliLine = `${binary} ${args.join(' ')}`
     console.log(`[UG ch.${this.channelIndex}] spawn: ${cliLine}`)
     const cliLogLine = `[CLI] ${cliLine}`
@@ -244,6 +251,19 @@ export class UltraGridDevice implements DeviceHandler {
 
   private publishEnableOff(): void {
     this.publish(1, topics.deviceGui(this.peerId, this.channelIndex, 'enable'), '0')
+  }
+
+  // A blocked TCC record does not fail the spawn — `uv` starts, opens nothing,
+  // and streams silence. Without this line the monitor log looks healthy, so the
+  // user has no way to tell a permission problem from a broken interface.
+  private warnIfCaptureBlocked(): void {
+    if (!usesAudioHardwareCapture(this.config)) return
+    const status = this.mediaAccess('microphone')
+    if (status === 'granted' || status === 'unknown') return
+    this.logWarn(
+      `microphone access is "${status}" — UltraGrid will capture silence. ` +
+        'Enable it under System Settings > Privacy & Security > Microphone, then re-enable this channel.'
+    )
   }
 
   private logWarn(message: string): void {
@@ -315,6 +335,17 @@ function audioBackendFromType(type: string): 'portaudio' | 'coreaudio' | 'wasapi
   if (type === '2') return 'wasapi'
   if (type === '3') return 'jack'
   return null
+}
+
+// True only when this config actually opens an input device: transmission must
+// include audio (1=audio, 2=both) and the capture backend must be a hardware one
+// (0=portaudio, 1=coreaudio, 2=wasapi, 3=jack). Testcard, embedded and custom
+// flags are excluded so an unrelated channel never warns about the microphone.
+function usesAudioHardwareCapture(config: UltraGridConfig): boolean {
+  const transmission = config.audioVideo.transmission
+  if (transmission !== '1' && transmission !== '2') return false
+  const type = config.audioVideo.audioCapture.type
+  return type === '0' || type === '1' || type === '2' || type === '3'
 }
 
 // Strip env vars Electron injects into the main process so the UV child can't

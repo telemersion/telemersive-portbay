@@ -146,6 +146,42 @@ If the signing secrets are absent (e.g. on a fork or before setup is complete), 
 
 ---
 
+## macOS hardware permissions (microphone / camera)
+
+UltraGrid never runs as its own app here — the gateway spawns `uv` as a child process. macOS TCC attributes a child's hardware request to the **responsible process**, which is the `Telemersive Gateway.app` bundle, not `uv`. Two consequences:
+
+- The capture entitlements and the `NS*UsageDescription` strings have to be declared on **this** bundle, even though no Electron code opens a device itself. They live in [build/entitlements.mac.plist](../build/entitlements.mac.plist) and the `mac.extendInfo` block of [electron-builder.yml](../electron-builder.yml).
+- The grant is recorded against `ch.telemersive.gateway`. It is *not* recorded against UltraGrid, so a working `uv` in Terminal proves nothing about the packaged app — in that case the responsible process is Terminal, which already holds the grant.
+
+Failure mode when this is wrong: no permission dialog appears, `uv` starts normally, and it captures silence. There is no error on stdout, so the monitor log looks healthy. The main process therefore asks for microphone and camera access at startup (`primeMediaAccess()` in [src/main/mediaPermissions.ts](../src/main/mediaPermissions.ts)) and writes a warning line into the UltraGrid monitor log if a channel with a hardware audio backend is enabled while the grant is missing.
+
+Startup is the only sane moment to ask: the spawn path in `UltraGridDevice.startProcess()` is synchronous, so there is nowhere to await a dialog once a device is being enabled.
+
+### Changing the entitlements file
+
+Supplying `mac.entitlements` **replaces** electron-builder's template rather than merging with it. The three `com.apple.security.cs.*` keys Electron needs under the hardened runtime are reproduced verbatim in our file — dropping one of them breaks the app, not just the permissions.
+
+### Debugging a stale grant
+
+A TCC record stores the app's code requirement. If the signing identity changes (unsigned dev build → Developer ID, or a different team), the stored record no longer matches and macOS **denies silently instead of re-prompting**. Reset it:
+
+```bash
+tccutil reset Microphone ch.telemersive.gateway
+tccutil reset Camera ch.telemersive.gateway
+```
+
+Then relaunch the app. Under `npm run dev` the responsible process is the ad-hoc-signed `Electron.app` from `node_modules`, so the grant is recorded under `com.github.Electron` and shows up in System Settings as "Electron" — expected, and it is a separate record from the packaged app's.
+
+Verify a build carries the entitlements:
+
+```bash
+codesign -dv --entitlements - --xml "/Applications/Telemersive Gateway.app" 2>&1 | tail -1
+```
+
+`com.apple.security.device.audio-input` and `com.apple.security.device.camera` must both be present.
+
+---
+
 ## One-time setup: Windows code signing (optional)
 
 The Windows build currently produces an unsigned NSIS installer. Windows Defender SmartScreen will show an "Unknown publisher" warning on first run until the executable accumulates sufficient reputation, or until you add an Authenticode certificate.
