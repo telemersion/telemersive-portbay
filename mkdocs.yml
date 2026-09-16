@@ -1,0 +1,108 @@
+site_name: Telemersive Portbay
+site_description: Share video, audio, OSC and motion capture between locations that sit behind firewalls.
+site_url: https://telemersion.github.io/telemersive-portbay/
+repo_url: https://github.com/telemersion/telemersive-portbay
+repo_name: telemersion/telemersive-portbay
+edit_uri: edit/master/docs/
+
+copyright: Telemersion — Zürcher Hochschule der Künste
+
+theme:
+  name: material
+  language: en
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - content.action.edit
+    - search.suggest
+    - search.highlight
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Follow system
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - assets/extra.css
+
+# Developer material lives under docs/ but is not part of the user manual.
+exclude_docs: |
+  wiki/
+  design/
+  specs/
+  superpowers/
+  javascript/
+  spec.md
+  deployment.md
+  upgrading-ultragrid.md
+  docs-migration-plan.md
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Install: getting-started/install.md
+      - Tools & compatibility: getting-started/tools.md
+      - Your first session: getting-started/first-session.md
+  - Using the app:
+      - The matrix: guide/matrix.md
+      - Adding & removing devices: guide/devices.md
+      - Peer details & locking: guide/peer-detail.md
+      - Channel proxies: guide/channel-proxies.md
+      - Activity log: guide/activity-log.md
+      - Settings: guide/settings.md
+      - Leaving & quitting: guide/leaving-and-quitting.md
+  - Devices:
+      - OSC: devices/osc.md
+      - Stage Control: devices/stage-control.md
+      - UltraGrid: devices/ultragrid.md
+      - Motion capture: devices/mocap.md
+  - Tutorials:
+      - Audio on macOS: tutorials/audio-on-macos.md
+  - Reference:
+      - Ports: reference/ports.md
+      - Max compatibility: reference/max-compatibility.md
+  - FAQ: faq.md

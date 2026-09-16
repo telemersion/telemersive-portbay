@@ -12,6 +12,9 @@
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "gen:icons-data": "node scripts/generate-icons-data.mjs",
+    "docs:screenshots": "npm run build && tsx scripts/docs-screenshots/capture.ts",
+    "docs:serve": ".venv-docs/bin/mkdocs serve",
+    "docs:build": ".venv-docs/bin/mkdocs build --strict",
     "package": "npm run build && electron-builder"
   },
   "dependencies": {
@@ -29,6 +32,8 @@
     "electron": "^39.8.9",
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
+    "playwright": "^1.63.0",
+    "tsx": "^4.23.13",
     "typescript": "^5.7.2",
     "vite": "^5.4.11",
     "vitest": "^2.1.8",

@@ -1,0 +1,29 @@
+/* Screenshots are of a dark UI on a dark ground; a hairline keeps them from
+   bleeding into the page in dark mode and from floating in light mode. */
+.md-typeset img[src*="/screenshots/"] {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 4px;
+}
+
+/* The architecture diagrams are dark-line SVGs on transparent ground. */
+[data-md-color-scheme="slate"] .md-typeset img[src*="/img/Diagram"],
+[data-md-color-scheme="slate"] .md-typeset img[src*="/img/PortRanges"] {
+  background: #fff;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+/* Device-type colour chips, matching AddDevicePopup.vue. */
+.md-typeset .chip {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 2px;
+  margin-right: 0.35em;
+  vertical-align: baseline;
+}
+.chip-osc    { background: #36ABFF; }
+.chip-stagec { background: #FE5FF5; }
+.chip-ug     { background: #F0DE01; }
+.chip-mocap  { background: #FFA126; }
+.chip-motive { background: #E84E4E; }
