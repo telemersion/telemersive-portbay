@@ -1,13 +1,13 @@
 # Ports
 
-Portbay works with **two separate port spaces**. Confusing them is the root of
+The Gateway works with **two separate port spaces**. Confusing them is the root of
 most "but the port is right there" problems.
 
 | | **Local ports** | **Room ports** |
 | --- | --- | --- |
 | Prefix | always `10` | the room number |
 | Example (room 11, channel 0) | `10009` | `11009` |
-| Used for | your own tools ↔ Portbay | Portbay ↔ the router's proxies |
+| Used for | your own tools ↔ the Gateway | the Gateway ↔ the router's proxies |
 | Shown in the interface | yes | no |
 | Changes when you join another room | **no** | yes |
 
@@ -80,7 +80,7 @@ pass is:
 - **outbound UDP** to the router on that room's range
 - **inbound UDP** on your local `10xxx` ports, for the return traffic
 
-Portbay itself also needs **outbound TCP** to the broker port, `3883` by default.
+The Gateway itself also needs **outbound TCP** to the broker port, `3883` by default.
 
 Media is UDP throughout and never passes through the broker. That is why a
 broker outage costs you control but not streams.

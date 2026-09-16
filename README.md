@@ -1,14 +1,18 @@
-# Telemersive Portbay
+# Telemersive Gateway
 
 [![Latest release](https://img.shields.io/github/v/release/telemersion/telemersive-portbay)](https://github.com/telemersion/telemersive-portbay/releases/latest)
 
 
 
-Telemersive Portbay is a desktop app for joining a telemersive-bus room — a shared MQTT-based session for routing video, audio, OSC, and motion-capture data between remote participants. It bridges local UltraGrid, OSC, and Motive devices into the room. It is a drop-in replacement for the Max MSP Telemersive Gateway and is wire-compatible, so mixed Max/Portbay rooms work.
+Telemersive Gateway is a desktop app for joining a telemersive-bus room — a shared MQTT-based session for routing video, audio, OSC, and motion-capture data between remote participants. It bridges local UltraGrid, OSC, and Motive devices into the room. It is a drop-in replacement for the Max MSP implementation of the Telemersive Gateway and is wire-compatible, so rooms mixing the two work.
+
+> **On the repository name.** The app was prototyped as *Portbay*; the product is Telemersive Gateway. The repository, its release URLs and the documentation site still use `telemersive-portbay` so that existing links, downloads and the auto-updater keep working.
+
+📖 **[Documentation](https://telemersion.github.io/telemersive-portbay/)**
 
 ![Gateway Matrix](docs/assets/Gateway_Matrix.png)
 
-See [docs/spec.md](docs/spec.md) for the protocol and design specification, and [CLAUDE.md](CLAUDE.md) for an architecture overview.
+See [docs/spec.md](docs/spec.md) for the protocol and design specification, and [CLAUDE.md](CLAUDE.md) for an architecture overview. User-facing documentation lives under [docs/](docs/) and is published with MkDocs Material — see [scripts/docs-screenshots/README.md](scripts/docs-screenshots/README.md) for how its screenshots are generated.
 
 ## Supported devices
 
@@ -95,8 +99,26 @@ UltraGrid is needed for video/audio channels. [NatNetFour2OSC](https://github.co
 - `npx vitest run tests/main/enumeration/parsers` — run only the UG parser tests
 - `npm run build` — production build into `out/`
 - `npm run preview` — launch the built app from `out/` without HMR
+- `npm run docs:screenshots` — regenerate the documentation screenshots from the live app
+- `npm run docs:serve` — serve the documentation site locally (needs `.venv-docs`, see below)
 
 UltraGrid CLI output changes between versions, so the parsers in [src/main/enumeration/parsers/](src/main/enumeration/parsers/) are version-coupled. Upgrading the vendored UltraGrid is a deliberate multi-step procedure — see [docs/upgrading-ultragrid.md](docs/upgrading-ultragrid.md) for the full runbook, and [vendor/ultragrid/README.md](vendor/ultragrid/README.md) for vendor layout details.
+
+## Documentation
+
+The user manual is built with MkDocs Material and published to GitHub Pages by
+[.github/workflows/docs.yml](.github/workflows/docs.yml) on every push to `master`.
+
+```sh
+python3.12 -m venv .venv-docs
+.venv-docs/bin/pip install -r requirements-docs.txt
+npm run docs:serve        # http://127.0.0.1:8000
+npm run docs:build        # strict build, fails on broken links
+```
+
+Screenshots under `docs/assets/screenshots/` are generated from the running app
+by `npm run docs:screenshots` — no broker or second machine required. Re-run it
+and commit the result whenever the UI changes.
 
 ## Releasing
 

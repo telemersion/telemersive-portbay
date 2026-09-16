@@ -178,7 +178,7 @@ const FREEZE_CSS = `
 async function main(): Promise<void> {
   mkdirSync(OUT_DIR, { recursive: true })
 
-  const profile = mkdtempSync(join(tmpdir(), 'portbay-docs-'))
+  const profile = mkdtempSync(join(tmpdir(), 'telemersive-gateway-docs-'))
   writeFileSync(join(profile, 'settings.json'), JSON.stringify(PROFILE_SETTINGS, null, 2))
 
   console.log(`profile: ${profile}`)

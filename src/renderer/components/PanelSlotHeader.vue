@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { deviceDocsUrl } from '../../shared/docs'
 
 const props = defineProps<{
   peerId: string
@@ -24,6 +25,7 @@ const deviceColor = computed(() => {
     case '2': return '#1BFEE9'
     case '3': return '#FFA126'
     case '4': return '#FE5FF5'
+    case '5': return '#E84E4E'
     default:  return '#555'
   }
 })
@@ -34,9 +36,27 @@ const deviceLabel = computed(() => {
     case '2': return 'UG'
     case '3': return 'MC'
     case '4': return 'SC'
+    case '5': return 'MO'
     default:  return '?'
   }
 })
+
+const deviceName = computed(() => {
+  switch (loaded.value) {
+    case '1': return 'OSC'
+    case '2': return 'UltraGrid'
+    case '3': return 'MoCap'
+    case '4': return 'Stage Control'
+    case '5': return 'Motive bridge'
+    default:  return 'devices'
+  }
+})
+
+// The main process routes window.open through shell.openExternal
+// (setWindowOpenHandler in main/index.ts), so this lands in the default browser.
+function openDocs(): void {
+  window.open(deviceDocsUrl(loaded.value), '_blank')
+}
 
 const ugIndicators = computed(() => {
   if (loaded.value !== '2') return null
@@ -99,6 +119,14 @@ const mocapRxActive = computed(() => {
     </template>
 
     <div class="slot-actions">
+      <button
+        class="action-btn help-btn"
+        :title="`Open the ${deviceName} documentation`"
+        :aria-label="`Open the ${deviceName} documentation`"
+        @click.stop="openDocs()"
+      >
+        ?
+      </button>
       <button v-if="!pinned" class="action-btn" title="Pin panel" @click.stop="emit('pin')">
         📌
       </button>
@@ -173,7 +201,13 @@ const mocapRxActive = computed(() => {
 
 .pulse.active { color: #1BFEE9; }
 
-.slot-actions { margin-left: auto; flex-shrink: 0; }
+.slot-actions {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
 
 .action-btn {
   background: none;
@@ -186,4 +220,20 @@ const mocapRxActive = computed(() => {
 }
 
 .action-btn:hover { color: #ccc; }
+
+.help-btn {
+  font-weight: bold;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 10px;
+}
+
+.help-btn:hover { color: #ccc; border-color: #888; }
+
 </style>

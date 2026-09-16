@@ -22,11 +22,11 @@ Reaper writes into it, UltraGrid reads out of it, and the other way around.
 Including the built-in output lets you monitor the Reaper mix on the Mac's own
 speakers. The microphone is not used here but costs nothing to include.
 
-!!! info "Screenshot pending"
-    Audio MIDI Setup with BlackHole — `ext-macos-audio-midi-blackhole.png`
+![BlackHole 16ch in Audio MIDI Setup](../assets/screenshots/ext-macos-audio-midi-blackhole.png)
 
-!!! info "Screenshot pending"
-    The aggregate device and its channel offsets — `ext-macos-audio-midi-aggregate.png`
+The aggregate device gathers BlackHole and the built-in devices under one name:
+
+![The aggregate device and its sub-devices](../assets/screenshots/ext-macos-audio-midi-aggregate.png)
 
 ### The channel convention
 
@@ -43,29 +43,30 @@ This example uses 1–2 for sending and 9–10 for receiving.
 
 Set up a Master track, two output tracks and two input tracks.
 
-!!! info "Screenshot pending"
-    Preferences → Audio → Device — `ext-reaper-audio-device.png`
+![The four-track layout in Reaper](../assets/screenshots/ext-reaper-tracksetup.png)
+
+Four tracks: two carrying audio out to the room, two carrying audio in from it.
+The exact input and output numbers are set in the steps below.
 
 In **Preferences → Audio → Device**, select `Ultragrid_16chan` as both input and
 output device.
 
+![Reaper's audio device preferences](../assets/screenshots/ext-reaper-audio-device.png)
+
 **Output tracks** — what you send. Route track 1 to `1: Output 1 (BlackHole
 16ch)` and track 2 to `2: Output 2 (BlackHole 16ch)`.
 
-!!! info "Screenshot pending"
-    An output track's routing — `ext-reaper-output-track.png`
+![Routing for an output track](../assets/screenshots/ext-reaper-output-track.png)
 
 **Input tracks** — what you receive. Set track 3's input to `Input 9 (BlackHole
 16ch)` and track 4's to `Input 10 (BlackHole 16ch)`. These are the receive-side
 channels from the convention above.
 
-!!! info "Screenshot pending"
-    An input track's input assignment — `ext-reaper-input-track.png`
+![Input assignment for an input track](../assets/screenshots/ext-reaper-input-track.png)
 
 **Master track** — route it to your built-in output so you can hear the mix.
 
-!!! info "Screenshot pending"
-    Master track routing — `ext-reaper-master-track.png`
+![Master track hardware output](../assets/screenshots/ext-reaper-master-track.png)
 
 ## 3. Configure the sending device
 

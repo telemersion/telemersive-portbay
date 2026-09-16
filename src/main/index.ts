@@ -13,6 +13,7 @@ import {
   type RackSnapshot
 } from './persistence/rack'
 import { topics } from '../shared/topics'
+import { DOCS_URL } from '../shared/docs'
 import { DeviceRouter } from './deviceRouter'
 import { OscDevice } from './devices/OscDevice'
 import { NatNetDevice } from './devices/NatNetDevice'
@@ -298,7 +299,7 @@ function setupMenu(): void {
       submenu: [
         { label: 'Repository',  click: () => shell.openExternal(REPO) },
         { label: 'Releases',    click: () => shell.openExternal(`${REPO}/releases`) },
-        { label: 'Wiki',        click: () => shell.openExternal(`${REPO}/wiki`) },
+        { label: 'Documentation', click: () => shell.openExternal(DOCS_URL) },
         { label: 'Report Issue', click: () => shell.openExternal(`${REPO}/issues`) },
       ]
     }

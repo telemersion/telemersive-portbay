@@ -18,7 +18,7 @@ lines and auto-scrolls unless you scroll up.
 
 ## Why it looks like an echo chamber
 
-Because it is. Nothing in Portbay acts on a change directly. Pressing a button
+Because it is. Nothing in the Gateway acts on a change directly. Pressing a button
 publishes the new value, the broker sends it back, and only *then* does anything
 happen. So a single click shows up as a `PUB` immediately followed by a `RECV`
 of the same topic:

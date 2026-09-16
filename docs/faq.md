@@ -111,7 +111,7 @@ view.
 
 ### A device switched itself off
 
-UltraGrid or NatNetFour2OSC exited. Portbay does not restart them; it switches
+UltraGrid or NatNetFour2OSC exited. The Gateway does not restart them; it switches
 the device off and writes the error to the monitor log. Open **Monitor** on that
 device and read it.
 
@@ -127,7 +127,7 @@ router password in plain text — do not attach it to bug reports.
 Not for this app. The
 [telemersive-bus](https://github.com/telemersion/telemersive-bus) client library
 offers a reduced feature set — chat, MQTT, OSC-as-lists, a connection speed test —
-without needing a router, but not the device relaying that Portbay is for.
+without needing a router, but not the device relaying that the Gateway is for.
 
 ![The simplified topology](assets/img/DiagramSimpleRouter.svg)
 

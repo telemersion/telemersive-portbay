@@ -49,7 +49,7 @@ Press **join**.
 
 ![Joined](../assets/screenshots/session-joined.png)
 
-Portbay switches to the [matrix](../guide/matrix.md) as soon as the join
+The Gateway switches to the [matrix](../guide/matrix.md) as soon as the join
 succeeds, and the Matrix icon appears in the icon bar.
 
 Your credentials, peer name and last room are saved automatically, so the next

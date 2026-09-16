@@ -1,7 +1,7 @@
 # Install
 
-Portbay is a standalone desktop application. Unlike its Max/MSP predecessor it
-needs neither Max nor any Max packages.
+Telemersive Gateway is a standalone desktop application. Unlike the Max/MSP
+version it replaces, it needs neither Max nor any Max packages.
 
 Download the latest build from the
 [releases page](https://github.com/telemersion/telemersive-portbay/releases).
@@ -20,8 +20,7 @@ Download the latest build from the
     The build is signed and notarised, so it should open normally. If macOS
     refuses to open it, right-click the app and choose **Open** once.
 
-    !!! info "Screenshot pending"
-        Disk image window — `os-macos-dmg.png`
+    ![The mounted disk image](../assets/screenshots/os-macos-dmg.png)
 
 === "Windows"
 
@@ -37,7 +36,7 @@ Download the latest build from the
 
 ## Updates
 
-Portbay checks for new releases on its own. When one is available a banner
+The Gateway checks for new releases on its own. When one is available a banner
 appears on the Session view, and the **About** panel offers to download and
 install it.
 
@@ -52,7 +51,7 @@ Two command-line tools do the actual media work, and they are **not** bundled:
 - **[NatNetFour2OSC](https://github.com/immersive-arts/NatNetFour2OSC)** —
   OptiTrack motion capture. Windows only.
 
-Portbay checks for both at startup and refuses to go any further until the check
+The Gateway checks for both at startup and refuses to go any further until the check
 passes. That check, and what to do when it fails, is the
 [next page](tools.md).
 
@@ -66,7 +65,7 @@ If you dismissed the prompt by accident, see the [FAQ](../faq.md#firewall).
 
 ## What you connect it to
 
-Portbay bridges between the network and whatever produces or consumes media on
+The Gateway bridges between the network and whatever produces or consumes media on
 your machine:
 
 - **Video** via Syphon (macOS), Spout (Windows) or NDI

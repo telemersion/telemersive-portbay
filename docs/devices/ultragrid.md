@@ -1,8 +1,8 @@
 # UltraGrid
 
 [UltraGrid](https://www.ultragrid.cz/) moves video and audio across a network
-with very low latency. Portbay runs it for you and gives it a interface, so you
-never have to write a `uv` command line.
+with very low latency. The Gateway runs it for you and gives it an interface, so
+you never have to write a `uv` command line.
 
 ![UltraGrid device panel](../assets/screenshots/panel-ultragrid.png)
 
@@ -98,7 +98,7 @@ point of it. Leave it **Off** when you are not reading it; it publishes
 continuously.
 
 !!! warning "No automatic restart"
-    If UltraGrid exits, Portbay switches the device off and leaves it off. It
+    If UltraGrid exits, the Gateway switches the device off and leaves it off. It
     does not restart it. Open the monitor, read the error, fix the cause. A
     silent restart loop would just hide a missing capture device or a port
     collision.

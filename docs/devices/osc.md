@@ -28,7 +28,7 @@ machine and a console elsewhere in the building.
 
 Where this device listens for OSC *from your tools*, to forward into the room.
 Both fields are read-only: the IP is the NetworkCard you chose at connect time,
-and the port is allocated by Portbay.
+and the port is allocated by the Gateway.
 
 Send OSC to that address and port, and every peer with an OSC device on this
 channel receives it.
@@ -53,7 +53,7 @@ addresses.
 
 ## OSC is really lists
 
-Messages travel over MQTT as strings, not as OSC packets. Portbay serialises on
+Messages travel over MQTT as strings, not as OSC packets. The Gateway serialises on
 the way out and deserialises on the way in.
 
 In practice this is invisible — in Max there is no difference between a list and

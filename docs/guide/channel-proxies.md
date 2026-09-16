@@ -41,7 +41,7 @@ output. Which slot gets which port is laid out in [Ports](../reference/ports.md)
 
 ## Refresh rate
 
-Portbay polls the switchboard every 5 seconds by default. Change that under
+The Gateway polls the switchboard every 5 seconds by default. Change that under
 [Settings](settings.md) if you want a livelier display or less chatter.
 
 !!! note "Proxy state is the router's view, not yours"

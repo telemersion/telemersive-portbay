@@ -1,4 +1,4 @@
-# Telemersive Portbay
+# Telemersive Gateway
 
 Share video, audio, OSC and motion capture between locations whose firewalls you
 cannot change.
@@ -23,11 +23,11 @@ Two components:
 
 - the **[telemersive-router](https://github.com/telemersion/telemersive-router)**,
   running on a server with a public IP address
-- the **telemersive-portbay** (this app), running on every participating machine
+- the **Telemersive Gateway** (this app), running on every participating machine
 
 ![The user's view](assets/img/DiagramUserView.svg)
 
-Each portbay joins a **room** on the router, either creating it or entering an
+Each Gateway joins a **room** on the router, either creating it or entering an
 existing one with its password. Peers in the same room can share their data
 sources. Each peer opens **devices** that carry the actual media; the router
 mediates between them, so no firewall rule has to change.

@@ -46,6 +46,7 @@ Clicking a device cell opens its panel in a row docked at the bottom.
 Each panel header shows the device type badge, which peer and channel it belongs
 to, and live activity — for UltraGrid, the TX/RX frame rate and volume.
 
+- **?** opens this page's documentation for that device type in your browser.
 - **Pin** (the pin icon) keeps the panel open when you select another cell.
   Without pinning, selecting a different device replaces the panel.
 - **Close** (×) removes a pinned panel.

@@ -86,7 +86,7 @@ Sink.
 | --- | --- |
 | **interface** | the network interface to capture from or multicast on |
 | **multicast** | the multicast group — must match Motive's setting on the Source, and is what Sinks will re-multicast to |
-| **data port / cmd port** | allocated by Portbay from the room's range |
+| **data port / cmd port** | allocated by the Gateway from the room's range |
 | **motive ip** | the Motive machine, on the Source side |
 
 The **interface** matters more here than elsewhere. Multicast is per-interface:

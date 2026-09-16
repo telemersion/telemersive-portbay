@@ -23,7 +23,7 @@ Close the window, or quit from the application menu. There is no "save before
 quitting?" prompt — there is nothing to decide, because everything has already
 been saved.
 
-On quit, Portbay:
+On quit, the Gateway:
 
 1. writes settings and rack to disk
 2. stops every running device and its command-line process
@@ -51,7 +51,7 @@ it will not.
 
 ## Crashes in the media tools
 
-If UltraGrid or NatNetFour2OSC exits unexpectedly, Portbay does **not** restart
+If UltraGrid or NatNetFour2OSC exits unexpectedly, the Gateway does **not** restart
 it. It publishes `enable 0` for that device and writes the tool's error output to
 the monitor log, then waits for you.
 
