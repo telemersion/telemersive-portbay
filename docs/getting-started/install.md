@@ -28,11 +28,13 @@ Download the latest build from the
     lets you choose the installation directory and installs for all users, so it
     will ask for administrator rights.
 
-    Windows SmartScreen may warn about an unrecognised app. Choose **More info →
-    Run anyway**.
+    Windows SmartScreen may warn about an unrecognised app.
 
-    !!! info "Screenshot pending"
-        SmartScreen dialog — `os-windows-smartscreen.png`
+    ![Windows SmartScreen warning](../assets/screenshots/os-windows-smartscreen.png)
+
+    Choose **More info → Run anyway**.
+
+    ![SmartScreen with Run anyway expanded](../assets/screenshots/os-windows-runanyway.png)
 
 ## Updates
 

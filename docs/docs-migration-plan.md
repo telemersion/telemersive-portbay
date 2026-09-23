@@ -1,7 +1,7 @@
 # Docs status & the screenshots still needed
 
-The MkDocs site is live and the in-app screenshots are generated. Eight manual
-screenshots have arrived and are embedded; seven are still open.
+The MkDocs site is live and the in-app screenshots are generated. Ten manual
+screenshots have arrived and are embedded; six are still open.
 
 **Live at <https://telemersion.github.io/telemersive-portbay/>**
 
@@ -56,7 +56,7 @@ Not blocking — the pages are correct and readable as they stand.
 
 ## Manual screenshots
 
-**Seven still open.** Each has a *"Screenshot pending"* admonition sitting
+**Six still open.** Each has a *"Screenshot pending"* admonition sitting
 exactly where the image goes, so the pages read correctly without them and you
 can drop images in one at a time.
 
@@ -86,7 +86,7 @@ indentation inside `=== "macOS"` tabs, where the image line must stay indented.
 | --- | --- | --- |
 | ~~M1~~ | ~~`os-macos-dmg.png`~~ | **Done — embedded.** |
 | M2 | `os-macos-gatekeeper.png` | The "developer cannot be verified" alert — **only if it still appears**. *(no placeholder)* |
-| **M3** | `os-windows-smartscreen.png` | "Windows protected your PC", **More info** already expanded so **Run anyway** shows. |
+| ~~M3~~ | ~~`os-windows-smartscreen.png`~~ | **Done — embedded.** Plus `os-windows-runanyway.png` (unrequested): the initial dialog before **More info** is expanded, shown just above it. |
 | M4 | `os-windows-installer.png` | The NSIS page where the install directory is chosen. *(no placeholder)* |
 
 ### B — Firewall
