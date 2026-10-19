@@ -204,14 +204,14 @@ const healthLabel = computed(() => {
       <div class="field-row">
         <label>data port</label>
         <input
-          class="port-input"
+          class="pair-input"
           :value="dataPort.value.value"
           :disabled="isLocked"
           @change="dataPort.set(($event.target as HTMLInputElement).value)"
         />
-        <label>cmd port</label>
+        <label class="inline">cmd port</label>
         <input
-          class="port-input"
+          class="pair-input"
           :value="cmdPort.value.value"
           :disabled="isLocked"
           @change="cmdPort.set(($event.target as HTMLInputElement).value)"
@@ -272,6 +272,9 @@ h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px
 .field-row input, .field-row select { flex: 1; min-width: 0; padding: 4px 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: white; font-family: monospace; font-size: 12px; }
 .field-row input:disabled, .field-row select:disabled { color: #666; cursor: not-allowed; }
 .port-input { max-width: 80px !important; flex: none !important; }
+/* Two inputs sharing a row: shrink with the card instead of overflowing it. */
+.pair-input { flex: 1 1 80px !important; max-width: 80px; }
+.field-row label.inline { min-width: 0; }
 .role-row { display: flex; gap: 6px; }
 .role-btn { flex: 1; padding: 6px 12px; border-radius: 4px; border: 1px solid #555; background: #2a2a2a; color: #aaa; cursor: pointer; font-size: 12px; font-weight: 500; }
 .role-btn.active { background: #E84E4E; color: #1a1a1a; border-color: #E84E4E; }

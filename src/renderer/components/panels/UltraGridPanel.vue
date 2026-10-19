@@ -738,14 +738,14 @@ async function triggerRefresh(backend: Backend) {
           <div class="field-row">
             <label>bitrate (M)</label>
             <input
-              class="port-input"
+              class="pair-input"
               :value="videoBitrate.value.value"
               :disabled="isLocked"
               @change="videoBitrate.set(($event.target as HTMLInputElement).value)"
             />
-            <label>fps</label>
+            <label class="inline">fps</label>
             <input
-              class="port-input"
+              class="pair-input"
               :value="videoFps.value.value"
               :disabled="isLocked"
               @change="videoFps.set(($event.target as HTMLInputElement).value)"
@@ -972,14 +972,14 @@ async function triggerRefresh(backend: Backend) {
           <div class="field-row">
             <label>bitrate</label>
             <input
-              class="port-input"
+              class="pair-input"
               :value="audioBitrate.value.value"
               :disabled="isLocked"
               @change="audioBitrate.set(($event.target as HTMLInputElement).value)"
             />
-            <label>sample</label>
+            <label class="inline">sample</label>
             <input
-              class="port-input"
+              class="pair-input"
               :value="audioSamplerate.value.value"
               :disabled="isLocked"
               @change="audioSamplerate.set(($event.target as HTMLInputElement).value)"
@@ -1217,6 +1217,9 @@ h4 { font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 6px
 .field-row select { text-overflow: ellipsis; }
 .field-row input:disabled, .field-row select:disabled { color: #666; cursor: not-allowed; }
 .port-input { max-width: 80px !important; flex: none !important; }
+/* Two inputs sharing a row: shrink with the card instead of overflowing it. */
+.pair-input { flex: 1 1 80px !important; max-width: 80px; }
+.field-row label.inline { min-width: 0; }
 .toggle-btn { padding: 2px 8px; border-radius: 4px; border: 1px solid #555; background: none; color: #888; cursor: pointer; font-size: 10px; }
 .toggle-btn.on { background: #36ABFF; color: white; border-color: #36ABFF; }
 .toggle-btn:disabled { opacity: 0.4; cursor: not-allowed; }
