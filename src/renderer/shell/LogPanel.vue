@@ -1,26 +1,22 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-
-type LogKind = 'sub' | 'unsub' | 'pub' | 'recv'
-
-interface LogEntry {
-  seq: number
-  ts: number
-  kind: LogKind
-  topic: string
-  value?: string
-  retained?: boolean
-}
+import { pushCapped, type LogEntry } from '../../shared/log'
 
 const entries = ref<LogEntry[]>([])
 const showSub = ref(true)
 const showPub = ref(true)
 const showRecv = ref(true)
+const showData = ref(true)
+const showBus = ref(true)
+const showPings = ref(false)
 const autoScroll = ref(true)
 const listEl = ref<HTMLDivElement | null>(null)
 const copyFlash = ref(false)
 
 const visible = computed(() => entries.value.filter(e => {
+  if (e.source === 'data' && !showData.value) return false
+  if (e.source === 'bus' && !showBus.value) return false
+  if (e.source === 'keepalive' && !(showBus.value && showPings.value)) return false
   if (e.kind === 'sub' || e.kind === 'unsub') return showSub.value
   if (e.kind === 'pub') return showPub.value
   if (e.kind === 'recv') return showRecv.value
@@ -41,7 +37,10 @@ function kindLabel(e: LogEntry): string {
     case 'sub': return 'SUB  '
     case 'unsub': return 'UNSUB'
     case 'pub': return e.retained ? 'PUB r' : 'PUB  '
-    case 'recv': return 'RECV '
+    case 'recv': return e.retained ? 'RECVr' : 'RECV '
+    case 'event': return 'EVT  '
+    case 'warn': return 'WARN '
+    case 'error': return 'ERR  '
   }
 }
 
@@ -65,8 +64,7 @@ watch(visible, async () => {
 })
 
 function onEntry(entry: LogEntry): void {
-  entries.value.push(entry)
-  if (entries.value.length > 500) entries.value.splice(0, entries.value.length - 500)
+  pushCapped(entries.value, entry)
 }
 
 async function clear(): Promise<void> {
@@ -108,10 +106,14 @@ onUnmounted(() => {
       <label><input type="checkbox" v-model="showSub" /> Sub</label>
       <label><input type="checkbox" v-model="showPub" /> Pub</label>
       <label><input type="checkbox" v-model="showRecv" /> Recv</label>
+      <span class="sep" />
+      <label title="Room data-plane topics (/peer/...)"><input type="checkbox" v-model="showData" /> Data</label>
+      <label title="telemersive-bus handshake and control traffic with the room manager"><input type="checkbox" v-model="showBus" /> Bus</label>
+      <label title="Periodic bus keepalive traffic (room alive and speed pings)" :class="{ dim: !showBus }"><input type="checkbox" v-model="showPings" :disabled="!showBus" /> Pings</label>
     </div>
 
     <div ref="listEl" class="list" @scroll="onListScroll">
-      <div v-for="e in visible" :key="e.seq" class="row" :class="'k-' + e.kind">
+      <div v-for="e in visible" :key="e.seq" class="row" :class="['k-' + e.kind, 's-' + e.source]">
         <span class="ts">{{ formatTs(e.ts) }}</span>
         <span class="kind">{{ kindLabel(e) }}</span>
         <span class="topic">{{ e.topic }}</span>
@@ -162,6 +164,8 @@ onUnmounted(() => {
   color: #aaa;
 }
 .filters label { display: flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; }
+.filters label.dim { opacity: 0.4; cursor: default; }
+.filters .sep { width: 1px; background: #2a2a2a; }
 
 .list {
   flex: 1;
@@ -189,6 +193,12 @@ onUnmounted(() => {
 .k-sub .kind, .k-unsub .kind { color: #9a8; }
 .k-pub .kind { color: #f90; }
 .k-recv .kind { color: #39f; }
+.k-event .kind { color: #b9a3e3; }
+.k-warn .kind { color: #e5c07b; }
+.k-error .kind { color: #f55; }
+
+.s-bus .topic { color: #b9a3e3; }
+.s-keepalive .topic, .s-keepalive .value { color: #666; }
 
 .empty {
   color: #555;

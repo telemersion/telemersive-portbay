@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events'
 import type { BrokerConfig, RemotePeerInfo } from '../shared/types'
 import { logEvent } from './logBus'
+import { installBusTap, logBusCallback } from './busTap'
 
 const APPVERSION = 'TeGateway_v0612'
 
@@ -21,6 +22,7 @@ export class TBusClient extends EventEmitter {
       throw new Error('telemersive-bus module not available')
     }
     this.client = new BusClientClass(APPVERSION)
+    installBusTap(this.client)
     this.client.setCallback((message: string, content: any[]) => {
       this.handleCallback(message, content)
     })
@@ -71,6 +73,7 @@ export class TBusClient extends EventEmitter {
 
   private handleCallback(message: string, content: any[]): void {
     if (message === 'bus') {
+      logBusCallback(content)
       this.parseBusEvent(content)
     } else if (message === 'mqtt') {
       const [topic, ...rest] = content
