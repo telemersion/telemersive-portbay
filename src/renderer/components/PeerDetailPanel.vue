@@ -2,6 +2,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import PanelResizeHandle from '../shell/PanelResizeHandle.vue'
+import { panelWidths } from '../shell/panelWidths'
 
 // Leaflet's default marker icons rely on webpack asset paths that don't resolve
 // in Vite/Electron. Point them at the CDN copies instead.
@@ -92,13 +94,17 @@ watch([geo, mapEl], ([geoVal, el]) => {
   map.setView([geoVal.lat, geoVal.lon], 10)
 })
 
+// Leaflet caches its container size; re-measure after the panel is resized.
+watch(() => panelWidths.peerDetail, () => map?.invalidateSize())
+
 onUnmounted(() => {
   if (map) { map.remove(); map = null }
 })
 </script>
 
 <template>
-  <aside class="peer-detail">
+  <aside class="peer-detail" :style="{ width: panelWidths.peerDetail + 'px' }">
+    <PanelResizeHandle panel="peerDetail" edge="left" :reserved="48" />
     <header class="head">
       <div class="title-row">
         <div v-if="colorSwatch" class="color-dot" :style="{ background: colorSwatch }" />
@@ -176,7 +182,6 @@ onUnmounted(() => {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 280px;
   background: #161616;
   border-left: 1px solid #2a2a2a;
   color: #ddd;

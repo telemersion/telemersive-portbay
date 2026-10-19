@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { pushCapped, type LogEntry } from '../../shared/log'
+import PanelResizeHandle from './PanelResizeHandle.vue'
+import { panelWidths } from './panelWidths'
+
+defineProps<{ iconBarWidth: number }>()
 
 const entries = ref<LogEntry[]>([])
 const showSub = ref(true)
@@ -96,7 +100,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <aside class="log-panel">
+  <aside class="log-panel" :style="{ left: iconBarWidth + 'px', width: panelWidths.log + 'px' }">
+    <PanelResizeHandle panel="log" edge="right" :reserved="iconBarWidth" />
     <header class="head">
       <span class="title">Activity log</span>
       <span class="count">{{ visible.length }} / {{ entries.length }}</span>
@@ -134,8 +139,6 @@ onUnmounted(() => {
   position: fixed;
   top: 0;
   bottom: 0;
-  left: 48px;
-  width: 400px;
   background: #161616;
   border-right: 1px solid #2a2a2a;
   color: #ddd;
@@ -159,7 +162,8 @@ onUnmounted(() => {
   padding: 6px 12px;
   border-bottom: 1px solid #2a2a2a;
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 4px 12px;
   font-size: 11px;
   color: #aaa;
 }
