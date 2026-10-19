@@ -32,9 +32,13 @@ import { TOOL_REQUIREMENTS, type CompatStatus } from '../shared/toolRequirements
 import {
   switchboardBaseUrl,
   fetchSwitchboardRoomState,
+  fetchSwitchboardHealth,
   groupProxiesByChannel,
+  SwitchboardHttpError,
   type ProxyEntry
 } from './switchboardClient'
+import { SwitchboardWatch } from './switchboardWatch'
+import { AllRoomsObserver } from './busObserver'
 
 let mainWindow: BrowserWindow | null = null
 let bus: TBusClient | null = null
@@ -207,6 +211,21 @@ const retainedTopics = new Map<string, string>()
 let switchboardPollTimer: NodeJS.Timeout | null = null
 let switchboardPolling = false
 let lastSwitchboardChannels: Record<number, ProxyEntry[]> = {}
+const switchboardWatch = new SwitchboardWatch((kind, message, detail) =>
+  logEvent({ source: 'switchboard', kind, topic: message, value: detail }))
+
+// Activity-log "All rooms" toggle: observe the manager's activity in other rooms
+// over a separate read-only connection while the broker is connected.
+const allRoomsObserver = new AllRoomsObserver(() => roomName)
+let observeAllRooms = false
+
+function syncAllRoomsObserver(): void {
+  if (observeAllRooms && brokerConnected && bus?.brokerConfig) {
+    allRoomsObserver.start(bus.brokerConfig, localPeerId)
+  } else {
+    allRoomsObserver.stop()
+  }
+}
 
 const RACK_SAVE_DEBOUNCE_MS = 500
 let rackSaveTimer: NodeJS.Timeout | null = null
@@ -377,18 +396,34 @@ function forwardToRenderer(channel: string): void {
 async function pollSwitchboardOnce(): Promise<void> {
   if (!roomName) return
   const baseUrl = switchboardBaseUrl(loadSettings().brokerUrl)
-  try {
-    const state = await fetchSwitchboardRoomState(baseUrl, roomName)
-    lastSwitchboardChannels = groupProxiesByChannel(state, roomId)
+  const [stateResult, healthResult] = await Promise.allSettled([
+    fetchSwitchboardRoomState(baseUrl, roomName),
+    fetchSwitchboardHealth(baseUrl)
+  ])
+  if (stateResult.status === 'fulfilled') {
+    lastSwitchboardChannels = groupProxiesByChannel(stateResult.value, roomId)
     sendToRenderer('switchboard:state', { roomId, error: false, channels: lastSwitchboardChannels })
-  } catch {
+  } else {
     sendToRenderer('switchboard:state', { roomId, error: true, channels: lastSwitchboardChannels })
   }
+
+  // Activity log: diff this poll against the previous one. A 404 for the room
+  // means the switchboard holds none of its ports, which the watch reports.
+  if (stateResult.status === 'fulfilled') {
+    switchboardWatch.observeState(stateResult.value)
+  } else if (stateResult.reason instanceof SwitchboardHttpError && stateResult.reason.status === 404) {
+    switchboardWatch.observeState({})
+  } else {
+    switchboardWatch.observeUnreachable(String(stateResult.reason?.message ?? stateResult.reason))
+    return
+  }
+  if (healthResult.status === 'fulfilled') switchboardWatch.observeHealth(healthResult.value)
 }
 
 function startSwitchboardPolling(): void {
   if (switchboardPolling) return
   switchboardPolling = true
+  switchboardWatch.reset(roomName, roomId)
   const tick = (): void => {
     if (!switchboardPolling) return
     pollSwitchboardOnce().finally(() => {
@@ -489,6 +524,7 @@ function setupBus(): void {
       roomId = 0
       stopSwitchboardPolling()
     }
+    syncAllRoomsObserver()
   })
 
   bus.on('peer:joined', (joined: boolean) => {
@@ -704,6 +740,11 @@ function setupIpcHandlers(): void {
     clearLogBuffer()
   })
 
+  ipcMain.handle('log:observe-all-rooms', (_event, enabled: boolean) => {
+    observeAllRooms = !!enabled
+    syncAllRoomsObserver()
+  })
+
   ipcMain.handle('compat:get-status', async () => {
     if (!compatStatus) compatStatus = await runCompatCheck()
     return compatStatus
@@ -792,6 +833,7 @@ function setupIpcHandlers(): void {
     isShuttingDown = true
     flushRackSave()
     rackSaveSuppressed = true
+    allRoomsObserver.stop()
     if (bus) {
       performShutdown(bus, deviceRouter, [...retainedTopics.keys()])
     }
@@ -914,6 +956,7 @@ app.on('before-quit', (e) => {
   e.preventDefault()
   flushRackSave()
   rackSaveSuppressed = true
+  allRoomsObserver.stop()
   if (bus) {
     performShutdown(bus, deviceRouter, [...retainedTopics.keys()])
   }

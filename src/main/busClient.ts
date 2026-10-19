@@ -36,7 +36,11 @@ export class TBusClient extends EventEmitter {
     return this.client.init()
   }
 
+  // Last configuration passed to configure(), for side connections (busObserver).
+  brokerConfig: BrokerConfig | null = null
+
   configure(config: BrokerConfig): void {
+    this.brokerConfig = config
     const brokerUrl = 'mqtt://' + config.host
     this.client.configureServer(brokerUrl, config.port, config.username, config.password, config.localIP)
   }

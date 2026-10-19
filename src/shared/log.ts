@@ -2,12 +2,15 @@
 
 export type LogKind = 'sub' | 'unsub' | 'pub' | 'recv' | 'event' | 'warn' | 'error'
 
-// 'data'      — room data-plane topics (/peer/..., the Max-compatible protocol)
-// 'bus'       — telemersive-bus control traffic with the room manager
-//               (broker connect, roomCreate/roomAccess handshake, peer join/leave)
-// 'keepalive' — periodic bus traffic (room alive pings, speed pings); kept in
-//               its own bucket so it can't evict handshake entries
-export type LogSource = 'data' | 'bus' | 'keepalive'
+// 'data'        — room data-plane topics (/peer/..., the Max-compatible protocol)
+// 'bus'         — telemersive-bus control traffic with the room manager
+//                 (broker connect, roomCreate/roomAccess handshake, housekeeping
+//                 pings, peer join/leave)
+// 'keepalive'   — speed (latency) pings between peers; kept in its own bucket
+//                 so it can't evict handshake entries
+// 'switchboard' — changes seen while polling the switchboard's HTTP API
+//                 (restarts, missing ports, relays stopping or being revived)
+export type LogSource = 'data' | 'bus' | 'keepalive' | 'switchboard'
 
 export interface LogEntry {
   seq: number
@@ -17,6 +20,8 @@ export interface LogEntry {
   topic: string
   value?: string
   retained?: boolean
+  // Human-readable one-liner shown instead of topic/value when present.
+  summary?: string
 }
 
 export const LOG_CAP_PER_SOURCE = 500

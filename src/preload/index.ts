@@ -6,7 +6,7 @@ const INVOKE_CHANNELS = [
   'mqtt:publish', 'mqtt:subscribe', 'mqtt:unsubscribe',
   'settings:load', 'settings:save',
   'settings:get-path', 'settings:reveal', 'settings:open-in-editor',
-  'log:get', 'log:clear',
+  'log:get', 'log:clear', 'log:observe-all-rooms',
   'geo:lookup',
   'compat:get-status', 'compat:recheck', 'compat:locate',
   'compat:open-download', 'compat:reveal-tools-folder',

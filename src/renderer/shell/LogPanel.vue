@@ -6,6 +6,13 @@ import { panelWidths } from './panelWidths'
 
 defineProps<{ iconBarWidth: number }>()
 
+// "All rooms" is remembered per machine; main only observes while it's on.
+const OBSERVE_KEY = 'log.observeAllRooms'
+
+function loadObserveAllRooms(): boolean {
+  try { return localStorage.getItem(OBSERVE_KEY) === '1' } catch { return false }
+}
+
 const entries = ref<LogEntry[]>([])
 const showSub = ref(true)
 const showPub = ref(true)
@@ -13,6 +20,9 @@ const showRecv = ref(true)
 const showData = ref(true)
 const showBus = ref(true)
 const showPings = ref(false)
+const showSwitchboard = ref(true)
+const showRaw = ref(false)
+const observeAllRooms = ref(loadObserveAllRooms())
 const autoScroll = ref(true)
 const listEl = ref<HTMLDivElement | null>(null)
 const copyFlash = ref(false)
@@ -21,6 +31,7 @@ const visible = computed(() => entries.value.filter(e => {
   if (e.source === 'data' && !showData.value) return false
   if (e.source === 'bus' && !showBus.value) return false
   if (e.source === 'keepalive' && !(showBus.value && showPings.value)) return false
+  if (e.source === 'switchboard' && !showSwitchboard.value) return false
   if (e.kind === 'sub' || e.kind === 'unsub') return showSub.value
   if (e.kind === 'pub') return showPub.value
   if (e.kind === 'recv') return showRecv.value
@@ -48,10 +59,19 @@ function kindLabel(e: LogEntry): string {
   }
 }
 
-function formatEntry(e: LogEntry): string {
-  const base = `[${formatTs(e.ts)}] ${kindLabel(e)} ${e.topic}`
-  return e.value ? `${base} ${e.value}` : base
+function rawText(e: LogEntry): string {
+  return e.value ? `${e.topic} ${e.value}` : e.topic
 }
+
+function formatEntry(e: LogEntry): string {
+  const base = `[${formatTs(e.ts)}] ${kindLabel(e)}`
+  return e.summary ? `${base} ${e.summary} — ${rawText(e)}` : `${base} ${rawText(e)}`
+}
+
+watch(observeAllRooms, (on) => {
+  try { localStorage.setItem(OBSERVE_KEY, on ? '1' : '0') } catch { /* non-fatal */ }
+  window.api.invoke('log:observe-all-rooms', on)
+})
 
 function onListScroll(): void {
   const el = listEl.value
@@ -89,6 +109,7 @@ onMounted(async () => {
   const initial = await window.api.invoke('log:get') as LogEntry[]
   entries.value = initial ?? []
   window.api.on('log:entry', onEntry)
+  window.api.invoke('log:observe-all-rooms', observeAllRooms.value)
   await nextTick()
   const el = listEl.value
   if (el) el.scrollTop = el.scrollHeight
@@ -114,15 +135,22 @@ onUnmounted(() => {
       <span class="sep" />
       <label title="Room data-plane topics (/peer/...)"><input type="checkbox" v-model="showData" /> Data</label>
       <label title="telemersive-bus handshake and control traffic with the room manager"><input type="checkbox" v-model="showBus" /> Bus</label>
-      <label title="Periodic bus keepalive traffic (room alive and speed pings)" :class="{ dim: !showBus }"><input type="checkbox" v-model="showPings" :disabled="!showBus" /> Pings</label>
+      <label title="Speed (latency) pings between peers" :class="{ dim: !showBus }"><input type="checkbox" v-model="showPings" :disabled="!showBus" /> Pings</label>
+      <label title="Also show the manager's activity in other rooms (housekeeping, peers joining and leaving) — opens a separate read-only broker connection" :class="{ dim: !showBus }"><input type="checkbox" v-model="observeAllRooms" :disabled="!showBus" /> All rooms</label>
+      <span class="sep" />
+      <label title="Changes seen while polling the switchboard: restarts, missing ports, relays stopping or being revived"><input type="checkbox" v-model="showSwitchboard" /> Switchboard</label>
+      <label title="Show raw topics and payloads instead of readable summaries"><input type="checkbox" v-model="showRaw" /> Raw</label>
     </div>
 
     <div ref="listEl" class="list" @scroll="onListScroll">
       <div v-for="e in visible" :key="e.seq" class="row" :class="['k-' + e.kind, 's-' + e.source]">
         <span class="ts">{{ formatTs(e.ts) }}</span>
         <span class="kind">{{ kindLabel(e) }}</span>
-        <span class="topic">{{ e.topic }}</span>
-        <span v-if="e.value" class="value">{{ e.value }}</span>
+        <span v-if="e.summary && !showRaw" class="summary" :title="rawText(e)">{{ e.summary }}</span>
+        <template v-else>
+          <span class="topic">{{ e.topic }}</span>
+          <span v-if="e.value" class="value">{{ e.value }}</span>
+        </template>
       </div>
       <div v-if="visible.length === 0" class="empty">No entries.</div>
     </div>
@@ -201,7 +229,9 @@ onUnmounted(() => {
 .k-warn .kind { color: #e5c07b; }
 .k-error .kind { color: #f55; }
 
-.s-bus .topic { color: #b9a3e3; }
+.s-bus .topic, .summary { color: #b9a3e3; }
+.s-switchboard .topic { color: #e0e0e0; }
+.s-switchboard .value { color: #999; }
 .s-keepalive .topic, .s-keepalive .value { color: #666; }
 
 .empty {

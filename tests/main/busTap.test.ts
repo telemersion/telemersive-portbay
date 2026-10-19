@@ -16,9 +16,10 @@ describe('topic classification', () => {
     expect(isDataPlaneTopic('tBus/roomCreate')).toBe(false)
   })
 
-  it('separates keepalive from handshake traffic', () => {
-    expect(classifyBusTopic('tBus/rooms/lab/alive')).toBe('keepalive')
-    expect(classifyBusTopic('tBus/rooms/lab/alive/ping')).toBe('keepalive')
+  it('files only speed pings as keepalive', () => {
+    // housekeeping pings are event-driven and diagnostic
+    expect(classifyBusTopic('tBus/rooms/lab/alive')).toBe('bus')
+    expect(classifyBusTopic('tBus/rooms/lab/alive/ping')).toBe('bus')
     expect(classifyBusTopic('tBus/rooms/lab/speed')).toBe('keepalive')
     expect(classifyBusTopic('tBus/peers/abc/speed/ping')).toBe('keepalive')
     expect(classifyBusTopic('tBus/roomCreate')).toBe('bus')
@@ -105,6 +106,8 @@ describe('installBusTap', () => {
     expect(log[0].value).toBe('clientId=abc:*** will=tBus/peerLeaving')
     expect(log[4].value).toContain('access=true')
     expect(log[4].value).toContain('roomId=11')
+    expect(log[4].summary).toBe("manager granted access to room 'lab' (id 11)")
+    expect(log[3].summary).toBe("join request: peer 'alice' → room ''")
 
     // library handlers still run, including for data-plane messages
     expect(f.handled).toEqual(['tBus/peers/abc:deadbeef12/roomAccess', 'tBus/rooms/lab/mqtt/peer/abc/x'])

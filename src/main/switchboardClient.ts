@@ -14,13 +14,43 @@ export interface SwitchboardProxyState {
   packets_out: number
   bytes_out: number
   clients: Record<string, SwitchboardClientInfo>
+  // How often the switchboard's supervisor restarted this relay. Missing on
+  // switchboards that predate the supervisor.
+  revivals?: number
 }
 
 // Keyed by port number (as string, per the switchboard's JSON response).
 export type SwitchboardRoomState = Record<string, SwitchboardProxyState>
 
+export interface SwitchboardHealth {
+  // Changes whenever the switchboard process restarts (and forgets its relays).
+  instance: string
+  uptime?: number
+  proxies?: number
+  // Proxy count per room.
+  rooms?: Record<string, number>
+}
+
+export class SwitchboardHttpError extends Error {
+  constructor(readonly status: number) {
+    super(`switchboard responded ${status}`)
+  }
+}
+
 export function switchboardBaseUrl(brokerHost: string): string {
   return `http://${brokerHost}:3591`
+}
+
+async function fetchJson<T>(url: string, timeoutMs: number): Promise<T> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const res = await fetch(url, { signal: controller.signal })
+    if (!res.ok) throw new SwitchboardHttpError(res.status)
+    return await res.json() as T
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export async function fetchSwitchboardRoomState(
@@ -28,16 +58,19 @@ export async function fetchSwitchboardRoomState(
   roomName: string,
   timeoutMs = 4000
 ): Promise<SwitchboardRoomState> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  return fetchJson<SwitchboardRoomState>(`${baseUrl}/rooms/${encodeURIComponent(roomName)}/state`, timeoutMs)
+}
+
+// Returns null when the switchboard has no /health endpoint (older versions).
+export async function fetchSwitchboardHealth(
+  baseUrl: string,
+  timeoutMs = 4000
+): Promise<SwitchboardHealth | null> {
   try {
-    const res = await fetch(`${baseUrl}/rooms/${encodeURIComponent(roomName)}/state`, {
-      signal: controller.signal
-    })
-    if (!res.ok) throw new Error(`switchboard responded ${res.status}`)
-    return await res.json() as SwitchboardRoomState
-  } finally {
-    clearTimeout(timer)
+    return await fetchJson<SwitchboardHealth>(`${baseUrl}/health`, timeoutMs)
+  } catch (err) {
+    if (err instanceof SwitchboardHttpError && err.status === 404) return null
+    throw err
   }
 }
 
