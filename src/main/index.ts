@@ -24,6 +24,7 @@ import { resolveUgPath } from './enumeration/spawnCli'
 import { mediaAccessStatus, primeMediaAccess } from './mediaPermissions'
 import { performShutdown } from './shutdown'
 import { logEvent, setLogSink, getLogBuffer, clearLogBuffer } from './logBus'
+import { installCrashGuard } from './crashGuard'
 import { enumerate, handleRefreshTrigger } from './enumeration'
 import { registerDefaultBackends } from './enumeration/parsers'
 import { runCompatCheck, validateToolPath } from './compat'
@@ -891,6 +892,23 @@ function setupIpcHandlers(): void {
   })
 
 }
+
+// Installed at module load so it also covers errors thrown during startup.
+installCrashGuard({
+  onTransient: (err) => {
+    console.warn(`[main] ignored network error (${(err as NodeJS.ErrnoException).code}): ${err.message}`)
+    logEvent({
+      source: 'bus',
+      kind: 'warn',
+      topic: 'network connection lost',
+      value: `${(err as NodeJS.ErrnoException).code}: ${err.message} — the MQTT client reconnects automatically`
+    })
+  },
+  fatal: (err) => {
+    console.error('[main] uncaught exception', err)
+    dialog.showErrorBox('A JavaScript error occurred in the main process', err.stack ?? err.message)
+  }
+})
 
 app.whenReady().then(async () => {
   registerDefaultBackends()
