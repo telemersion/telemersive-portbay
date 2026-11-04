@@ -71,8 +71,10 @@ describeIfUv('UG codec acceptance (live `uv` binary)', () => {
     expect(out).toMatch(/Unable to find encoder for audio codec 'speex'/)
   })
 
-  it('confirms MJPEG is rejected (reason we remap index 1 to JPEG)', async () => {
-    const out = await runUvCollect(['-c', 'libavcodec:codec=MJPEG:help'])
-    expect(out).toMatch(/Unable to find codec/)
+  // UG 1.10.3 rejected the literal "MJPEG" (hence index 1 maps to JPEG); 1.10.8
+  // accepts both. JPEG is the common denominator, so the map keeps using it.
+  it('accepts the JPEG literal used for video codec index 1', async () => {
+    const out = await runUvCollect(['-c', 'libavcodec:codec=JPEG:help'])
+    expect(out).not.toMatch(/Unable to find codec/)
   })
 })

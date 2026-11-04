@@ -28,6 +28,15 @@ describe('parseCoreaudio', () => {
     expect(result.range).toContain('88 MacBook Pro Speakers')
   })
 
+  it('parses 1.10.8 capture and playback probes', () => {
+    const cap = parseCoreaudio(fixture('1.10.8', 'coreaudio-cap.txt'))
+    expect(cap.count).toBe(8)
+    expect(cap.range).toContain('99 MacBook Pro Microphone')
+    const recv = parseCoreaudio(fixture('1.10.8', 'coreaudio-recv.txt'))
+    expect(recv.count).toBe(8)
+    expect(recv.range).toContain('92 MacBook Pro Speakers')
+  })
+
   it('parses 1.9.12 capture probe identically', () => {
     const result = parseCoreaudio(fixture('1.9.12', 'coreaudio-cap.txt'))
     expect(result.count).toBe(8)

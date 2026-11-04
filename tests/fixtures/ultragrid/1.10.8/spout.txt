@@ -1,0 +1,5 @@
+UltraGrid 1.10.8 (tags/v1.10.8 rev 5d44e6b built Aug 24 2026 07:14:08)
+
+WARNING: Selected 'spout' capture card was not found.
+Unable to open capture device: spout
+Exit

@@ -6,7 +6,7 @@ export interface ToolRequirement {
   supportedPlatforms: NodeJS.Platform[]
 }
 
-export const REQUIRED_UG_VERSION = '1.10.3'
+export const REQUIRED_UG_VERSION = '1.10.8'
 export const REQUIRED_NATNET_OSC_VERSION = '1.2.0'
 
 export const ULTRAGRID_REQUIREMENT: ToolRequirement = {

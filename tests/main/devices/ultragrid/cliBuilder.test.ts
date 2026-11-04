@@ -983,7 +983,7 @@ describe('buildUvArgs — audio codec table', () => {
     expect(args).not.toContain('--audio-codec')
   })
 
-  it('codec index 2 (speex) throws because UG 1.10.3 cannot encode it', () => {
+  it('codec index 2 (speex) throws because UG 1.10.8 cannot encode it', () => {
     expect(() => buildMode1AudioOnly('2')).toThrow(/speex/)
   })
 

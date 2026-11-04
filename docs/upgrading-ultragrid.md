@@ -55,6 +55,14 @@ This auto-detects the version from `uv --version` and writes to `tests/fixtures/
 npx vitest run tests/main/enumeration/parsers
 ```
 
+To get fixtures with *live* Syphon and NDI sources without starting streams by hand, run:
+
+```sh
+scripts/capture-uv-live-sources.sh
+```
+
+It spawns UV testcard senders feeding two receiver instances (`-d syphon:name=UGFixtureSyphon`, `-d ndi:name=UGFixtureNDI`), probes, and writes `syphon-live.txt` / `ndi-live.txt` next to the other fixtures (macOS only).
+
 If a parser fails, the test will tell you which fixture line broke. Fix the parser regex/logic in [src/main/enumeration/parsers/](../src/main/enumeration/parsers/), not the fixture — the fixture is ground truth.
 
 ---

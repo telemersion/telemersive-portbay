@@ -1,0 +1,15 @@
+UltraGrid 1.10.8 (tags/v1.10.8 rev 5d44e6b built Aug 24 2026 07:14:08)
+
+OpenGL renderer: Apple M1 Max 2.1 Metal - 90.5 (GLSL: 1.20)
+Usage:
+	-t syphon[:name=<name>|:app=<appname>|:override_fps|:RGB] | -t syphon:[full]help
+where
+	      <name> - Syphon server name
+	   <appname> - Syphon server application name
+	override_fps - overrides FPS in metadata (but not the actual rate captured)
+	         RGB - use RGB as an output codec instead of default UYVY
+
+Available servers:
+	1) app: Simple Server name: 
+
+Exit

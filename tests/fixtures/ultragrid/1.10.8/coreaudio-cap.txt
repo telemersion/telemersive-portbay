@@ -1,0 +1,18 @@
+UltraGrid 1.10.8 (tags/v1.10.8 rev 5d44e6b built Aug 24 2026 07:14:08)
+
+Core Audio capture usage:
+	-s coreaudio[:<index>|:<name>]
+where
+	<name> - device name substring (case sensitive)
+
+Available Core Audio capture devices:
+	coreaudio    : Default CoreAudio capture
+	coreaudio:162: NDI Audio
+	coreaudio:104: BlackHole 16ch
+	coreaudio:120: BlackHole 2ch
+	coreaudio:136: BlackHole 64ch
+	coreaudio:99 : MacBook Pro Microphone
+	coreaudio:152: Microsoft Teams Audio
+	coreaudio:179: ZoomAudioDevice
+	coreaudio:61 : AggregateDevice
+Exit

@@ -38,7 +38,7 @@ NG addresses three goals, in priority order when they conflict:
 NG-only additions on top of the Max-protocol surface:
 
 - **Motive bridge (`loaded=5`)** — NG-only NatNet UDP relay over the existing telemersive-bus proxies. See §5.6. Max peers in mixed rooms see `loaded=5` channels as opaque.
-- **Tool compatibility check** — version-pinned UltraGrid (1.10.3) and NatNetFour2OSC (10.0.0) with locate/download flow in the Settings view. See §11.
+- **Tool compatibility check** — version-pinned UltraGrid (1.10.8) and NatNetFour2OSC (10.0.0) with locate/download flow in the Settings view. See §11.
 
 Surface area:
 
@@ -614,7 +614,7 @@ Video sources (`textureCaptureRange`, `ndiRange`) **[resolved 2026-04-21]**:
 - `uv -t spout:help` → `textureCaptureRange` (Windows)
 - `uv -t ndi:help` → `ndiRange`
 
-Parsers are fixture-verified against UG 1.10.3 — see [parsers/textureSender.ts](../src/main/enumeration/parsers/textureSender.ts) and [parsers/ndi.ts](../src/main/enumeration/parsers/ndi.ts). Both backends feed `-default-` when the probe returns no servers or the backend plugin is absent.
+Parsers are fixture-verified against UG 1.10.8 (and 1.10.3) — see [parsers/textureSender.ts](../src/main/enumeration/parsers/textureSender.ts) and [parsers/ndi.ts](../src/main/enumeration/parsers/ndi.ts). Both backends feed `-default-` when the probe returns no servers or the backend plugin is absent.
 
 ### 8.2 Output Format on the Wire
 
@@ -874,7 +874,7 @@ Steps 1–14 are **shipped**. The original ordering is preserved for provenance;
 
 **Resolved:**
 
-- ~~**Tool compatibility check:**~~ ✅ Pinned `REQUIRED_UG_VERSION` (1.10.3) and `REQUIRED_NATNET_OSC_VERSION` (10.0.0) in [src/shared/toolRequirements.ts](../src/shared/toolRequirements.ts). Boot-time probe (`uv --version` etc) compares against pin and surfaces status in the Settings view (§9.1). User can locate an installed binary via native picker (validates by re-probing version) or open the official download page. See [src/main/compat/](../src/main/compat/) and [src/renderer/views/SettingsView.vue](../src/renderer/views/SettingsView.vue).
+- ~~**Tool compatibility check:**~~ ✅ Pinned `REQUIRED_UG_VERSION` (1.10.8) and `REQUIRED_NATNET_OSC_VERSION` (10.0.0) in [src/shared/toolRequirements.ts](../src/shared/toolRequirements.ts). Boot-time probe (`uv --version` etc) compares against pin and surfaces status in the Settings view (§9.1). User can locate an installed binary via native picker (validates by re-probing version) or open the official download page. See [src/main/compat/](../src/main/compat/) and [src/renderer/views/SettingsView.vue](../src/renderer/views/SettingsView.vue).
 - ~~**Settings file inspection:**~~ ✅ Settings view exposes the `settings.json` path with Reveal in Finder/Explorer + Open in default editor.
 
 **Pending:**

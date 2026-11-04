@@ -8,6 +8,24 @@ const fixture = (version: string, name: string) =>
 
 describe('parseTextureSender', () => {
   describe('syphon (macOS)', () => {
+    it('parses a single server with blank name (1.10.8)', () => {
+      expect(parseTextureSender(fixture('1.10.8', 'syphon.txt'), 'syphon')).toEqual({
+        range: "app='Simple Server'",
+        count: 1
+      })
+    })
+
+    it('lists a named server next to an unnamed one (1.10.8, scripts/capture-uv-live-sources.sh)', () => {
+      const entries = parseTextureSender(fixture('1.10.8', 'syphon-live.txt'), 'syphon').range.split('|')
+      expect(entries).toContain("app='Simple Server'")
+      expect(entries).toContain("app='uv-real':name='UGFixtureSyphon'")
+    })
+
+    it('returns -default- when 1.10.8 reports no servers', () => {
+      const out = 'Available servers:\n[syphon cap.] \tNo Syphon servers found.\n\nExit\n'
+      expect(parseTextureSender(out, 'syphon')).toEqual({ range: '-default-', count: 0 })
+    })
+
     it('parses a single server with blank name (1.10.3)', () => {
       const result = parseTextureSender(fixture('1.10.3', 'syphon.txt'), 'syphon')
       expect(result.count).toBe(1)

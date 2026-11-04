@@ -29,6 +29,22 @@ describe('parsePortaudio', () => {
     })
   })
 
+  describe('1.10.8 (terse format, unchanged)', () => {
+    it('parses capture probe and strips (*) default marker', () => {
+      const result = parsePortaudio(fixture('1.10.8', 'portaudio-cap.txt'))
+      expect(result.count).toBe(8)
+      expect(result.range.split('|')[0]).toBe('0 NDI Audio (2; Core Audio)')
+      expect(result.range).toContain('4 MacBook Pro Microphone (1; Core Audio)')
+      expect(result.range).not.toContain('(*)')
+    })
+
+    it('parses playback probe', () => {
+      const result = parsePortaudio(fixture('1.10.8', 'portaudio-recv.txt'))
+      expect(result.count).toBe(8)
+      expect(result.range).toContain('5 MacBook Pro Speakers (2; Core Audio)')
+    })
+  })
+
   describe('1.9.12 (verbose format)', () => {
     it('parses capture probe with output/input channels', () => {
       const result = parsePortaudio(fixture('1.9.12', 'portaudio-cap.txt'))

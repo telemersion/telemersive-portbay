@@ -1,0 +1,18 @@
+UltraGrid 1.10.8 (tags/v1.10.8 rev 5d44e6b built Aug 24 2026 07:14:08)
+
+Core Audio playback usage:
+	-r coreaudio[:<index>|:<name>] [--param audio-buffer-len=<len_ms>] [--param audio-disable-adaptive-buffer]
+where
+	<name> - device name substring (case sensitive)
+
+Available CoreAudio playback devices:
+	coreaudio    : Default CoreAudio playback
+	coreaudio:104: BlackHole 16ch
+	coreaudio:120: BlackHole 2ch
+	coreaudio:136: BlackHole 64ch
+	coreaudio:92 : MacBook Pro Speakers
+	coreaudio:152: Microsoft Teams Audio
+	coreaudio:166: NDI Audio
+	coreaudio:179: ZoomAudioDevice
+	coreaudio:61 : AggregateDevice
+Exit

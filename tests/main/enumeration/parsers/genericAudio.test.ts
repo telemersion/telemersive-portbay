@@ -11,6 +11,11 @@ describe('parseJack', () => {
     expect(parseJack(fixture('1.10.3', 'jack-cap.txt'))).toEqual({ range: '0', count: 0 })
   })
 
+  it('returns 0 for jack and wasapi on 1.10.8', () => {
+    expect(parseJack(fixture('1.10.8', 'jack-cap.txt'))).toEqual({ range: '0', count: 0 })
+    expect(parseWasapi(fixture('1.10.8', 'wasapi-cap.txt'))).toEqual({ range: '0', count: 0 })
+  })
+
   it('returns 0 on 1.9.12 as well', () => {
     const path = join(__dirname, '../../../fixtures/ultragrid/1.9.12/jack-cap.txt')
     if (!existsSync(path)) return

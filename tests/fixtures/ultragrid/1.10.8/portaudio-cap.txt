@@ -1,0 +1,28 @@
+UltraGrid 1.10.8 (tags/v1.10.8 rev 5d44e6b built Aug 24 2026 07:14:08)
+
+[PortAudio] Using PortAudio V19.7.0-devel, revision 147dd722548358763a8b649b3e4b41dfffbcfbb6
+PortAudio capture usage:
+	-s portaudio:[full]help
+	-s portaudio[:<index>[:latency=<l>]]
+or
+	-s portaudio[:device=<dev>][:latency=<l>]
+
+options:
+	 <l> 	suggested latency in sec (experimental, use in case of problems)
+	<dev>	device name (or a part of it); device index is also accepted here
+
+
+Available PortAudio capture devices (max channels; API):
+	portaudio - use default Portaudio device (marked with star)
+	portaudio:0 - NDI Audio (2; Core Audio)
+	portaudio:1 - BlackHole 16ch (16; Core Audio)
+	portaudio:2 - BlackHole 2ch (2; Core Audio)
+	portaudio:3 - BlackHole 64ch (64; Core Audio)
+(*) 	portaudio:4 - MacBook Pro Microphone (1; Core Audio)
+	portaudio:6 - Microsoft Teams Audio (1; Core Audio)
+	portaudio:8 - ZoomAudioDevice (2; Core Audio)
+	portaudio:9 - AggregateDevice (17; Core Audio)
+
+Examples:
+	vendor/ultragrid/active/uv-qt.app/Contents/MacOS/uv-real -s portaudio:d="MacBook Pro"
+Exit

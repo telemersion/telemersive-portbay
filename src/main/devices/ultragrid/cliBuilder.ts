@@ -423,8 +423,8 @@ function audioBackendHasMenu(type: string): boolean {
 // Video codec umenu from Max tg.deviceUG_view.maxpat (line 22391).
 // Index 0 (-none-) is deliberately absent here: it means "no -c flag at all",
 // which is handled by the caller (see pushVideoCapture).
-// Index 1 Max-label is MJPEG but UG 1.10.3 rejects that literal; UG accepts
-// "JPEG" instead. Max has shipped this broken for years; we map to JPEG.
+// Index 1 Max-label is MJPEG. UG 1.10.3 rejected that literal (1.10.8 accepts it);
+// "JPEG" works in both, so we map to JPEG. Max shipped the broken literal for years.
 // Codec name acceptance re-verified with scripts/probe-uv-codecs.sh — see
 // docs/ug-codecs-<version>.txt for the live probe output.
 const VIDEO_CODEC_NAMES: Readonly<Record<string, string>> = {
@@ -441,7 +441,7 @@ const VIDEO_CODEC_NAMES: Readonly<Record<string, string>> = {
 
 // Audio codec umenu from Max tg.deviceUG_view.maxpat (line 12555).
 // Index 0 (-none-) means "no --audio-codec flag" — handled by caller.
-// Index 2 (speex) is intentionally absent: UG 1.10.3 lists speex as
+// Index 2 (speex) is intentionally absent: UG 1.10.8 lists speex as
 // "unavailable" — a spawn with --audio-codec speex fails at runtime with
 // "Unable to find encoder for audio codec 'speex'". We throw in audioCodecName
 // rather than letting that reach the user via a spawn crash.
@@ -466,7 +466,7 @@ function videoCodecName(codec: string): string {
 
 function audioCodecName(codec: string): string {
   if (codec === '2') {
-    throw new Error('audio codec index 2 (speex) is unavailable in UG 1.10.3')
+    throw new Error('audio codec index 2 (speex) is unavailable in UG 1.10.8')
   }
   const name = AUDIO_CODEC_NAMES[codec]
   if (!name) throw new Error(`unsupported audio codec id: ${codec}`)

@@ -5,7 +5,7 @@ export type TextureBackend = 'syphon' | 'spout'
 // Parses `uv -t syphon:help` (macOS) or `uv -t spout:help` (Windows). Both
 // feed `textureCaptureRange` but the formats differ between backends.
 //
-// Syphon format (macOS, verified 1.10.3):
+// Syphon format (macOS, verified 1.10.3; header/empty-list format unchanged in 1.10.8):
 //   Available servers:
 //       1) app: Simple Server name:
 //       2) app: OtherApp name: channel_2
