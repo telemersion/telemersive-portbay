@@ -18,7 +18,8 @@ type PublishFn = (retained: 0 | 1, topic: string, ...values: string[]) => void
 
 const TIMESTAMP_PATTERN = /^\[\d+\.\d+\]\s+/
 const SOURCE_PATTERN = /\[(Syphon|SYPHON|Spout|SPOUT|Decklink|DeckLink|screen|AVfoundation|NDI|ndi|Audio|dshow|GL|testcard|syphon)[^\]]*\]/i
-const DIRECTION_PATTERN = /(sender|capture|cap|display|decoder|disp)[.\]]/
+// `dec` covers the receive-side audio line "[audio dec.] Volume: ..." (UG 1.10.3 and 1.10.8).
+const DIRECTION_PATTERN = /(sender|capture|cap|display|decoder|dec|disp)[.\]]/
 
 export interface UltraGridIndicatorState {
   txActive: boolean

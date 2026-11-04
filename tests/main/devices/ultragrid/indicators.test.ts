@@ -43,6 +43,19 @@ describe('UltraGridIndicatorParser', () => {
     expect(published).toContainEqual({ topic: 'test/indicators', value: expect.stringMatching(/^0 1 .* -91\.38$/) })
   })
 
+  it('parses live UG 1.10.x receive-side audio line "[audio dec.] Volume:"', (ctx) => {
+    ctx.onTestFinished(() => parser.reset())
+    parser.handleLogLine('[audio dec.] Volume: [0] -17.99/-14.75 dBFS RMS/peak')
+    expect(published).toContainEqual({ topic: 'test/indicators', value: expect.stringMatching(/^0 1 0 0 0 -17\.99$/) })
+  })
+
+  it('parses live UG 1.10.x GL display and audio sender lines', (ctx) => {
+    ctx.onTestFinished(() => parser.reset())
+    parser.handleLogLine('[GL] 150 frames in 5.00021 seconds = 29.9987 FPS')
+    parser.handleLogLine('[Audio sender] Volume: [0] -18.00/-14.99 dBFS RMS/peak')
+    expect(published.at(-1)?.value).toBe('1 1 0 -18.00 29.9987 0')
+  })
+
   it('parses Audio TX Volume line with channel prefix "[0] dB/peak" format', (ctx) => {
     ctx.onTestFinished(() => parser.reset())
     parser.handleLogLine('[1664558497.525] [Audio sender] Volume: [0] -46.77/-33.98 dBFS RMS/peak')
