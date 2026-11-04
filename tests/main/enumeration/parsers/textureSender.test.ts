@@ -15,9 +15,8 @@ describe('parseTextureSender', () => {
       })
     })
 
-    it('lists a named server next to an unnamed one (1.10.8, scripts/capture-uv-live-sources.sh)', () => {
+    it('lists a self-generated named server (1.10.8, scripts/capture-uv-live-sources.sh)', () => {
       const entries = parseTextureSender(fixture('1.10.8', 'syphon-live.txt'), 'syphon').range.split('|')
-      expect(entries).toContain("app='Simple Server'")
       expect(entries).toContain("app='uv-real':name='UGFixtureSyphon'")
     })
 

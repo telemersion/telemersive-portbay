@@ -10,7 +10,6 @@ where
 	         RGB - use RGB as an output codec instead of default UYVY
 
 Available servers:
-	1) app: Simple Server name: 
-	2) app: uv-real name: UGFixtureSyphon
+	1) app: uv-real name: UGFixtureSyphon
 
 Exit

@@ -29,7 +29,6 @@ where
 		prefer progressive capture for interlaced input
 
 available sources (tentative, format: name - url):
-	MB-41545 (Test Patterns) - 127.0.0.1:5961
-	MB-41545 (UGFixtureNDI) - 127.0.0.1:5962
+	MB-41545 (UGFixtureNDI) - 127.0.0.1:5961
 
 Exit
