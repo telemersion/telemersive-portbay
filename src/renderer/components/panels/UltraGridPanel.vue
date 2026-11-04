@@ -551,7 +551,6 @@ async function triggerRefresh(backend: Backend) {
 
 <template>
   <div class="ug-panel">
-    <LevelMeter :tx="txLevels" :rx="rxLevels" />
     <div class="panel-header">
       <button
         class="enable-btn"
@@ -568,6 +567,8 @@ async function triggerRefresh(backend: Backend) {
         @change="descBinding.set(($event.target as HTMLInputElement).value)"
       />
     </div>
+
+    <LevelMeter :tx="txLevels" :rx="rxLevels" />
 
     <section>
       <h4>Network</h4>
