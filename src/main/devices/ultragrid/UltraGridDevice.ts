@@ -69,6 +69,9 @@ export class UltraGridDevice implements DeviceHandler {
 
   private lifecycle: ChildProcessLifecycle | null = null
   private enabled = false
+  // False once the process is stopped/exited: UG prints cumulative stats on shutdown
+  // (e.g. an averaged FPS) that must not be shown as live values.
+  private acceptingIndicators = false
   private indicatorParser: UltraGridIndicatorParser
 
   constructor(opts: UltraGridDeviceOptions) {
@@ -90,7 +93,11 @@ export class UltraGridDevice implements DeviceHandler {
         this.publishedTopics.add(topic)
         opts.publish(1, topic, ...values)
       },
-      indicatorTopic
+      indicatorTopic,
+      {
+        tx: topics.deviceGui(opts.peerId, opts.channelIndex, 'levels/tx'),
+        rx: topics.deviceGui(opts.peerId, opts.channelIndex, 'levels/rx')
+      }
     )
   }
 
@@ -114,6 +121,8 @@ export class UltraGridDevice implements DeviceHandler {
     }
     this.pubDeviceGui('description', 'UG', false)
     this.pubDeviceGui('indicators', '0 0 0 0 0 0', false)
+    this.pubDeviceGui('levels/tx', '', false)
+    this.pubDeviceGui('levels/rx', '', false)
     this.pubDeviceGui('monitor/log', '', false)
     this.pubDeviceGui('monitor/monitorGate', '0', false)
   }
@@ -203,6 +212,7 @@ export class UltraGridDevice implements DeviceHandler {
     // Quotes in argv are shell syntax — spawn passes argv verbatim, so `'Simple Server'`
     // would reach uv as a literal 13-char string and fail the Syphon name match. Strip
     // wrapping single quotes here; the logged cliLine above keeps them for pastability.
+    this.acceptingIndicators = true
     this.lifecycle = this.spawnFactory({
       binary,
       args: stripArgQuotes(args),
@@ -215,6 +225,7 @@ export class UltraGridDevice implements DeviceHandler {
   }
 
   private stopProcess(): void {
+    this.acceptingIndicators = false
     this.lifecycle?.stop()
     this.indicatorParser.reset()
     this.pubDeviceGui('indicators', '0 0 0 0 0 0', true)
@@ -223,7 +234,7 @@ export class UltraGridDevice implements DeviceHandler {
   private handleLogLine(line: string): void {
     this.monitor.append(line)
     if (this.monitorGateOn) this.publishMonitorLine(line)
-    this.indicatorParser.handleLogLine(line)
+    if (this.acceptingIndicators) this.indicatorParser.handleLogLine(line)
   }
 
   private publishMonitorLine(line: string): void {
@@ -242,10 +253,13 @@ export class UltraGridDevice implements DeviceHandler {
 
   private handleExit(reason: ExitReason, code: number | null, _ports: UgPorts): void {
     this.lifecycle = null
+    this.acceptingIndicators = false
     if (reason === 'killed') return
     const label = reason === 'spawn-failure' ? 'UV spawn-failure' : 'UV crashed'
     this.logWarn(`${label} (code ${code}); disabling`)
     this.enabled = false
+    this.indicatorParser.reset()
+    this.pubDeviceGui('indicators', '0 0 0 0 0 0', true)
     this.publishEnableOff()
   }
 
@@ -318,12 +332,14 @@ export class UltraGridDevice implements DeviceHandler {
   }
 
   teardown(): string[] {
+    this.indicatorParser.dispose()
     this.lifecycle?.stop()
     this.lifecycle = null
     return [...this.publishedTopics]
   }
 
   destroy(): void {
+    this.indicatorParser.dispose()
     this.lifecycle?.stop()
     this.lifecycle = null
   }

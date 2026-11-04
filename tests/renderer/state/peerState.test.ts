@@ -26,6 +26,12 @@ describe('peerState', () => {
     expect(state.peers.abc.rack.page_0['channel.2'].device.gui.localudp.outputPortOne).toBe('10028')
   })
 
+  it('sets nested per-channel audio levels', () => {
+    const state = createPeerState()
+    state.applyTopic('/peer/abc/rack/page_0/channel.0/device/gui/levels/tx', '-18.00/-14.99 -20.00/-12.00')
+    expect(state.peers.abc.rack.page_0['channel.0'].device.gui.levels.tx).toBe('-18.00/-14.99 -20.00/-12.00')
+  })
+
   it('clears a topic when value is empty string', () => {
     const state = createPeerState()
     state.applyTopic('/peer/abc/rack/page_0/channel.0/device/gui/enable', '1')

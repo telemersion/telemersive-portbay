@@ -17,6 +17,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Electron + Vue 3 + TypeScript app that is a drop-in replacement for the Max MSP "Telemersive Gateway". It is a **protocol-frozen** peer in a telemersive-bus room — the MQTT data-plane topics, values, retain flags, and `APPVERSION` (`TeGateway_v0612` in [busClient.ts](src/main/busClient.ts)) match the Max gateway bit-for-bit so mixed Max/NG rooms work. The authoritative design doc is [docs/spec.md](docs/spec.md).
 
+**Deliberate NG extension:** UltraGrid devices additionally publish per-channel audio levels to `device/gui/levels/tx` and `.../levels/rx` (space-separated `rms/peak` dBFS tokens, one per channel; see [indicators.ts](src/main/devices/ultragrid/indicators.ts)). Max gateways ignore these topics; the existing 6-value `indicators` topic is unchanged (channel 0 only). The renderer draws them with [LevelMeter.vue](src/renderer/components/LevelMeter.vue).
+
 ### Process split and IPC
 
 - **Main** ([src/main/](src/main/)) owns the single `mqtt.js` client (wrapped via `telemersive-bus`) and all child-process device handlers (UltraGrid `uv`, OSC relays, later NatNet).

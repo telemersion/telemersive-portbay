@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { type Backend, refreshTopic } from '../../../shared/topics'
 import CustomFlagsModal, { type FlagsPreset, type DocLink } from './CustomFlagsModal.vue'
 import MonitorToggle from '../MonitorToggle.vue'
+import LevelMeter from '../LevelMeter.vue'
 
 // ── Custom flags modal state ─────────────────────────────────────
 type CustomFlagsTarget = 'videoCapture' | 'videoReceiver' | 'audioCapture' | 'audioReceiver'
@@ -199,6 +200,8 @@ const audioReceiver = computed(() => av.value?.audioReceiver ?? {})
 const monitor = computed(() => gui.value?.monitor ?? {})
 
 const isEnabled = computed(() => gui.value?.enable === '1')
+const txLevels = computed<string>(() => gui.value?.levels?.tx ?? '')
+const rxLevels = computed<string>(() => gui.value?.levels?.rx ?? '')
 const isLocked = computed(() => isEnabled.value || (!props.isLocal && props.targetLocked))
 
 const mode = computed(() => network.value?.mode ?? '1')
@@ -548,6 +551,7 @@ async function triggerRefresh(backend: Backend) {
 
 <template>
   <div class="ug-panel">
+    <LevelMeter :tx="txLevels" :rx="rxLevels" />
     <div class="panel-header">
       <button
         class="enable-btn"

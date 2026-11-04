@@ -157,6 +157,27 @@ describe('UltraGridDevice', () => {
     expect(enableCalls).toHaveLength(0)
   })
 
+  it('resets indicators and levels immediately on crash exit', () => {
+    const { device, publish, spawned } = makeDevice()
+    device.onTopicChanged('gui/network/mode', '4')
+    device.onTopicChanged('gui/enable', '1')
+    spawned[0].opts.onStdout?.('[audio dec.] Volume: [0] -18.00/-14.00 dBFS RMS/peak')
+    publish.mockClear()
+    spawned[0].opts.onExit?.('crash', 1)
+    expect(publish.mock.calls.some((c) => c[1] === '/peer/p1/rack/page_0/channel.0/device/gui/indicators' && c.slice(2).join(' ') === '0 0 0 0 0 0')).toBe(true)
+    expect(publish.mock.calls.some((c) => c[1] === '/peer/p1/rack/page_0/channel.0/device/gui/levels/rx' && c[2] === '')).toBe(true)
+  })
+
+  it('ignores UG shutdown stats after the process was stopped', () => {
+    const { device, publish, spawned } = makeDevice()
+    device.onTopicChanged('gui/network/mode', '4')
+    device.onTopicChanged('gui/enable', '1')
+    device.onTopicChanged('gui/enable', '0')
+    publish.mockClear()
+    spawned[0].opts.onStdout?.('[GL] 108 frames in 30.6658 seconds = 3.52183 FPS')
+    expect(publish.mock.calls.filter((c) => c[1] === '/peer/p1/rack/page_0/channel.0/device/gui/indicators')).toHaveLength(0)
+  })
+
   it('fails soft when binary is not resolvable', () => {
     const { device, publish, spawned } = makeDevice({ resolveBinary: () => null })
     device.onTopicChanged('gui/network/mode', '4')
